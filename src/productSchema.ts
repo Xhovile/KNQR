@@ -8,7 +8,9 @@ export type ProductFieldType =
   | "select"
   | "multiselect"
   | "boolean"
-  | "image[]";
+  | "image[]"
+  | "checkbox"
+  | "radio";
 
 export interface ProductSchemaField {
   key: string;
@@ -19,6 +21,10 @@ export interface ProductSchemaField {
   helpText?: string;
   options?: string[];
   section?: string;
+  dependsOn?: {
+    field: string;
+    value: string | string[];
+  };
 }
 
 export interface ProductSchemaSection {
@@ -53,7 +59,34 @@ export interface ProductDraftValues {
   deliveryMethod: ProductDeliveryMethod | "";
   deliveryNote: string;
   details: string[];
+
+  // Apparel specific
+  fit?: string;
+  material?: string;
+  apparelGender?: string;
+  sleeveType?: string;
+
+  // Bags & Accessories specific
+  bagType?: string;
+  bagMaterial?: string;
+  strapType?: string;
+  bagCapacity?: string;
+  useCase?: string;
+
+  // Fragrances specific
+  volume?: string;
+  scentFamily?: string;
+  fragranceGender?: string;
+  concentration?: string;
+  longevity?: string;
+  notes?: string[];
 }
+
+export const SUBCATEGORIES_MAP: Record<string, string[]> = {
+  "Apparel": ["T-shirts", "Hoodies", "Sweaters", "Tracksuits", "Golf shirts", "Jackets", "3/4 sleeve shirts"],
+  "Bags & Accessories": ["Backpacks", "Sling bags", "Gym bags", "Hustle bags", "Toilet bags"],
+  "Fragrances": ["Perfumes", "Colognes"]
+};
 
 export const PRODUCT_SCHEMA: ProductSchema = {
   key: "product",
@@ -76,31 +109,58 @@ export const PRODUCT_SCHEMA: ProductSchema = {
     {
       key: "basic",
       title: "Basic Info",
+      description: "Define the visual identity, title, story, and status of the product.",
       fields: ["name", "collectionCategory", "category", "description", "status"],
     },
     {
       key: "pricing",
       title: "Pricing",
+      description: "Set the cost and track available warehouse quantity.",
       fields: ["priceUSD", "priceMWK", "stock"],
     },
     {
       key: "media",
       title: "Media",
+      description: "Upload primary and secondary gallery photos.",
       fields: ["image", "images"],
     },
     {
       key: "variants",
       title: "Variants",
-      fields: ["sizes", "colors"],
+      description: "Customize sizes, colors, and dynamic category-specific options.",
+      fields: [
+        "sizes", 
+        "colors",
+        // Apparel
+        "fit",
+        "material",
+        "apparelGender",
+        "sleeveType",
+        // Bags
+        "bagType",
+        "bagMaterial",
+        "strapType",
+        "bagCapacity",
+        "useCase",
+        // Fragrances
+        "volume",
+        "scentFamily",
+        "fragranceGender",
+        "concentration",
+        "longevity",
+        "notes"
+      ],
     },
     {
       key: "delivery",
       title: "Delivery",
+      description: "Configure shipment modes and regional handoff instructions.",
       fields: ["deliveryMethod", "deliveryNote"],
     },
     {
       key: "extras",
       title: "Details",
+      description: "Add key sourcing, craft, and highlight tags for the buyer.",
       fields: ["details"],
     },
   ],
@@ -144,7 +204,7 @@ export const PRODUCT_SCHEMA: ProductSchema = {
     {
       key: "status",
       label: "Status",
-      type: "select",
+      type: "radio",
       required: true,
       section: "basic",
       options: ["draft", "active", "sold_out", "archived"],
@@ -168,7 +228,7 @@ export const PRODUCT_SCHEMA: ProductSchema = {
     },
     {
       key: "stock",
-      label: "Stock",
+      label: "Stock Count",
       type: "number",
       required: true,
       section: "pricing",
@@ -196,6 +256,10 @@ export const PRODUCT_SCHEMA: ProductSchema = {
       type: "multiselect",
       section: "variants",
       options: ["XS", "S", "M", "L", "XL", "One Size", "50ml", "100ml"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: ["Apparel", "Fragrances"]
+      }
     },
     {
       key: "colors",
@@ -203,10 +267,183 @@ export const PRODUCT_SCHEMA: ProductSchema = {
       type: "multiselect",
       section: "variants",
       options: ["Earthy Brown", "Desert Sand", "Slate Charcoal", "24K Gold Plated", "Original Essence"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: ["Apparel", "Bags & Accessories"]
+      }
+    },
+    // Apparel category-specific fields
+    {
+      key: "fit",
+      label: "Product Fit Style",
+      type: "select",
+      section: "variants",
+      options: ["Regular Fit", "Slim Fit", "Oversized", "Relaxed Fit", "Athletic Fit"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Apparel"
+      }
     },
     {
+      key: "material",
+      label: "Fabric Composition",
+      type: "select",
+      section: "variants",
+      options: ["100% Malawian Cotton", "Heavyweight Fleece Cotton", "Premium Linen Blend", "Polyester Tech Blend", "Nylon Sport", "Merino Wool Blend"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Apparel"
+      }
+    },
+    {
+      key: "apparelGender",
+      label: "Target Gender Profile",
+      type: "radio",
+      section: "variants",
+      options: ["Unisex", "Men", "Women"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Apparel"
+      }
+    },
+    {
+      key: "sleeveType",
+      label: "Sleeve Type",
+      type: "select",
+      section: "variants",
+      options: ["Short Sleeve", "Long Sleeve", "Sleeveless", "3/4 Sleeve", "None"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Apparel"
+      }
+    },
+    // Bags & Accessories category-specific fields
+    {
+      key: "bagType",
+      label: "Accessory / Bag Category",
+      type: "select",
+      section: "variants",
+      options: ["Backpack", "Sling Bag", "Gym Bag", "Hustle Bag", "Toilet Bag", "Hand-carried Case", "Jewelry / Accent"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Bags & Accessories"
+      }
+    },
+    {
+      key: "bagMaterial",
+      label: "Accessory Material Sourcing",
+      type: "select",
+      section: "variants",
+      options: ["Full-Grain Genuine Leather", "Ultra-durable Canvas", "Water-resistant Ballistic Nylon", "24K Gold Plated Brass", "Sterling Silver Coated"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Bags & Accessories"
+      }
+    },
+    {
+      key: "strapType",
+      label: "Strap Style",
+      type: "select",
+      section: "variants",
+      options: ["Adjustable Padded Shoulder Straps", "Removable Chain Strap", "Dual Reinforced Carry Handles", "Elastic Hook Strap", "None"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Bags & Accessories"
+      }
+    },
+    {
+      key: "bagCapacity",
+      label: "Volume Capacity",
+      type: "select",
+      section: "variants",
+      options: ["Under 5L (Compact)", "5L - 15L (Medium)", "15L - 30L (Daily)", "Over 30L (Travel)", "One Size (Accessory)"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Bags & Accessories"
+      }
+    },
+    {
+      key: "useCase",
+      label: "Primary Intended Use",
+      type: "select",
+      section: "variants",
+      options: ["Daily Commute & Office", "Gym & Active Sports", "Weekend Travel & Outing", "Formal & Evening Accents"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Bags & Accessories"
+      }
+    },
+    // Fragrances category-specific fields
+    {
+      key: "volume",
+      label: "Volume Options",
+      type: "select",
+      section: "variants",
+      options: ["50ml", "100ml", "150ml", "Sample Vial (2ml)"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Fragrances"
+      }
+    },
+    {
+      key: "scentFamily",
+      label: "Olfactive Scent Sensation Family",
+      type: "select",
+      section: "variants",
+      options: ["Woody & Earthy", "Oriental & Amber", "Fresh & Citrusy", "Warm & Spicy", "Floral & Aromatic"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Fragrances"
+      }
+    },
+    {
+      key: "fragranceGender",
+      label: "Target Profile Scent",
+      type: "radio",
+      section: "variants",
+      options: ["Unisex / Fluid", "Pour Homme (Masculine)", "Pour Femme (Feminine)"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Fragrances"
+      }
+    },
+    {
+      key: "concentration",
+      label: "Fragrance Strength Profile",
+      type: "select",
+      section: "variants",
+      options: ["Extrait de Parfum (Highest)", "Eau de Parfum (EDP)", "Eau de Toilette (EDT)", "Eau de Cologne"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Fragrances"
+      }
+    },
+    {
+      key: "longevity",
+      label: "Average Scent Projection Longevity",
+      type: "select",
+      section: "variants",
+      options: ["Light (2-4 Hours)", "Moderate (4-6 Hours)", "Long-Lasting (6-8 Hours)", "Eternal (8-12+ Hours)"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Fragrances"
+      }
+    },
+    {
+      key: "notes",
+      label: "Olfactive Fragrance Notes",
+      type: "multiselect",
+      section: "variants",
+      options: ["Bergamot", "Sandalwood", "Amber Noir", "Malawian Vetiver", "Sweet Vanilla", "Oud Wood", "Black Pepper", "Cedarwood", "Patchouli", "Neroli", "Cardamom"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Fragrances"
+      }
+    },
+    // Delivery fields
+    {
       key: "deliveryMethod",
-      label: "Delivery Method",
+      label: "Default Delivery Method",
       type: "select",
       required: true,
       section: "delivery",
@@ -214,17 +451,18 @@ export const PRODUCT_SCHEMA: ProductSchema = {
     },
     {
       key: "deliveryNote",
-      label: "Delivery Note",
+      label: "Delivery Guidelines / Notes",
       type: "textarea",
       section: "delivery",
-      placeholder: "Any special delivery notes",
+      placeholder: "Provide special local handoff or delivery notes here...",
     },
+    // Extras / details
     {
       key: "details",
-      label: "Details",
+      label: "Highlighted Selling Points",
       type: "multiselect",
       section: "extras",
-      options: ["Premium finish", "Limited edition", "Handmade", "Locally sourced"],
+      options: ["Premium finish", "Limited edition", "Handmade", "Locally sourced", "Ethically Crafted", "Waterproof Materials"],
     },
   ],
 };
@@ -246,6 +484,27 @@ export function createEmptyProductDraft(): ProductDraftValues {
     deliveryMethod: "",
     deliveryNote: "",
     details: [],
+
+    // Defaults for Apparel
+    fit: "Regular Fit",
+    material: "100% Malawian Cotton",
+    apparelGender: "Unisex",
+    sleeveType: "Short Sleeve",
+
+    // Defaults for Bags
+    bagType: "Backpack",
+    bagMaterial: "Full-Grain Genuine Leather",
+    strapType: "Adjustable Padded Shoulder Straps",
+    bagCapacity: "15L - 30L (Daily)",
+    useCase: "Daily Commute & Office",
+
+    // Defaults for Fragrances
+    volume: "100ml",
+    scentFamily: "Woody & Earthy",
+    fragranceGender: "Unisex / Fluid",
+    concentration: "Eau de Parfum (EDP)",
+    longevity: "Long-Lasting (6-8 Hours)",
+    notes: []
   };
 }
 

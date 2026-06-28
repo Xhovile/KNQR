@@ -19,6 +19,7 @@ import Shop from "./Shop";
 import ApparelPage from "./ApparelPage";
 import BagsAndAccessoriesPage from "./BagsAndAccessoriesPage";
 import FragrancesPage from "./FragrancesPage";
+import Skeleton from "./components/Skeleton";
 import { ProductDraftValues } from "./productSchema";
 
 import { PRODUCTS } from "./data";
@@ -35,6 +36,99 @@ export default function App() {
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [currentSkeletonType, setCurrentSkeletonType] = useState<"grid" | "detail" | "form" | "home">("home");
+
+  const transitionTo = (
+    tab: ActiveTab,
+    product: Product | null = null,
+    isCreating = false,
+    editing: Product | null = null,
+    skipPush = false
+  ) => {
+    let skeletonType: "grid" | "detail" | "form" | "home" = "grid";
+    if (isCreating || editing) {
+      skeletonType = "form";
+    } else if (product) {
+      skeletonType = "detail";
+    } else if (tab === "home") {
+      skeletonType = "home";
+    }
+
+    setCurrentSkeletonType(skeletonType);
+    setIsPageLoading(true);
+
+    setActiveTab(tab);
+    setSelectedProduct(product);
+    setIsCreatingProduct(isCreating);
+    setEditingProduct(editing);
+
+    // Scroll to top of the page on transition
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (!skipPush) {
+      const stateObj = {
+        activeTab: tab,
+        selectedProductId: product ? product.id : null,
+        isCreatingProduct: isCreating,
+        editingProductId: editing ? editing.id : null,
+      };
+      window.history.pushState(stateObj, "");
+    }
+
+    setTimeout(() => {
+      setIsPageLoading(false);
+    }, 450);
+  };
+
+  const handleGoBack = () => {
+    if (window.history.state && window.history.length > 1) {
+      window.history.back();
+    } else {
+      transitionTo("home", null, false, null);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state) {
+        const foundProduct = PRODUCTS.find((p) => p.id === state.selectedProductId) || null;
+        const actualProduct = productsList.find((p) => p.id === state.selectedProductId) || foundProduct;
+        
+        const foundEditing = PRODUCTS.find((p) => p.id === state.editingProductId) || null;
+        const actualEditing = productsList.find((p) => p.id === state.editingProductId) || foundEditing;
+
+        transitionTo(
+          state.activeTab || "home",
+          actualProduct,
+          !!state.isCreatingProduct,
+          actualEditing,
+          true
+        );
+      } else {
+        transitionTo("home", null, false, null, true);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    // Initial state setup
+    if (!window.history.state) {
+      const initialState = {
+        activeTab: "home",
+        selectedProductId: null,
+        isCreatingProduct: false,
+        editingProductId: null,
+      };
+      window.history.replaceState(initialState, "");
+    }
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [productsList]);
+
 
   const handleToggleWishlist = (productId: string) => {
     setWishlist((prev) =>
@@ -182,29 +276,53 @@ export default function App() {
   return (
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
-        {isCreatingProduct ? (
+        {isPageLoading ? (
+          <motion.div
+            key="skeleton-loader-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex-grow flex flex-col justify-center"
+          >
+            {currentSkeletonType === "grid" || currentSkeletonType === "home" ? (
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <Navigation 
+                  activeTab={activeTab} 
+                  setActiveTab={(tab) => transitionTo(tab, null, false, null)} 
+                  onNavigate={handleNavigation} 
+                  onCreateProduct={() => transitionTo(activeTab, null, true, null)}
+                />
+                <Skeleton type={currentSkeletonType} />
+                <Footer />
+              </div>
+            ) : (
+              <Skeleton type={currentSkeletonType} />
+            )}
+          </motion.div>
+        ) : isCreatingProduct ? (
           <AddProduct
             key="add-product-screen"
-            onCancel={() => setIsCreatingProduct(false)}
+            onCancel={handleGoBack}
             onSubmit={handleCreateProductSubmit}
           />
         ) : editingProduct ? (
           <EditProduct
             key="edit-product-screen"
             product={editingProduct}
-            onCancel={() => setEditingProduct(null)}
+            onCancel={handleGoBack}
             onSubmit={handleEditProductSubmit}
           />
         ) : selectedProduct ? (
           <ProductDetailPage
             key="product-detail-screen"
             product={selectedProduct}
-            onBack={() => setSelectedProduct(null)}
+            onBack={handleGoBack}
             onAddToCart={handleAddToCart}
             priceCurrency={priceCurrency}
             onEditProduct={(prod) => {
-              setEditingProduct(prod);
-              setSelectedProduct(null);
+              transitionTo(activeTab, null, false, prod);
             }}
           />
         ) : (
@@ -222,9 +340,9 @@ export default function App() {
             {/* 2. Horizontal Navigation */}
             <Navigation 
               activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
+              setActiveTab={(tab) => transitionTo(tab, null, false, null)} 
               onNavigate={handleNavigation} 
-              onCreateProduct={() => setIsCreatingProduct(true)}
+              onCreateProduct={() => transitionTo(activeTab, null, true, null)}
             />
 
             <AnimatePresence mode="wait">
@@ -239,7 +357,7 @@ export default function App() {
                 >
                   <Shop
                     products={productsList}
-                    onViewDetails={(product) => setSelectedProduct(product)}
+                    onViewDetails={(product) => transitionTo(activeTab, product, false, null)}
                     onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.name)}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
@@ -257,15 +375,12 @@ export default function App() {
                 >
                   <ApparelPage
                     products={productsList}
-                    onViewDetails={(product) => setSelectedProduct(product)}
+                    onViewDetails={(product) => transitionTo(activeTab, product, false, null)}
                     onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.value)}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
-                    onBackToHome={() => {
-                      setActiveTab("home");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
+                    onBackToHome={handleGoBack}
                   />
                 </motion.div>
               ) : activeTab === "bags-accessories" ? (
@@ -279,15 +394,12 @@ export default function App() {
                 >
                   <BagsAndAccessoriesPage
                     products={productsList}
-                    onViewDetails={(product) => setSelectedProduct(product)}
+                    onViewDetails={(product) => transitionTo(activeTab, product, false, null)}
                     onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.value)}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
-                    onBackToHome={() => {
-                      setActiveTab("home");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
+                    onBackToHome={handleGoBack}
                   />
                 </motion.div>
               ) : activeTab === "fragrances" ? (
@@ -301,15 +413,12 @@ export default function App() {
                 >
                   <FragrancesPage
                     products={productsList}
-                    onViewDetails={(product) => setSelectedProduct(product)}
+                    onViewDetails={(product) => transitionTo(activeTab, product, false, null)}
                     onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.value)}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
-                    onBackToHome={() => {
-                      setActiveTab("home");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
+                    onBackToHome={handleGoBack}
                   />
                 </motion.div>
               ) : (
@@ -322,28 +431,27 @@ export default function App() {
                   className="flex flex-col"
                 >
                   {/* 3. Hero Section */}
-                  <Hero onShopClick={() => { setActiveTab("shop"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+                  <Hero onShopClick={() => transitionTo("shop", null, false, null)} />
 
                   {/* 4. Featured Collections Shelf */}
                   <Collection
                     products={productsList}
                     onSelectCollection={(collectionCategory) => {
                       const lower = collectionCategory.toLowerCase();
+                      let tab: ActiveTab = "apparel";
                       if (lower.includes("bags") || lower.includes("accessories")) {
-                        setActiveTab("bags-accessories");
+                        tab = "bags-accessories";
                       } else if (lower.includes("fragrance")) {
-                        setActiveTab("fragrances");
-                      } else {
-                        setActiveTab("apparel");
+                        tab = "fragrances";
                       }
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      transitionTo(tab, null, false, null);
                     }}
                     onAddToCart={(prod) => handleAddToCart(prod, 1, prod.sizes?.[0], prod.colors?.[0])}
                     priceCurrency={priceCurrency}
                   />
 
                   {/* 5. Promotional Banner Overlay */}
-                  <Promo onShopClick={() => { setActiveTab("shop"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+                  <Promo onShopClick={() => transitionTo("shop", null, false, null)} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -393,4 +501,5 @@ export default function App() {
       />
     </div>
   );
+
 }
