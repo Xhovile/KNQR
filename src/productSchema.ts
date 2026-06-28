@@ -98,8 +98,6 @@ export const PRODUCT_SCHEMA: ProductSchema = {
     "priceMWK",
     "collectionCategory",
     "category",
-    "image",
-    "images",
     "description",
     "status",
     "stock",
@@ -121,7 +119,7 @@ export const PRODUCT_SCHEMA: ProductSchema = {
     {
       key: "media",
       title: "Media",
-      description: "Upload primary and secondary gallery photos.",
+      description: "Select product images from the device. Files stay staged locally until Publish.",
       fields: ["image", "images"],
     },
     {
@@ -238,17 +236,18 @@ export const PRODUCT_SCHEMA: ProductSchema = {
       key: "image",
       label: "Primary Image",
       type: "text",
-      required: true,
+      required: false,
       section: "media",
-      placeholder: "Main image URL",
+      placeholder: "Managed after publish",
+      helpText: "The editor stages device images locally and saves Cloudinary URLs only when you publish.",
     },
     {
       key: "images",
       label: "Gallery Images",
       type: "image[]",
-      required: true,
+      required: false,
       section: "media",
-      helpText: "Store uploaded image URLs here.",
+      helpText: "Device-selected photos are uploaded on Publish and stored as URLs in the product record.",
     },
     {
       key: "sizes",
@@ -272,7 +271,6 @@ export const PRODUCT_SCHEMA: ProductSchema = {
         value: ["Apparel", "Bags & Accessories"]
       }
     },
-    // Apparel category-specific fields
     {
       key: "fit",
       label: "Product Fit Style",
@@ -317,7 +315,6 @@ export const PRODUCT_SCHEMA: ProductSchema = {
         value: "Apparel"
       }
     },
-    // Bags & Accessories category-specific fields
     {
       key: "bagType",
       label: "Accessory / Bag Category",
@@ -373,7 +370,6 @@ export const PRODUCT_SCHEMA: ProductSchema = {
         value: "Bags & Accessories"
       }
     },
-    // Fragrances category-specific fields
     {
       key: "volume",
       label: "Volume Options",
@@ -440,7 +436,6 @@ export const PRODUCT_SCHEMA: ProductSchema = {
         value: "Fragrances"
       }
     },
-    // Delivery fields
     {
       key: "deliveryMethod",
       label: "Default Delivery Method",
@@ -456,7 +451,6 @@ export const PRODUCT_SCHEMA: ProductSchema = {
       section: "delivery",
       placeholder: "Provide special local handoff or delivery notes here...",
     },
-    // Extras / details
     {
       key: "details",
       label: "Highlighted Selling Points",
