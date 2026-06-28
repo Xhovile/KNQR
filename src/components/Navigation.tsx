@@ -7,9 +7,10 @@ interface NavigationProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   onNavigate: (tab: ActiveTab) => void;
+  onCreateProduct?: () => void;
 }
 
-export default function Navigation({ activeTab, setActiveTab, onNavigate }: NavigationProps) {
+export default function Navigation({ activeTab, setActiveTab, onNavigate, onCreateProduct }: NavigationProps) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [activeNotification, setActiveNotification] = React.useState<string | null>(null);
 
@@ -28,6 +29,11 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate }: Navi
   ];
 
   const handlePlaceholderClick = (actionName: string) => {
+    if (actionName === "Create Product" && onCreateProduct) {
+      onCreateProduct();
+      setDropdownOpen(false);
+      return;
+    }
     setActiveNotification(`${actionName} active`);
     setDropdownOpen(false);
     setTimeout(() => {

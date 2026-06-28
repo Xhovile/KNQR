@@ -8,6 +8,7 @@ interface ProductDetailPageProps {
   onBack: () => void;
   onAddToCart: (product: Product, quantity: number, size?: string, color?: string) => void;
   priceCurrency: "USD" | "MWK";
+  onEditProduct?: (product: Product) => void;
 }
 
 export default function ProductDetailPage({
@@ -15,6 +16,7 @@ export default function ProductDetailPage({
   onBack,
   onAddToCart,
   priceCurrency,
+  onEditProduct,
 }: ProductDetailPageProps) {
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "");
@@ -25,6 +27,8 @@ export default function ProductDetailPage({
   const [activeNotification, setActiveNotification] = useState<string | null>(null);
 
   useEffect(() => {
+    setSelectedSize(product.sizes?.[0] || "");
+    setSelectedColor(product.colors?.[0] || "");
     setActiveImageIndex(0);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [product.id]);
@@ -38,6 +42,16 @@ export default function ProductDetailPage({
   ];
 
   const handlePlaceholderClick = (actionName: string) => {
+    if (actionName === "Edit" && onEditProduct) {
+      onEditProduct(product);
+      setDropdownOpen(false);
+      return;
+    }
+    if (actionName === "Add to Cart") {
+      handleAddToCart();
+      setDropdownOpen(false);
+      return;
+    }
     setActiveNotification(`${actionName} active`);
     setDropdownOpen(false);
     setTimeout(() => {

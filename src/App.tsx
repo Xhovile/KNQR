@@ -13,17 +13,23 @@ import Promo from "./components/Promo";
 import Footer from "./components/Footer";
 import Cart from "./components/Cart";
 import ProductDetailPage from "./ProductDetailPage";
+import AddProduct from "./AddProduct";
+import EditProduct from "./EditProduct";
+import { ProductDraftValues } from "./productSchema";
 
 import { PRODUCTS } from "./data";
 import { Product, CartItem, ActiveTab } from "./types";
 
 export default function App() {
+  const [productsList, setProductsList] = useState<Product[]>(PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [priceCurrency] = useState<"USD" | "MWK">("MWK");
   const [activeTab, setActiveTab] = useState<ActiveTab>("home");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   // Monitor scroll for "back to top" button visibility
   useEffect(() => {
@@ -106,15 +112,92 @@ export default function App() {
     setActiveTab("home");
   };
 
+  const handleCreateProductSubmit = (values: ProductDraftValues) => {
+    const newId = `knqr-${values.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
+    const newProduct: Product = {
+      id: newId,
+      name: values.name,
+      priceUSD: values.priceUSD || 0,
+      priceMWK: values.priceMWK || 0,
+      image: values.image || "",
+      images: values.images || [],
+      category: values.collectionCategory || "Apparel",
+      collectionCategory: values.collectionCategory,
+      description: values.description,
+      sizes: values.sizes,
+      colors: values.colors,
+      details: values.details,
+      status: values.status,
+      stock: values.stock || 0,
+      delivery: {
+        available: values.deliveryMethod !== "Pickup",
+        methods: [values.deliveryMethod].filter(Boolean) as string[],
+        note: values.deliveryNote
+      }
+    };
+
+    setProductsList((prev) => [newProduct, ...prev]);
+    setIsCreatingProduct(false);
+  };
+
+  const handleEditProductSubmit = (values: ProductDraftValues) => {
+    if (!editingProduct) return;
+
+    const updatedProduct: Product = {
+      ...editingProduct,
+      name: values.name,
+      priceUSD: values.priceUSD || 0,
+      priceMWK: values.priceMWK || 0,
+      image: values.image || "",
+      images: values.images || [],
+      category: values.collectionCategory || "Apparel",
+      collectionCategory: values.collectionCategory,
+      description: values.description,
+      sizes: values.sizes,
+      colors: values.colors,
+      details: values.details,
+      status: values.status,
+      stock: values.stock || 0,
+      delivery: {
+        available: values.deliveryMethod !== "Pickup",
+        methods: [values.deliveryMethod].filter(Boolean) as string[],
+        note: values.deliveryNote
+      }
+    };
+
+    setProductsList((prev) =>
+      prev.map((p) => (p.id === editingProduct.id ? updatedProduct : p))
+    );
+    setEditingProduct(null);
+  };
+
   return (
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
-        {selectedProduct ? (
+        {isCreatingProduct ? (
+          <AddProduct
+            key="add-product-screen"
+            onCancel={() => setIsCreatingProduct(false)}
+            onSubmit={handleCreateProductSubmit}
+          />
+        ) : editingProduct ? (
+          <EditProduct
+            key="edit-product-screen"
+            product={editingProduct}
+            onCancel={() => setEditingProduct(null)}
+            onSubmit={handleEditProductSubmit}
+          />
+        ) : selectedProduct ? (
           <ProductDetailPage
+            key="product-detail-screen"
             product={selectedProduct}
             onBack={() => setSelectedProduct(null)}
             onAddToCart={handleAddToCart}
             priceCurrency={priceCurrency}
+            onEditProduct={(prod) => {
+              setEditingProduct(prod);
+              setSelectedProduct(null);
+            }}
           />
         ) : (
           <motion.div
@@ -133,6 +216,7 @@ export default function App() {
               activeTab={activeTab} 
               setActiveTab={setActiveTab} 
               onNavigate={handleNavigation} 
+              onCreateProduct={() => setIsCreatingProduct(true)}
             />
 
             {/* 3. Hero Section */}
@@ -140,7 +224,7 @@ export default function App() {
 
             {/* 4. Featured Collections Shelf */}
             <Collection
-              products={PRODUCTS}
+              products={productsList}
               onSelectProduct={(product) => setSelectedProduct(product)}
               onAddToCart={(prod) => handleAddToCart(prod, 1, prod.sizes?.[0], prod.colors?.[0])}
               priceCurrency={priceCurrency}

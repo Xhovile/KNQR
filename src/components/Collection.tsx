@@ -104,9 +104,6 @@ export default function Collection({
               </div>
 
               <div className="text-center w-full px-2" id={`card-info-${product.id}`}>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-chocolate/45 mb-2">
-                  {product.category}
-                </p>
                 <h4
                   className="font-serif text-xl font-normal text-chocolate hover:text-chocolate-light transition-colors cursor-pointer tracking-wide"
                   onClick={() => onSelectProduct(product)}
