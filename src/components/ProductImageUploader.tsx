@@ -1,216 +1,201 @@
-import React, { useState, useRef } from "react";
-import { Upload, Trash2, HelpCircle } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-interface ProductImageUploaderProps {
-  images: string[];
-  primaryImage: string;
-  onImagesChange: (urls: string[]) => void;
-  onPrimaryChange: (url: string) => void;
-  errors?: Record<string, string>;
+export type ProductImageUploaderProps = {
+  files: File[];
+  onFilesChange: (files: File[]) => void;
+  maxFiles?: number;
+  disabled?: boolean;
+  title?: string;
+  description?: string;
+  className?: string;
+  accept?: string;
+};
+
+type PreviewItem = {
+  key: string;
+  src: string;
+  name: string;
+  file: File;
+};
+
+function createFileKey(file: File): string {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
-// Preset luxury images from the workspace for quick selection
-const PRESET_IMAGES = [
-  { label: "Hero Model", url: "/src/assets/images/knqr_hero_model_1782618845727.jpg" },
-  { label: "Earthy Apparel", url: "/src/assets/images/knqr_apparel_new_1782625253891.jpg" },
-  { label: "Sculpted Accessory", url: "/src/assets/images/knqr_accessory_new_1782625265014.jpg" },
-  { label: "Noir Essence Fragrance", url: "/src/assets/images/knqr_fragrance_new_1782625278359.jpg" },
-  { label: "Luxe Necklace", url: "/src/assets/images/knqr_necklace_1782618869518.jpg" },
-  { label: "Classic Black Shirt", url: "/src/assets/images/knqr_black_shirt_1782625829276.jpg" },
-  { label: "Tailored Trousers", url: "/src/assets/images/knqr_trousers_1782618856513.jpg" },
-];
-
 export default function ProductImageUploader({
-  images = [],
-  primaryImage = "",
-  onImagesChange,
-  onPrimaryChange,
-  errors = {},
+  files,
+  onFilesChange,
+  maxFiles = 10,
+  disabled = false,
+  title = 'Product images',
+  description = 'Select images from your device. They stay staged here until you publish the product.',
+  className = '',
+  accept = 'image/*',
 }: ProductImageUploaderProps) {
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [objectUrls, setObjectUrls] = useState<Record<string, string>>({});
 
-  const processFiles = (files: FileList) => {
-    const loadedUrls: string[] = [];
-    let count = 0;
+  const fileItems = useMemo(() => {
+    return files.map((file) => ({
+      key: createFileKey(file),
+      file,
+    }));
+  }, [files]);
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result && typeof e.target.result === "string") {
-          loadedUrls.push(e.target.result);
-          count++;
+  useEffect(() => {
+    const nextObjectUrls: Record<string, string> = {};
 
-          if (count === files.length) {
-            const updatedImages = [...images, ...loadedUrls];
-            onImagesChange(updatedImages);
-
-            // If primary is empty, set first as primary
-            if (!primaryImage) {
-              onPrimaryChange(loadedUrls[0]);
-            }
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+    fileItems.forEach(({ key, file }) => {
+      nextObjectUrls[key] = URL.createObjectURL(file);
     });
+
+    setObjectUrls((previous) => {
+      Object.values(previous).forEach((url) => URL.revokeObjectURL(url));
+      return nextObjectUrls;
+    });
+
+    return () => {
+      Object.values(nextObjectUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [fileItems]);
+
+  const previewItems: PreviewItem[] = fileItems.map(({ key, file }) => ({
+    key,
+    src: objectUrls[key],
+    name: file.name,
+    file,
+  }));
+
+  const remainingSlots = Math.max(0, maxFiles - previewItems.length);
+
+  const openFilePicker = () => {
+    if (disabled) return;
+    inputRef.current?.click();
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (!selected.length) return;
+
+    const nextFiles = [...files, ...selected].slice(0, maxFiles);
+    onFilesChange(nextFiles);
+    event.target.value = '';
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFiles(e.dataTransfer.files);
-    }
+  const removeLocalFile = (fileKey: string) => {
+    const nextFiles = files.filter((file) => createFileKey(file) !== fileKey);
+    onFilesChange(nextFiles);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      processFiles(e.target.files);
-    }
-  };
-
-  const handleRemoveImage = (indexToRemove: number) => {
-    const removedUrl = images[indexToRemove];
-    const nextImages = images.filter((_, idx) => idx !== indexToRemove);
-    onImagesChange(nextImages);
-
-    if (primaryImage === removedUrl) {
-      onPrimaryChange(nextImages[0] || "");
-    }
-  };
-
-  const handleSelectPresetImage = (url: string) => {
-    if (!images.includes(url)) {
-      onImagesChange([...images, url]);
-      if (!primaryImage) {
-        onPrimaryChange(url);
-      }
-    } else {
-      onPrimaryChange(url);
-    }
+  const clearAll = () => {
+    onFilesChange([]);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Drag & Drop Area */}
-      <div
-        onDragEnter={handleDrag}
-        onDragOver={handleDrag}
-        onDragLeave={handleDrag}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${
-          dragActive
-            ? "border-gold bg-gold/5"
-            : "border-cream/15 hover:border-gold/45 bg-chocolate/30"
-        }`}
-        id="media-drop-zone"
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          multiple
-          accept="image/*"
-          className="hidden"
-        />
-        <Upload className="w-10 h-10 text-gold mb-3 animate-pulse" />
-        <p className="text-xs tracking-wider uppercase font-mono text-cream/80 text-center">
-          Drag & Drop Images here
-        </p>
-        <p className="text-[10px] text-cream/40 mt-1.5 text-center uppercase font-sans">
-          or click to browse local files (processed locally via base64)
-        </p>
-      </div>
+    <section className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ${className}`}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-600">{description}</p>
+        </div>
 
-      {/* Luxury Preset Selection */}
-      <div className="space-y-2">
-        <label className="text-[10px] font-mono tracking-widest uppercase text-cream/55 flex items-center space-x-1.5">
-          <HelpCircle className="w-3.5 h-3.5 text-gold" />
-          <span>Quick-select high-res preset images from the workspace</span>
-        </label>
-        <div className="flex gap-2 overflow-x-auto pb-3 select-none scrollbar-thin">
-          {PRESET_IMAGES.map((preset) => (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={openFilePicker}
+            disabled={disabled || remainingSlots <= 0}
+            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {previewItems.length ? 'Add more images' : 'Select images'}
+          </button>
+
+          {previewItems.length > 0 && (
             <button
-              key={preset.label}
               type="button"
-              onClick={() => handleSelectPresetImage(preset.url)}
-              className="px-3 py-1.5 bg-chocolate border border-cream/10 rounded-lg text-[10px] tracking-wider uppercase font-mono text-cream/70 hover:text-gold hover:border-gold/50 transition-all shrink-0 cursor-pointer"
+              onClick={clearAll}
+              disabled={disabled}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              + {preset.label}
+              Clear all
             </button>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Preview Grid */}
-      {images.length > 0 && (
-        <div className="space-y-3">
-          <label className="text-[10px] font-mono tracking-widest uppercase text-gold">
-            Media Gallery ({images.length} item{images.length > 1 ? "s" : ""})
-          </label>
-          <p className="text-[10px] font-mono text-cream/40 uppercase">
-            💡 Click on any image below to designate it as the <strong className="text-gold">Primary Cover Image</strong>.
-          </p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={disabled || remainingSlots <= 0}
+      />
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" id="image-preview-grid">
-            {images.map((url, idx) => {
-              const isPrimary = primaryImage === url;
-              return (
-                <div
-                  key={idx}
-                  className={`relative aspect-[4/5] rounded-xl overflow-hidden border-2 transition-all ${
-                    isPrimary ? "border-gold ring-2 ring-gold/20" : "border-cream/10"
-                  }`}
-                >
+      <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+        {previewItems.length === 0 ? (
+          <button
+            type="button"
+            onClick={openFilePicker}
+            disabled={disabled}
+            className="flex w-full flex-col items-center justify-center rounded-xl py-10 text-center text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="text-sm font-medium text-slate-900">No images selected yet</span>
+            <span className="mt-1 text-sm">Tap to choose product photos from your device</span>
+            <span className="mt-2 text-xs text-slate-500">Previews stay here until you publish</span>
+          </button>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {previewItems.map((item) => (
+              <div key={item.key} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="aspect-square w-full bg-slate-100">
                   <img
-                    src={url}
-                    alt={`Preview ${idx + 1}`}
-                    className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => onPrimaryChange(url)}
-                    referrerPolicy="no-referrer"
+                    src={item.src}
+                    alt={item.name}
+                    className="h-full w-full object-cover"
                   />
-
-                  {/* Overlay indicators */}
-                  {isPrimary && (
-                    <div className="absolute top-2 left-2 bg-gold text-chocolate font-mono text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                      Primary
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(idx)}
-                    className="absolute bottom-2 right-2 p-1.5 bg-chocolate-dark/80 hover:bg-rose-600 rounded-lg text-cream/70 hover:text-white transition-colors cursor-pointer"
-                    title="Remove image from gallery"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
-      {errors.images && (
-        <p className="text-xs text-rose-400 font-mono tracking-wide">{errors.images}</p>
-      )}
-      {errors.image && (
-        <p className="text-xs text-rose-400 font-mono tracking-wide">{errors.image}</p>
-      )}
-    </div>
+                <div className="border-t border-slate-200 p-2">
+                  <p className="truncate text-xs font-medium text-slate-700" title={item.name}>
+                    {item.name}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-slate-500">Staged for publish</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeLocalFile(item.key)}
+                  disabled={disabled}
+                  className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white opacity-100 transition group-hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={`Remove ${item.name}`}
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+
+            {remainingSlots > 0 && (
+              <button
+                type="button"
+                onClick={openFilePicker}
+                disabled={disabled}
+                className="flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="text-2xl font-light">+</span>
+                <span className="mt-1 text-xs font-medium">Add photos</span>
+                <span className="mt-1 text-[11px] text-slate-500">{remainingSlots} slot{remainingSlots === 1 ? '' : 's'} left</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+        <span>{previewItems.length} / {maxFiles} selected</span>
+        <span>Images stay local until Publish</span>
+      </div>
+    </section>
   );
 }
