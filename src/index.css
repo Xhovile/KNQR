@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cinzel:wght@400;500;600;700;800;900&family=Prata&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-chocolate: #2a2b2d; /* Premium Charcoal Slate Gray */
+  --color-cream: #f3ede1;     /* Warm Ivory / Elegant Cream */
+  --color-cream-muted: rgba(243, 237, 225, 0.6); /* Muted Cream */
+  --color-gold: #d4af37;      /* Subtle Gold Accent */
+  --color-light-brown: #dfd1be; /* Premium Warm Light Brown Accent */
+  --color-chocolate-light: #3e4044; /* Lighter Charcoal Gray for secondary surfaces */
+  --color-chocolate-dark: #18191b;  /* Even darker charcoal gray for footer */
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-preospe: "Cinzel", "Prata", "Playfair Display", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #2a2b2d;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 3px;
+}
+
+body {
+  background-color: #2a2b2d;
+  color: #f3ede1;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Luxury visual accents */
+.luxury-border {
+  border: 1px solid rgba(243, 237, 225, 0.15);
+}
+
+.luxury-glow {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}

@@ -1,0 +1,6 @@
+{
+  "name": "KNQR Online",
+  "description": "KNQR Online is the premium digital boutique of the KNQR Lifestyle Brand, selling locally designed Malawian apparel and accessories promoting a mindset of ambition, confidence, and self-improvement.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
