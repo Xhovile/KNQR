@@ -1,19 +1,17 @@
-import React, { useState } from "react";
-import { Undo, Eye, Sparkles, X, Check } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Undo, Eye, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  ProductDraftValues, 
-  PRODUCT_SCHEMA, 
-  createEmptyProductDraft, 
-  SUBCATEGORIES_MAP, 
-  ProductStatus, 
+import {
+  ProductDraftValues,
+  PRODUCT_SCHEMA,
+  createEmptyProductDraft,
+  SUBCATEGORIES_MAP,
   ProductDeliveryMethod,
-  ProductSchemaField
+  ProductSchemaField,
 } from "../productSchema";
 import { Product } from "../types";
-import { uploadToCloudinary, isBase64Image } from "../utils/cloudinary";
+import { uploadToCloudinary } from "../utils/cloudinary";
 
-// Import modular subcomponents
 import FormAccordion from "./FormAccordion";
 import FormField from "./FormField";
 import ProductImageUploader from "./ProductImageUploader";
@@ -26,13 +24,20 @@ interface ProductFormProps {
   onSubmit: (values: ProductDraftValues) => void;
 }
 
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function getExistingImages(values: ProductDraftValues): string[] {
+  return uniqueStrings([values.image, ...(values.images || [])]);
+}
+
 export default function ProductForm({
   mode,
   initialValues,
   onCancel,
   onSubmit,
 }: ProductFormProps) {
-  // 1. Initialize state from initial values
   const [values, setValues] = useState<ProductDraftValues>(() => {
     const defaultDraft = createEmptyProductDraft();
     if (!initialValues) return defaultDraft;
@@ -58,7 +63,6 @@ export default function ProductForm({
         deliveryNote: prod.delivery?.note || "",
         details: prod.details || [],
 
-        // Populate dynamic category fields if they exist
         fit: (prod as any).fit || "Regular Fit",
         material: (prod as any).material || "100% Malawian Cotton",
         apparelGender: (prod as any).apparelGender || "Unisex",
@@ -77,14 +81,16 @@ export default function ProductForm({
         longevity: (prod as any).longevity || "Long-Lasting (6-8 Hours)",
         notes: (prod as any).notes || [],
       };
-    } else {
-      return {
-        ...defaultDraft,
-        ...initialValues,
-      } as ProductDraftValues;
     }
+
+    return {
+      ...defaultDraft,
+      ...initialValues,
+    } as ProductDraftValues;
   });
 
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     basic: true,
@@ -94,13 +100,27 @@ export default function ProductForm({
     delivery: false,
     extras: false,
   });
-
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgressMsg, setUploadProgressMsg] = useState("");
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Helper to check if a schema field's conditions are currently met
+  const existingImages = useMemo(() => getExistingImages(values), [values.image, values.images]);
+
+  useEffect(() => {
+    if (mediaFiles.length === 0) {
+      setMediaPreviewUrl("");
+      return;
+    }
+
+    const preview = URL.createObjectURL(mediaFiles[0]);
+    setMediaPreviewUrl(preview);
+
+    return () => {
+      URL.revokeObjectURL(preview);
+    };
+  }, [mediaFiles]);
+
   const isFieldActive = (field: ProductSchemaField, currentValues: ProductDraftValues) => {
     if (!field.dependsOn) return true;
     const { field: dependField, value: dependValue } = field.dependsOn;
@@ -111,13 +131,11 @@ export default function ProductForm({
     return actualValue === dependValue;
   };
 
-  // Helper to check if a section contains any validation errors
   const doesSectionHaveError = (sectionKey: string) => {
     const sectionFields = PRODUCT_SCHEMA.sections.find((s) => s.key === sectionKey)?.fields || [];
     return sectionFields.some((fKey) => !!errors[fKey]);
   };
 
-  // Toggle Accordion open state
   const handleToggleSection = (sectionKey: string) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -125,12 +143,10 @@ export default function ProductForm({
     }));
   };
 
-  // Single dynamic field changer
   const handleChange = (key: string, val: any) => {
     setValues((prev) => {
       const next = { ...prev, [key]: val };
 
-      // Reset subcategory if collection category changes
       if (key === "collectionCategory") {
         const subcategories = SUBCATEGORIES_MAP[val] || [];
         next.category = subcategories[0] || "";
@@ -139,7 +155,6 @@ export default function ProductForm({
       return next;
     });
 
-    // Clear error
     if (errors[key]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -149,35 +164,27 @@ export default function ProductForm({
     }
   };
 
-  // Submit and upload logic
   const handlePublish = async () => {
     const validationErrors: Record<string, string> = {};
 
-    // Validate active fields based on schema constraints
     PRODUCT_SCHEMA.fields.forEach((field) => {
-      if (isFieldActive(field, values)) {
-        const val = values[field.key as keyof ProductDraftValues];
+      if (!isFieldActive(field, values)) return;
+      if (field.key === "image" || field.key === "images") return;
 
-        // Custom handle for images
-        if (field.key === "image" && !values.image) {
-          validationErrors.image = "Primary image is required.";
-        }
-        if (field.key === "images" && (!values.images || values.images.length === 0)) {
-          validationErrors.images = "At least one gallery image is required.";
-        }
-
-        if (field.required && field.key !== "image" && field.key !== "images") {
-          if (val === null || val === undefined || val === "") {
-            validationErrors[field.key] = `${field.label} is required.`;
-          }
-        }
+      const val = values[field.key as keyof ProductDraftValues];
+      if (field.required && (val === null || val === undefined || val === "")) {
+        validationErrors[field.key] = `${field.label} is required.`;
       }
     });
+
+    const hasAnySavedOrStagedMedia = existingImages.length > 0 || mediaFiles.length > 0;
+    if (!hasAnySavedOrStagedMedia) {
+      validationErrors.images = "At least one product image is required.";
+    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
 
-      // Open all accordions that have errors
       const newOpenState = { ...openSections };
       PRODUCT_SCHEMA.sections.forEach((section) => {
         const hasSectionError = section.fields.some((fKey) => !!validationErrors[fKey]);
@@ -187,7 +194,6 @@ export default function ProductForm({
       });
       setOpenSections(newOpenState);
 
-      // Scroll to first error
       const firstErrorKey = Object.keys(validationErrors)[0];
       setTimeout(() => {
         const errorElement = document.getElementById(`field-group-${firstErrorKey}`);
@@ -199,49 +205,45 @@ export default function ProductForm({
       return;
     }
 
-    // Process local files (base64) to Cloudinary if they exist
     setIsUploading(true);
     setUploadError(null);
-    setUploadProgressMsg("Checking product media files...");
+    setUploadProgressMsg("Preparing product media...");
 
     try {
-      const allImages = [values.image, ...values.images];
-      const uniqueBase64s = Array.from(new Set(allImages.filter(isBase64Image)));
+      const uploadedUrls: string[] = [];
 
-      const uploadedUrls: Record<string, string> = {};
-
-      if (uniqueBase64s.length > 0) {
-        for (let i = 0; i < uniqueBase64s.length; i++) {
-          const base64 = uniqueBase64s[i];
-          setUploadProgressMsg(`Uploading image ${i + 1} of ${uniqueBase64s.length} to Cloudinary...`);
-          const secureUrl = await uploadToCloudinary(base64);
-          uploadedUrls[base64] = secureUrl;
-        }
+      for (let i = 0; i < mediaFiles.length; i++) {
+        const file = mediaFiles[i];
+        setUploadProgressMsg(`Uploading image ${i + 1} of ${mediaFiles.length} to Cloudinary...`);
+        const secureUrl = await uploadToCloudinary(file);
+        uploadedUrls.push(secureUrl);
       }
 
-      const finalPrimaryImage = uploadedUrls[values.image] || values.image;
-      const finalGalleryImages = values.images.map((img) => uploadedUrls[img] || img);
+      const finalGallery = uniqueStrings([...existingImages, ...uploadedUrls]);
+      const finalPrimaryImage = finalGallery[0] || "";
 
       const finalValues: ProductDraftValues = {
         ...values,
         image: finalPrimaryImage,
-        images: finalGalleryImages,
+        images: finalGallery.slice(1),
       };
 
-      setUploadProgressMsg("Syncing product to database...");
+      setUploadProgressMsg("Finalizing product...");
       onSubmit(finalValues);
+      setIsUploading(false);
     } catch (err: any) {
       console.error("Upload process failed:", err);
-      setUploadError(err.message || "An unexpected error occurred during image upload.");
+      setUploadError(err?.message || "An unexpected error occurred during image upload.");
+      setIsUploading(false);
     }
   };
 
   const displayPriceUSD = values.priceUSD ? `$${Number(values.priceUSD).toLocaleString()}` : "$0";
   const displayPriceMWK = values.priceMWK ? `MK ${Number(values.priceMWK).toLocaleString()}` : "MK 0";
+  const previewImage = mediaPreviewUrl || values.image || existingImages[0] || "";
 
   return (
     <div className="min-h-screen bg-light-brown text-chocolate flex flex-col font-sans" id="product-form-root">
-      {/* Sticky Header */}
       <div className="sticky top-0 z-40 bg-white/40 border-b border-chocolate/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between text-chocolate">
         <div className="flex items-center space-x-4">
           <button
@@ -263,7 +265,6 @@ export default function ProductForm({
           </div>
         </div>
 
-        {/* Mode Toggles */}
         <div className="flex items-center space-x-2">
           <div className="hidden lg:flex p-1 bg-white/40 border border-chocolate/10 rounded-xl space-x-1">
             <button
@@ -288,19 +289,14 @@ export default function ProductForm({
         </div>
       </div>
 
-      {/* Main Content Layout */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left Column: Interactive Form Sections */}
         <div className={`space-y-6 lg:col-span-7 ${previewTab === "preview" ? "hidden lg:block" : "block"}`}>
-          
           {PRODUCT_SCHEMA.sections.map((section) => {
             const hasError = doesSectionHaveError(section.key);
             const activeFields = PRODUCT_SCHEMA.fields.filter(
               (f) => f.section === section.key && isFieldActive(f, values)
             );
 
-            // Skip rendering empty sections
             if (activeFields.length === 0) return null;
 
             return (
@@ -313,19 +309,44 @@ export default function ProductForm({
                 onToggle={() => handleToggleSection(section.key)}
                 hasError={hasError}
               >
-                {/* Special Media section handler */}
                 {section.key === "media" ? (
-                  <ProductImageUploader
-                    images={values.images}
-                    primaryImage={values.image}
-                    onImagesChange={(urls) => handleChange("images", urls)}
-                    onPrimaryChange={(url) => handleChange("image", url)}
-                    errors={errors}
-                  />
+                  <div className="space-y-5">
+                    {existingImages.length > 0 && (
+                      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Current saved images</p>
+                          <p className="mt-1 text-sm text-slate-600">
+                            These are already attached to the product and will remain unless you replace them in a future edit flow.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                          {existingImages.map((url, idx) => (
+                            <div key={`${url}-${idx}`} className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                              <div className="aspect-square w-full bg-slate-100">
+                                <img src={url} alt={`Current product image ${idx + 1}`} className="h-full w-full object-cover" />
+                              </div>
+                              <div className="border-t border-slate-200 px-2 py-2">
+                                <p className="text-[11px] font-medium text-slate-600">Saved image {idx + 1}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <ProductImageUploader
+                      files={mediaFiles}
+                      onFilesChange={setMediaFiles}
+                      maxFiles={10}
+                    />
+
+                    {errors.images && (
+                      <p className="text-sm font-medium text-rose-600">{errors.images}</p>
+                    )}
+                  </div>
                 ) : (
                   <div className="space-y-5">
                     {activeFields.map((field) => {
-                      // Dynamically adjust category options based on parent state
                       let fieldWithDynamicOptions = field;
                       if (field.key === "category") {
                         fieldWithDynamicOptions = {
@@ -349,10 +370,8 @@ export default function ProductForm({
               </FormAccordion>
             );
           })}
-
         </div>
 
-        {/* Right Column: Premium Interactive Live Preview Card */}
         <div className={`lg:col-span-5 lg:sticky lg:top-28 self-start space-y-6 ${previewTab === "edit" ? "hidden lg:block" : "block"}`}>
           <div className="bg-chocolate-dark border border-cream/15 rounded-2xl p-6 shadow-2xl space-y-6 text-cream">
             <div className="flex items-center justify-between border-b border-cream/10 pb-4">
@@ -367,12 +386,11 @@ export default function ProductForm({
               </span>
             </div>
 
-            {/* Product Card Rendering */}
             <div className="group flex flex-col items-center bg-transparent w-full max-w-sm mx-auto">
               <div className="relative w-full aspect-[3/4] mb-5 rounded-2xl overflow-hidden border border-cream/15 bg-chocolate-light/50">
-                {values.image ? (
+                {previewImage ? (
                   <img
-                    src={values.image}
+                    src={previewImage}
                     alt={values.name || "Preview"}
                     className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out"
                     referrerPolicy="no-referrer"
@@ -388,9 +406,11 @@ export default function ProductForm({
                   <span className="inline-flex items-center rounded-full bg-chocolate text-cream px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-md border border-cream/10">
                     {values.collectionCategory}
                   </span>
-                  <span className={`inline-flex items-center rounded-full text-white px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-md ${
-                    values.status === "active" ? "bg-emerald-600" : "bg-zinc-600"
-                  }`}>
+                  <span
+                    className={`inline-flex items-center rounded-full text-white px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-md ${
+                      values.status === "active" ? "bg-emerald-600" : "bg-zinc-600"
+                    }`}
+                  >
                     {values.status}
                   </span>
                 </div>
@@ -414,26 +434,20 @@ export default function ProductForm({
               </div>
             </div>
 
-            {/* Sizes, Colors & Dynamic Specs Preview list */}
             <div className="border-t border-cream/10 pt-4 space-y-3.5 text-xs">
               {values.sizes && values.sizes.length > 0 && (
                 <div className="flex justify-between">
                   <span className="text-cream/50">Curated Sizes:</span>
-                  <span className="font-mono text-cream font-medium">
-                    {values.sizes.join(", ")}
-                  </span>
+                  <span className="font-mono text-cream font-medium">{values.sizes.join(", ")}</span>
                 </div>
               )}
               {values.colors && values.colors.length > 0 && (
                 <div className="flex justify-between">
                   <span className="text-cream/50">Accent Tones:</span>
-                  <span className="font-mono text-cream font-medium">
-                    {values.colors.join(", ")}
-                  </span>
+                  <span className="font-mono text-cream font-medium">{values.colors.join(", ")}</span>
                 </div>
               )}
 
-              {/* Dynamic specs based on collectionCategory */}
               {values.collectionCategory === "Apparel" && (
                 <>
                   {values.fit && (
@@ -503,7 +517,6 @@ export default function ProductForm({
                 </>
               )}
 
-              {/* Delivery Notes */}
               {values.deliveryNote && (
                 <div className="bg-chocolate/40 p-3 rounded-xl border border-cream/5 mt-2">
                   <p className="text-[9px] font-mono text-gold uppercase mb-1 tracking-wider">Fulfillment Note</p>
@@ -513,10 +526,8 @@ export default function ProductForm({
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* Sticky Bottom Actions Bar */}
       <FormActions
         onCancel={onCancel}
         onSubmit={handlePublish}
@@ -524,7 +535,6 @@ export default function ProductForm({
         submitText={mode === "create" ? "Publish" : "Save Changes"}
       />
 
-      {/* Cloudinary Upload Status Modal */}
       <AnimatePresence>
         {isUploading && (
           <motion.div
@@ -535,7 +545,6 @@ export default function ProductForm({
             id="cloudinary-upload-overlay"
           >
             <div className="max-w-md w-full bg-chocolate border border-cream/15 rounded-2xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden text-cream">
-              
               <div className="absolute -top-12 -left-12 w-24 h-24 bg-gold/5 rounded-full blur-xl" />
               <div className="absolute -bottom-12 -right-12 w-24 h-24 bg-gold/5 rounded-full blur-xl" />
 
@@ -550,23 +559,15 @@ export default function ProductForm({
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="font-serif text-lg tracking-wide text-cream">
-                      Processing Media
-                    </h3>
-                    <p className="text-xs font-mono text-gold tracking-widest uppercase">
-                      Direct Cloudinary Handshake
-                    </p>
+                    <h3 className="font-serif text-lg tracking-wide text-cream">Processing Media</h3>
+                    <p className="text-xs font-mono text-gold tracking-widest uppercase">Publishing product</p>
                   </div>
 
                   <div className="bg-chocolate-light/40 border border-cream/5 p-4 rounded-xl">
-                    <p className="text-xs text-cream/70 leading-relaxed font-sans animate-pulse">
-                      {uploadProgressMsg}
-                    </p>
+                    <p className="text-xs text-cream/70 leading-relaxed font-sans animate-pulse">{uploadProgressMsg}</p>
                   </div>
 
-                  <p className="text-[10px] font-mono text-cream/40 uppercase">
-                    Securing your high-res product visuals...
-                  </p>
+                  <p className="text-[10px] font-mono text-cream/40 uppercase">Securing your product visuals...</p>
                 </>
               ) : (
                 <>
@@ -577,18 +578,12 @@ export default function ProductForm({
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="font-serif text-lg tracking-wide text-rose-400">
-                      Sync Failed
-                    </h3>
-                    <p className="text-xs font-mono text-rose-400/65 tracking-widest uppercase">
-                      Cloudinary Connection Error
-                    </p>
+                    <h3 className="font-serif text-lg tracking-wide text-rose-400">Sync Failed</h3>
+                    <p className="text-xs font-mono text-rose-400/65 tracking-widest uppercase">Cloudinary Connection Error</p>
                   </div>
 
                   <div className="bg-rose-950/20 border border-rose-500/10 p-4 rounded-xl text-left max-h-36 overflow-y-auto">
-                    <p className="text-xs text-rose-300 leading-relaxed font-mono">
-                      {uploadError}
-                    </p>
+                    <p className="text-xs text-rose-300 leading-relaxed font-mono">{uploadError}</p>
                   </div>
 
                   <div className="flex space-x-3 pt-2">
@@ -613,7 +608,6 @@ export default function ProductForm({
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }
