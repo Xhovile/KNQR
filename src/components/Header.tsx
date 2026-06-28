@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Header() {
   return (
-    <header className="pt-16 pb-12 text-center border-b border-cream/5">
+    <header className="pt-16 pb-12 text-center border-b border-cream/5 bg-chocolate-dark">
       <div className="flex flex-col items-center">
         {/* Brand Name */}
         <h1 

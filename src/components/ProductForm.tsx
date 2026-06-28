@@ -300,7 +300,7 @@ export default function ProductForm({
     // Set uploading state and start Cloudinary processing
     setIsUploading(true);
     setUploadError(null);
-    setUploadProgressMsg("Checking specimen media for local uploads...");
+    setUploadProgressMsg("Checking product media for local uploads...");
 
     try {
       // Find all unique base64 images that need uploading
@@ -312,7 +312,7 @@ export default function ProductForm({
       if (uniqueBase64s.length > 0) {
         for (let i = 0; i < uniqueBase64s.length; i++) {
           const base64 = uniqueBase64s[i];
-          setUploadProgressMsg(`Uploading specimen image ${i + 1} of ${uniqueBase64s.length} to Cloudinary...`);
+          setUploadProgressMsg(`Uploading product image ${i + 1} of ${uniqueBase64s.length} to Cloudinary...`);
           const secureUrl = await uploadToCloudinary(base64);
           uploadedUrls[base64] = secureUrl;
         }
@@ -328,7 +328,7 @@ export default function ProductForm({
         images: finalGalleryImages,
       };
 
-      setUploadProgressMsg("Instantly syncing specimen to catalog...");
+      setUploadProgressMsg("Instantly syncing product to catalog...");
       onSubmit(finalValues);
     } catch (error: any) {
       console.error("Cloudinary upload failed:", error);
@@ -341,13 +341,13 @@ export default function ProductForm({
   const displayPriceMWK = values.priceMWK ? `MK ${Number(values.priceMWK).toLocaleString()}` : "MK 0";
 
   return (
-    <div className="min-h-screen bg-chocolate text-cream flex flex-col font-sans" id="product-form-root">
+    <div className="min-h-screen bg-light-brown text-chocolate flex flex-col font-sans" id="product-form-root">
       {/* Sticky Top Header */}
-      <div className="sticky top-0 z-40 bg-chocolate-dark/95 border-b border-cream/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between">
+      <div className="sticky top-0 z-40 bg-white/40 border-b border-chocolate/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between text-chocolate">
         <div className="flex items-center space-x-4">
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-cream/5 rounded-full text-cream/70 hover:text-gold transition-colors cursor-pointer"
+            className="p-2 hover:bg-chocolate/5 rounded-full text-chocolate/70 hover:text-gold transition-colors cursor-pointer"
             id="product-form-back-btn"
             title="Cancel and return"
           >
@@ -357,19 +357,19 @@ export default function ProductForm({
             <span className="text-[10px] font-mono tracking-[0.3em] text-gold uppercase font-bold">
               KNQR Curator
             </span>
-            <h1 className="text-xl font-serif text-cream tracking-wide">
-              {mode === "create" ? "Add New Specimen" : `Edit ${values.name || "Specimen"}`}
+            <h1 className="text-xl font-serif text-chocolate tracking-wide">
+              {mode === "create" ? "Add New Product" : `Edit ${values.name || "Product"}`}
             </h1>
           </div>
         </div>
 
         {/* View toggles for real-time mobile preview layout */}
         <div className="flex items-center space-x-2">
-          <div className="hidden lg:flex p-1 bg-chocolate-dark border border-cream/10 rounded-xl space-x-1">
+          <div className="hidden lg:flex p-1 bg-white/40 border border-chocolate/10 rounded-xl space-x-1">
             <button
               onClick={() => setPreviewTab("edit")}
               className={`px-4 py-1.5 text-xs tracking-wider rounded-lg uppercase transition-all cursor-pointer ${
-                previewTab === "edit" ? "bg-cream text-chocolate font-semibold" : "text-cream/50 hover:text-cream"
+                previewTab === "edit" ? "bg-chocolate text-cream font-semibold" : "text-chocolate/50 hover:text-chocolate"
               }`}
             >
               Editor
@@ -377,7 +377,7 @@ export default function ProductForm({
             <button
               onClick={() => setPreviewTab("preview")}
               className={`px-4 py-1.5 text-xs tracking-wider rounded-lg uppercase transition-all cursor-pointer ${
-                previewTab === "preview" ? "bg-cream text-chocolate font-semibold" : "text-cream/50 hover:text-cream"
+                previewTab === "preview" ? "bg-chocolate text-cream font-semibold" : "text-chocolate/50 hover:text-chocolate"
               }`}
             >
               Live Preview
@@ -392,10 +392,10 @@ export default function ProductForm({
         <div className={`space-y-8 lg:col-span-7 ${previewTab === "preview" ? "hidden lg:block" : "block"}`}>
           
           {/* Section 1: Basic Information */}
-          <section className="bg-chocolate-dark/50 border border-cream/5 rounded-2xl p-6 space-y-6 luxury-glow" id="field-group-basic">
+          <section className="bg-chocolate-dark border border-cream/10 rounded-2xl p-6 space-y-6" id="field-group-basic">
             <div className="flex items-center space-x-3 border-b border-cream/10 pb-4">
               <Sparkles className="w-5 h-5 text-gold" />
-              <h2 className="font-serif text-lg tracking-wide">Basic Specimen Information</h2>
+              <h2 className="font-serif text-lg tracking-wide text-cream">Basic Product Information</h2>
             </div>
 
             <div className="space-y-4">
@@ -474,7 +474,7 @@ export default function ProductForm({
               {/* Status */}
               <div id="field-group-status" className="space-y-2">
                 <label className="text-[10px] font-mono tracking-widest uppercase text-gold">
-                  Specimen Status *
+                  Product Status *
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {(["draft", "active", "sold_out", "archived"] as ProductStatus[]).map((status) => {
@@ -486,8 +486,8 @@ export default function ProductForm({
                         onClick={() => handleChange("status", status)}
                         className={`py-2 px-3 text-xs tracking-wider rounded-xl border font-mono uppercase transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-gold border-gold text-chocolate font-bold"
-                            : "border-cream/15 text-cream/60 hover:border-cream/30 hover:text-cream"
+                            ? "bg-cream border-cream text-chocolate font-bold"
+                            : "bg-chocolate border border-cream/15 text-cream/60 hover:border-cream/30 hover:text-cream"
                         }`}
                       >
                         {status.replace("_", " ")}
@@ -520,10 +520,10 @@ export default function ProductForm({
           </section>
 
           {/* Section 2: Pricing & Inventory */}
-          <section className="bg-chocolate-dark/50 border border-cream/5 rounded-2xl p-6 space-y-6 luxury-glow" id="field-group-pricing">
+          <section className="bg-chocolate-dark border border-cream/10 rounded-2xl p-6 space-y-6" id="field-group-pricing">
             <div className="flex items-center space-x-3 border-b border-cream/10 pb-4">
               <DollarSign className="w-5 h-5 text-gold" />
-              <h2 className="font-serif text-lg tracking-wide">Pricing & Inventory</h2>
+              <h2 className="font-serif text-lg tracking-wide text-cream">Pricing & Inventory</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -570,7 +570,7 @@ export default function ProductForm({
               {/* Stock */}
               <div id="field-group-stock" className="space-y-2">
                 <label className="text-[10px] font-mono tracking-widest uppercase text-gold">
-                  Stock Specimen Count *
+                  Stock Product Count *
                 </label>
                 <input
                   type="number"
@@ -587,10 +587,10 @@ export default function ProductForm({
           </section>
 
           {/* Section 3: Media Gallery & Uploads */}
-          <section className="bg-chocolate-dark/50 border border-cream/5 rounded-2xl p-6 space-y-6 luxury-glow" id="field-group-images">
+          <section className="bg-chocolate-dark border border-cream/10 rounded-2xl p-6 space-y-6" id="field-group-images">
             <div className="flex items-center space-x-3 border-b border-cream/10 pb-4">
               <Upload className="w-5 h-5 text-gold" />
-              <h2 className="font-serif text-lg tracking-wide">Specimen Media</h2>
+              <h2 className="font-serif text-lg tracking-wide text-cream">Product Media</h2>
             </div>
 
             <div className="space-y-6">
@@ -637,7 +637,7 @@ export default function ProductForm({
                       key={preset.label}
                       type="button"
                       onClick={() => handleSelectPresetImage(preset.url)}
-                      className="px-3 py-1.5 bg-chocolate-dark border border-cream/10 rounded-lg text-[10px] tracking-wider uppercase font-mono text-cream/70 hover:text-gold hover:border-gold/50 transition-all shrink-0 cursor-pointer"
+                      className="px-3 py-1.5 bg-chocolate border border-cream/10 rounded-lg text-[10px] tracking-wider uppercase font-mono text-cream/70 hover:text-gold hover:border-gold/50 transition-all shrink-0 cursor-pointer"
                     >
                       + {preset.label}
                     </button>
@@ -704,10 +704,10 @@ export default function ProductForm({
           </section>
 
           {/* Section 4: Variants & Options */}
-          <section className="bg-chocolate-dark/50 border border-cream/5 rounded-2xl p-6 space-y-6 luxury-glow" id="field-group-variants">
+          <section className="bg-chocolate-dark border border-cream/10 rounded-2xl p-6 space-y-6" id="field-group-variants">
             <div className="flex items-center space-x-3 border-b border-cream/10 pb-4">
               <Layers className="w-5 h-5 text-gold" />
-              <h2 className="font-serif text-lg tracking-wide">Variants & Adaptations</h2>
+              <h2 className="font-serif text-lg tracking-wide text-cream">Variants & Adaptations</h2>
             </div>
 
             <div className="space-y-6">
@@ -732,7 +732,7 @@ export default function ProductForm({
                         className={`px-4 py-2 text-xs font-mono tracking-wider border rounded-xl transition-all cursor-pointer ${
                           isSelected
                             ? "bg-cream text-chocolate border-cream font-bold shadow-lg"
-                            : "border-cream/15 text-cream/70 hover:border-cream/40"
+                            : "bg-chocolate border border-cream/15 text-cream/70 hover:border-cream/40"
                         }`}
                       >
                         {size}
@@ -782,7 +782,7 @@ export default function ProductForm({
                         className={`px-4 py-2 text-xs font-sans tracking-wide border rounded-xl transition-all cursor-pointer ${
                           isSelected
                             ? "bg-cream text-chocolate border-cream font-semibold shadow-lg"
-                            : "border-cream/15 text-cream/70 hover:border-cream/45"
+                            : "bg-chocolate border border-cream/15 text-cream/70 hover:border-cream/45"
                         }`}
                       >
                         {color}
@@ -814,10 +814,10 @@ export default function ProductForm({
           </section>
 
           {/* Section 5: Delivery Details */}
-          <section className="bg-chocolate-dark/50 border border-cream/5 rounded-2xl p-6 space-y-6 luxury-glow" id="field-group-deliveryMethod">
+          <section className="bg-chocolate-dark border border-cream/10 rounded-2xl p-6 space-y-6" id="field-group-deliveryMethod">
             <div className="flex items-center space-x-3 border-b border-cream/10 pb-4">
               <Truck className="w-5 h-5 text-gold" />
-              <h2 className="font-serif text-lg tracking-wide">Fulfillment & Delivery</h2>
+              <h2 className="font-serif text-lg tracking-wide text-cream">Fulfillment & Delivery</h2>
             </div>
 
             <div className="space-y-4">
@@ -860,15 +860,15 @@ export default function ProductForm({
           </section>
 
           {/* Section 6: Sourcing & Specifications List */}
-          <section className="bg-chocolate-dark/50 border border-cream/5 rounded-2xl p-6 space-y-6 luxury-glow" id="field-group-details">
+          <section className="bg-chocolate-dark border border-cream/10 rounded-2xl p-6 space-y-6" id="field-group-details">
             <div className="flex items-center space-x-3 border-b border-cream/10 pb-4">
               <ListPlus className="w-5 h-5 text-gold" />
-              <h2 className="font-serif text-lg tracking-wide">Sourcing & Craft Details</h2>
+              <h2 className="font-serif text-lg tracking-wide text-cream">Sourcing & Craft Details</h2>
             </div>
 
             <div className="space-y-4">
               <label className="text-[10px] font-mono tracking-widest uppercase text-gold">
-                Specimen Specifications List ({values.details.length} defined)
+                Product Specifications List ({values.details.length} defined)
               </label>
 
               {/* Added Items list */}
@@ -881,7 +881,7 @@ export default function ProductForm({
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="flex items-center justify-between bg-chocolate/30 border border-cream/10 px-4 py-3 rounded-xl"
+                        className="flex items-center justify-between bg-chocolate border border-cream/10 px-4 py-3 rounded-xl text-cream"
                       >
                         <div className="flex items-center space-x-2 text-sm text-cream/80">
                           <span className="text-gold">•</span>
@@ -915,7 +915,7 @@ export default function ProductForm({
                         className={`text-[10px] font-mono tracking-wider uppercase border rounded-lg px-2.5 py-1.5 transition-all ${
                           isAdded 
                             ? "border-cream/5 text-cream/20 cursor-default" 
-                            : "border-cream/15 text-cream/60 hover:text-gold hover:border-gold/50 cursor-pointer"
+                            : "bg-chocolate border border-cream/15 text-cream/60 hover:text-gold hover:border-gold/50 cursor-pointer"
                         }`}
                       >
                         + {tag}
@@ -926,19 +926,19 @@ export default function ProductForm({
               </div>
 
               {/* Custom specs text field */}
-              <div className="flex items-center space-x-2 mt-4">
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
                 <input
                   type="text"
                   placeholder="Enter custom specification detail..."
                   value={customDetailInput}
                   onChange={(e) => setCustomDetailInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddDetail(customDetailInput))}
-                  className="flex-1 bg-chocolate border border-cream/15 rounded-xl px-4 py-3 text-sm text-cream focus:outline-none focus:border-gold transition-colors placeholder-cream/30"
+                  className="w-full sm:flex-1 bg-chocolate border border-cream/15 rounded-xl px-4 py-3 text-sm text-cream focus:outline-none focus:border-gold transition-colors placeholder-cream/30"
                 />
                 <button
                   type="button"
                   onClick={() => handleAddDetail(customDetailInput)}
-                  className="bg-cream hover:bg-gold text-chocolate px-4 py-3 rounded-xl text-xs font-mono tracking-wider uppercase font-bold transition-all shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto bg-cream hover:bg-gold text-chocolate px-6 py-3 rounded-xl text-xs font-mono tracking-wider uppercase font-bold transition-all shrink-0 cursor-pointer text-center"
                 >
                   Add Detail
                 </button>
@@ -950,7 +950,7 @@ export default function ProductForm({
 
         {/* RIGHT COLUMN: Interactive Live Luxury Preview */}
         <div className={`lg:col-span-5 lg:sticky lg:top-28 self-start space-y-6 ${previewTab === "edit" ? "hidden lg:block" : "block"}`}>
-          <div className="bg-chocolate-dark border border-cream/15 rounded-2xl p-6 shadow-2xl space-y-6 luxury-glow">
+          <div className="bg-chocolate-dark border border-cream/15 rounded-2xl p-6 shadow-2xl space-y-6 text-cream">
             <div className="flex items-center justify-between border-b border-cream/10 pb-4">
               <div className="flex items-center space-x-2">
                 <Eye className="w-4 h-4 text-gold" />
@@ -963,7 +963,7 @@ export default function ProductForm({
               </span>
             </div>
 
-            {/* Specimen Card Mock */}
+            {/* Product Card Mock */}
             <div className="group flex flex-col items-center bg-transparent w-full max-w-sm mx-auto">
               <div className="relative w-full aspect-[3/4] mb-5 rounded-2xl overflow-hidden border border-cream/15 bg-chocolate-light/50">
                 {values.image ? (
@@ -981,10 +981,10 @@ export default function ProductForm({
                 )}
 
                 <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                  <span className="inline-flex items-center rounded-full bg-chocolate text-cream px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-lg border border-cream/10">
+                  <span className="inline-flex items-center rounded-full bg-chocolate text-cream px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-md border border-cream/10">
                     {values.collectionCategory}
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-lg">
+                  <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-1 text-[10px] font-semibold tracking-[0.25em] uppercase shadow-md">
                     {values.status.replace("_", " ")}
                   </span>
                 </div>
@@ -997,7 +997,7 @@ export default function ProductForm({
 
               <div className="text-center w-full px-2">
                 <h4 className="font-serif text-xl font-normal text-cream tracking-wide">
-                  {values.name || "Specimen Title"}
+                  {values.name || "Product Title"}
                 </h4>
                 <div className="mt-2 flex items-center justify-center space-x-2 font-mono text-sm">
                   <span className="text-gold font-semibold">{displayPriceUSD}</span>
@@ -1034,7 +1034,7 @@ export default function ProductForm({
       </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <div className="sticky bottom-0 z-40 bg-chocolate-dark/95 border-t border-cream/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between shadow-2xl">
+      <div className="sticky bottom-0 z-40 bg-chocolate-dark border-t border-cream/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between shadow-2xl">
         <button
           onClick={onCancel}
           className="px-6 py-3 border border-cream/15 hover:border-cream/40 rounded-xl text-xs font-mono tracking-widest uppercase text-cream/70 hover:text-cream transition-all cursor-pointer"
@@ -1043,14 +1043,16 @@ export default function ProductForm({
           Cancel
         </button>
 
-        <button
+        <motion.button
           onClick={handlePublish}
-          className="px-8 py-3 bg-cream hover:bg-gold text-chocolate rounded-xl text-xs font-mono tracking-widest uppercase font-bold transition-all shadow-xl hover:scale-[1.01] cursor-pointer flex items-center space-x-2"
+          whileTap={{ scale: 0.95, y: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          className="px-8 py-3 bg-cream hover:bg-gold text-chocolate rounded-xl text-xs font-mono tracking-widest uppercase font-bold transition-all shadow-xl cursor-pointer flex items-center space-x-2"
           id="product-form-publish-btn"
         >
           <Check className="w-4 h-4 text-chocolate" />
-          <span>Publish Specimen</span>
-        </button>
+          <span>Publish</span>
+        </motion.button>
       </div>
 
       {/* Cloudinary Uploading & Status Overlay */}
@@ -1063,7 +1065,7 @@ export default function ProductForm({
             className="fixed inset-0 z-50 flex items-center justify-center bg-chocolate-dark/95 backdrop-blur-md p-6"
             id="cloudinary-upload-overlay"
           >
-            <div className="max-w-md w-full bg-chocolate border border-cream/15 rounded-2xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden luxury-glow">
+            <div className="max-w-md w-full bg-chocolate border border-cream/15 rounded-2xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden text-cream">
               
               {/* Golden circular decorative background elements */}
               <div className="absolute -top-12 -left-12 w-24 h-24 bg-gold/5 rounded-full blur-xl" />
@@ -1096,7 +1098,7 @@ export default function ProductForm({
                   </div>
 
                   <p className="text-[10px] font-mono text-cream/40 uppercase">
-                    Securing your high-res specimen visuals...
+                    Securing your high-res product visuals...
                   </p>
                 </>
               ) : (

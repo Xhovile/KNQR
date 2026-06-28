@@ -21,7 +21,7 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
   ];
 
   const menuItems = [
-    { label: "Create Product", icon: Plus },
+    { label: "Add Product", icon: Plus },
     { label: "Profile", icon: User },
     { label: "Settings", icon: SettingsIcon },
     { label: "Sign Up", icon: UserPlus },
@@ -29,7 +29,7 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
   ];
 
   const handlePlaceholderClick = (actionName: string) => {
-    if (actionName === "Create Product" && onCreateProduct) {
+    if (actionName === "Add Product" && onCreateProduct) {
       onCreateProduct();
       setDropdownOpen(false);
       return;

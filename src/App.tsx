@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { 
-  ShoppingBag, 
+  ShoppingCart, 
   ArrowUp
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -355,18 +355,20 @@ export default function App() {
       </AnimatePresence>
 
       {/* Quick Access Floating Cart Button */}
-      <button
-        onClick={() => setIsCartOpen(true)}
-        className="fixed bottom-6 right-6 z-40 p-4 bg-[#0b1b33] text-cream hover:bg-[#122c54] hover:text-gold border border-gold/30 rounded-full shadow-2xl transition-all hover:scale-105 flex items-center justify-center cursor-pointer group"
-        id="floating-cart-trigger"
-      >
-        <ShoppingBag className="w-5 h-5" />
-        {cart.length > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-[10px] text-chocolate font-bold rounded-full flex items-center justify-center border border-chocolate animate-bounce">
-            {cart.reduce((acc, item) => acc + item.quantity, 0)}
-          </span>
-        )}
-      </button>
+      {!isCreatingProduct && !editingProduct && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-6 right-6 z-40 p-4 bg-[#0b1b33] text-cream hover:bg-[#122c54] hover:text-gold border border-gold/30 rounded-full shadow-2xl transition-all hover:scale-105 flex items-center justify-center cursor-pointer group"
+          id="floating-cart-trigger"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          {cart.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-[10px] text-chocolate font-bold rounded-full flex items-center justify-center border border-chocolate animate-bounce">
+              {cart.reduce((acc, item) => acc + item.quantity, 0)}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Floating Scroll to Top */}
       {showScrollTop && (
