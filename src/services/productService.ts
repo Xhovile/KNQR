@@ -68,10 +68,10 @@ export interface HeroImages {
 }
 
 export const DEFAULT_HEROES: HeroImages = {
-  home: "/src/assets/images/knqr_black_shirt_1782625829276.jpg",
-  apparel: "/src/assets/images/knqr_black_shirt_1782625829276.jpg",
-  bagsAccessories: "/src/assets/images/knqr_accessory_new_1782625265014.jpg",
-  fragrances: "/src/assets/images/knqr_fragrance_new_1782625278359.jpg",
+  home: "",
+  apparel: "",
+  bagsAccessories: "",
+  fragrances: "",
 };
 
 /**

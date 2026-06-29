@@ -107,13 +107,20 @@ export default function EditableHeroImage({
         onTouchStart={startLongPress}
         onTouchEnd={cancelLongPress}
       >
-        <img
-          src={src}
-          alt={alt}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms] ease-out"
-          referrerPolicy="no-referrer"
-          loading="eager"
-        />
+        {src ? (
+          <img
+            src={src}
+            alt={alt}
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms] ease-out"
+            referrerPolicy="no-referrer"
+            loading="eager"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-chocolate-dark border border-cream/10 p-6 text-center select-none">
+            <ImageIcon className="w-8 h-8 text-gold/40 mb-2 animate-pulse" />
+            <span className="text-[10px] font-mono tracking-widest text-cream/50 uppercase">No Image Uploaded</span>
+          </div>
+        )}
 
         {/* Floating subtle helper hint for better user discoverability */}
         <div className="absolute top-3 right-3 bg-chocolate/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-mono uppercase tracking-widest text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">

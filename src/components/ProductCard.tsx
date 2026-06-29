@@ -30,7 +30,7 @@ export default function ProductCard({
   const isComingSoon = product.stock === 999; // Special coding for Coming Soon mock state
 
   // Image swap on hover supporting single/multiple images
-  const primaryImage = product.image || (product.images?.[0]) || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600";
+  const primaryImage = product.image || (product.images?.[0]) || "";
   const secondaryImage = product.images?.[1] || primaryImage;
 
   const handleAddToCartClick = (e: React.MouseEvent) => {
@@ -83,13 +83,20 @@ export default function ProductCard({
         </div>
 
         {/* Alternate Image Swap on Hover with Smooth Scale Zoom */}
-        <img
-          src={isHovered ? secondaryImage : primaryImage}
-          alt={product.name}
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center transition-all duration-700 ease-out scale-100 group-hover:scale-104"
-          id={`product-card-image-${product.id}`}
-        />
+        {primaryImage ? (
+          <img
+            src={isHovered ? secondaryImage : primaryImage}
+            alt={product.name}
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover object-center transition-all duration-700 ease-out scale-100 group-hover:scale-104"
+            id={`product-card-image-${product.id}`}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-chocolate/5 p-4 text-center select-none">
+            <Sparkles className="w-6 h-6 text-chocolate/20 mb-2 animate-pulse" />
+            <span className="text-[9px] font-mono tracking-widest text-chocolate/40 uppercase">KNQR Premium</span>
+          </div>
+        )}
 
         {/* Quick View and Action Utility Overlay */}
         <div className="absolute inset-0 bg-chocolate/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">

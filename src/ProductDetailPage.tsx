@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Check, MoreHorizontal, X, Pencil, PackagePlus, BadgePercent, Share2 } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Check, MoreHorizontal, X, Pencil, PackagePlus, BadgePercent, Share2, Sparkles } from "lucide-react";
 import { Product } from "./types";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -172,13 +172,20 @@ export default function ProductDetailPage({
       <div className="flex-1 max-w-6xl w-full mx-auto px-6 py-8 md:py-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
         <div className="space-y-6 flex flex-col justify-start">
           <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-chocolate/10 bg-white/40 shadow-lg">
-            <img
-              src={imagesList[activeImageIndex] || product.image}
-              alt={product.name}
-              className="w-full h-full object-cover object-center transition-all duration-500"
-              referrerPolicy="no-referrer"
-              id="detail-main-preview-image"
-            />
+            {imagesList.length > 0 && imagesList[activeImageIndex] ? (
+              <img
+                src={imagesList[activeImageIndex]}
+                alt={product.name}
+                className="w-full h-full object-cover object-center transition-all duration-500"
+                referrerPolicy="no-referrer"
+                id="detail-main-preview-image"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-chocolate/5 p-8 text-center select-none">
+                <Sparkles className="w-10 h-10 text-chocolate/20 mb-3 animate-pulse" />
+                <span className="text-[11px] font-mono tracking-[0.3em] text-chocolate/40 uppercase">No Campaign Image</span>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-chocolate/20 via-transparent to-transparent pointer-events-none" />
             <div className="absolute top-4 left-4 w-6 h-6 border-t border-l border-gold/40 rounded-tl-sm" />
             <div className="absolute top-4 right-4 w-6 h-6 border-t border-r border-gold/40 rounded-tr-sm" />
