@@ -50,11 +50,20 @@ export default function Footer() {
 
       {/* Copyright Line */}
       <p 
-        className="text-[10px] font-mono tracking-widest text-cream/40 select-none uppercase"
+        className="text-[10px] font-mono tracking-widest text-cream/40 select-none uppercase mb-4"
         id="footer-copyright"
       >
         © 2024. All Rights Reserved.
       </p>
+
+      {/* Signature & Designer Info */}
+      <div 
+        className="text-[10px] font-mono tracking-wider text-cream/30 space-y-1 select-none"
+        id="footer-designer-signature"
+      >
+        <p>Designed by: <span className="text-gold/60 font-medium">Isaac Mtsiriza</span></p>
+        <p>Contact: <a href="tel:+265992948283" className="hover:text-gold transition-colors">+265 992 948 283</a></p>
+      </div>
     </footer>
   );
 }

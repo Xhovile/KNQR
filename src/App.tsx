@@ -93,8 +93,21 @@ export default function App() {
     editing: Product | null = null,
     skipPush = false
   ) => {
+    // If we are explicitly opening the editor, reset the published flag so they can use it
+    if (isCreating || editing) {
+      (window as any).hasPublishedProduct = false;
+    }
+
+    // Guard: If they have published, bypass any back-navigation attempt to restore the editor state
+    let finalIsCreating = isCreating;
+    let finalEditing = editing;
+    if ((window as any).hasPublishedProduct && (isCreating || editing)) {
+      finalIsCreating = false;
+      finalEditing = null;
+    }
+
     const isTabChange = tab !== activeTab || (product !== null && product !== selectedProduct);
-    if (isTabChange && !isCreating && !editing) {
+    if (isTabChange && !finalIsCreating && !finalEditing) {
       setIsTabLoading(true);
       setTimeout(() => {
         setIsTabLoading(false);
@@ -103,8 +116,8 @@ export default function App() {
 
     setActiveTab(tab);
     setSelectedProduct(product);
-    setIsCreatingProduct(isCreating);
-    setEditingProduct(editing);
+    setIsCreatingProduct(finalIsCreating);
+    setEditingProduct(finalEditing);
 
     // Scroll to top of the page on transition
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -113,8 +126,8 @@ export default function App() {
       const stateObj = {
         activeTab: tab,
         selectedProductId: product ? product.id : null,
-        isCreatingProduct: isCreating,
-        editingProductId: editing ? editing.id : null,
+        isCreatingProduct: finalIsCreating,
+        editingProductId: finalEditing ? finalEditing.id : null,
       };
       window.history.pushState(stateObj, "");
     }
@@ -145,11 +158,15 @@ export default function App() {
           }, 450);
         }
 
+        const shouldSkipEditor = (window as any).hasPublishedProduct;
+        const isCreatingParam = shouldSkipEditor ? false : !!state.isCreatingProduct;
+        const editingParam = shouldSkipEditor ? null : actualEditing;
+
         transitionTo(
           state.activeTab || "home",
           actualProduct,
-          !!state.isCreatingProduct,
-          actualEditing,
+          isCreatingParam,
+          editingParam,
           true
         );
       } else {
@@ -303,7 +320,18 @@ export default function App() {
     try {
       await createProduct(newProduct);
       setProductsList((prev) => [newProduct, ...prev]);
+      // Set the published flag to prevent back-navigation to this editor state
+      (window as any).hasPublishedProduct = true;
       setIsCreatingProduct(false);
+
+      // Replace the current history state with the collection tab view
+      const stateObj = {
+        activeTab: activeTab,
+        selectedProductId: null,
+        isCreatingProduct: false,
+        editingProductId: null,
+      };
+      window.history.replaceState(stateObj, "");
     } catch (err) {
       console.error("Failed to create product in Firestore:", err);
       alert("Failed to save product to database. Please try again.");
@@ -360,7 +388,18 @@ export default function App() {
         setSelectedProduct(updatedProduct);
       }
 
+      // Set the published flag to prevent back-navigation to this editor state
+      (window as any).hasPublishedProduct = true;
       setEditingProduct(null);
+
+      // Replace the current history state with the detail view of the updated product
+      const stateObj = {
+        activeTab: activeTab,
+        selectedProductId: updatedProduct.id,
+        isCreatingProduct: false,
+        editingProductId: null,
+      };
+      window.history.replaceState(stateObj, "");
     } catch (err) {
       console.error("Failed to update product in Firestore:", err);
       alert("Failed to save product modifications. Please try again.");
