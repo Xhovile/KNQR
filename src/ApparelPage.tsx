@@ -42,7 +42,8 @@ export default function ApparelPage({
     "Tracksuits",
     "Golf shirts",
     "Jackets",
-    "3/4 sleeve shirts"
+    "3/4 sleeve shirts",
+    "Caps"
   ];
 
   // Filter apparel products

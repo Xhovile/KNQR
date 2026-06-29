@@ -83,7 +83,7 @@ export interface ProductDraftValues {
 }
 
 export const SUBCATEGORIES_MAP: Record<string, string[]> = {
-  "Apparel": ["T-shirts", "Hoodies", "Sweaters", "Tracksuits", "Golf shirts", "Jackets", "3/4 sleeve shirts"],
+  "Apparel": ["T-shirts", "Hoodies", "Sweaters", "Tracksuits", "Golf shirts", "Jackets", "3/4 sleeve shirts", "Caps"],
   "Bags & Accessories": ["Backpacks", "Sling bags", "Gym bags", "Hustle bags", "Toilet bags"],
   "Fragrances": ["Perfumes", "Colognes"]
 };
@@ -186,7 +186,7 @@ export const PRODUCT_SCHEMA: ProductSchema = {
       required: true,
       section: "basic",
       options: [
-        "T-shirts", "Hoodies", "Sweaters", "Tracksuits", "Golf shirts", "Jackets", "3/4 sleeve shirts",
+        "T-shirts", "Hoodies", "Sweaters", "Tracksuits", "Golf shirts", "Jackets", "3/4 sleeve shirts", "Caps",
         "Backpacks", "Sling bags", "Gym bags", "Hustle bags", "Toilet bags",
         "Perfumes", "Colognes"
       ],
