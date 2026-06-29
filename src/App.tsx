@@ -443,7 +443,10 @@ export default function App() {
             className="flex flex-col min-h-screen"
           >
             {/* 1. Header Area */}
-            <Header />
+            <Header onClick={() => {
+              transitionTo("home", null, false, null);
+              handleNavigation("home");
+            }} />
 
             {/* 2. Horizontal Navigation */}
             <Navigation 

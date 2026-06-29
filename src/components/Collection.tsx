@@ -130,10 +130,10 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
           onClick={() => onSelectCollection(product.collectionCategory)}
           id={`card-title-${product.id}`}
         >
-          {product.name}
+          {product.collectionCategory || product.name}
         </h4>
         <p className="text-[10px] font-mono tracking-[0.3em] uppercase text-chocolate/50 mt-1 select-none">
-          View {product.name} Catalog
+          View {product.collectionCategory || product.name} Catalog
         </p>
       </div>
     </motion.div>
