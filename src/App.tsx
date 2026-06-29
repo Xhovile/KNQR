@@ -38,6 +38,7 @@ import {
 export default function App() {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isTabLoading, setIsTabLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -92,6 +93,14 @@ export default function App() {
     editing: Product | null = null,
     skipPush = false
   ) => {
+    const isTabChange = tab !== activeTab || (product !== null && product !== selectedProduct);
+    if (isTabChange && !isCreating && !editing) {
+      setIsTabLoading(true);
+      setTimeout(() => {
+        setIsTabLoading(false);
+      }, 450);
+    }
+
     setActiveTab(tab);
     setSelectedProduct(product);
     setIsCreatingProduct(isCreating);
@@ -129,6 +138,13 @@ export default function App() {
         const foundEditing = PRODUCTS.find((p) => p.id === state.editingProductId) || null;
         const actualEditing = productsList.find((p) => p.id === state.editingProductId) || foundEditing;
 
+        if (state.activeTab !== activeTab) {
+          setIsTabLoading(true);
+          setTimeout(() => {
+            setIsTabLoading(false);
+          }, 450);
+        }
+
         transitionTo(
           state.activeTab || "home",
           actualProduct,
@@ -137,6 +153,10 @@ export default function App() {
           true
         );
       } else {
+        setIsTabLoading(true);
+        setTimeout(() => {
+          setIsTabLoading(false);
+        }, 450);
         transitionTo("home", null, false, null, true);
       }
     };
@@ -395,7 +415,7 @@ export default function App() {
             />
 
             <AnimatePresence mode="wait">
-              {isLoadingProducts ? (
+              {isLoadingProducts || isTabLoading ? (
                 <motion.div
                   key="loading-skeleton"
                   initial={{ opacity: 0 }}
@@ -403,7 +423,7 @@ export default function App() {
                   exit={{ opacity: 0 }}
                   className="flex-grow bg-light-brown"
                 >
-                  <Skeleton type={activeTab === "home" ? "home" : "grid"} />
+                  <Skeleton type={activeTab === "home" ? "home" : selectedProduct ? "detail" : "grid"} />
                 </motion.div>
               ) : productsError ? (
                 <motion.div
