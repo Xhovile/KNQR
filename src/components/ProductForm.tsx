@@ -21,7 +21,7 @@ interface ProductFormProps {
   mode: "create" | "edit";
   initialValues?: Partial<ProductDraftValues> | Product;
   onCancel: () => void;
-  onSubmit: (values: ProductDraftValues) => void;
+  onSubmit: (values: ProductDraftValues) => void | Promise<void>;
 }
 
 function uniqueStrings(values: string[]): string[] {
@@ -252,8 +252,8 @@ export default function ProductForm({
         images: finalGallery.slice(1),
       };
 
-      setUploadProgressMsg("Finalizing product...");
-      onSubmit(finalValues);
+      setUploadProgressMsg("Finalizing and saving product to Firestore...");
+      await onSubmit(finalValues);
       setIsUploading(false);
     } catch (err: any) {
       console.error("Upload process failed:", err);

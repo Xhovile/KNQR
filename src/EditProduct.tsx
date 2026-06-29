@@ -6,7 +6,7 @@ import { Product } from "./types";
 interface EditProductProps {
   product: Product;
   onCancel: () => void;
-  onSubmit: (values: ProductDraftValues) => void;
+  onSubmit: (values: ProductDraftValues) => void | Promise<void>;
 }
 
 export default function EditProduct({ product, onCancel, onSubmit }: EditProductProps) {

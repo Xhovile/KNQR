@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Schema representing a KNQR retail product",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique product identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product"
+        },
+        "priceUSD": {
+          "type": "number",
+          "description": "Price in USD"
+        },
+        "priceMWK": {
+          "type": "number",
+          "description": "Price in Malawian Kwacha (MWK)"
+        },
+        "image": {
+          "type": "string",
+          "description": "Main product image URL"
+        },
+        "images": {
+          "type": "array",
+          "description": "Additional product image URLs"
+        },
+        "category": {
+          "type": "string",
+          "description": "Specific product category"
+        },
+        "collectionCategory": {
+          "type": "string",
+          "description": "High-level collection category (Apparel, Fragrances, etc.)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Product narrative description"
+        },
+        "sizes": {
+          "type": "array",
+          "description": "Available product sizes"
+        },
+        "colors": {
+          "type": "array",
+          "description": "Available product colors or variations"
+        },
+        "details": {
+          "type": "array",
+          "description": "Bullet points highlighting product details"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "active", "sold_out", "archived"],
+          "description": "Product publication status"
+        },
+        "stock": {
+          "type": "number",
+          "description": "Available stock quantity"
+        },
+        "delivery": {
+          "type": "object",
+          "description": "Delivery availability and methods details"
+        },
+        "fit": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "apparelGender": {
+          "type": "string"
+        },
+        "sleeveType": {
+          "type": "string"
+        },
+        "bagType": {
+          "type": "string"
+        },
+        "bagMaterial": {
+          "type": "string"
+        },
+        "strapType": {
+          "type": "string"
+        },
+        "bagCapacity": {
+          "type": "string"
+        },
+        "useCase": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        },
+        "scentFamily": {
+          "type": "string"
+        },
+        "fragranceGender": {
+          "type": "string"
+        },
+        "concentration": {
+          "type": "string"
+        },
+        "longevity": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "priceUSD",
+        "priceMWK",
+        "image",
+        "category",
+        "collectionCategory",
+        "description",
+        "status",
+        "stock",
+        "delivery"
+      ]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "The collection storing products for KNQR"
+    }
+  }
+}

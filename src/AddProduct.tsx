@@ -4,7 +4,7 @@ import { createEmptyProductDraft, ProductDraftValues } from "./productSchema";
 
 interface AddProductProps {
   onCancel: () => void;
-  onSubmit: (values: ProductDraftValues) => void;
+  onSubmit: (values: ProductDraftValues) => void | Promise<void>;
 }
 
 export default function AddProduct({ onCancel, onSubmit }: AddProductProps) {

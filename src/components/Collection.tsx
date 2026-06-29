@@ -54,7 +54,7 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
     if (allImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-    }, 2000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [allImages]);
 

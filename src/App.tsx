@@ -25,9 +25,12 @@ import { ProductDraftValues } from "./productSchema";
 
 import { PRODUCTS } from "./data";
 import { Product, CartItem, ActiveTab } from "./types";
+import { fetchProducts, createProduct, updateProduct } from "./services/productService";
 
 export default function App() {
-  const [productsList, setProductsList] = useState<Product[]>(PRODUCTS);
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -37,8 +40,24 @@ export default function App() {
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
-  const [isPageLoading, setIsPageLoading] = useState(false);
-  const [currentSkeletonType, setCurrentSkeletonType] = useState<"grid" | "detail" | "form" | "home">("home");
+
+  // Load products from Firestore on boot
+  useEffect(() => {
+    async function loadProducts() {
+      setIsLoadingProducts(true);
+      try {
+        const fetched = await fetchProducts();
+        setProductsList(fetched);
+        setProductsError(null);
+      } catch (err: any) {
+        console.error("Failed to load products from Firestore:", err);
+        setProductsError(err?.message || "An error occurred while loading products.");
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    }
+    loadProducts();
+  }, []);
 
   const transitionTo = (
     tab: ActiveTab,
@@ -47,18 +66,6 @@ export default function App() {
     editing: Product | null = null,
     skipPush = false
   ) => {
-    let skeletonType: "grid" | "detail" | "form" | "home" = "grid";
-    if (isCreating || editing) {
-      skeletonType = "form";
-    } else if (product) {
-      skeletonType = "detail";
-    } else if (tab === "home") {
-      skeletonType = "home";
-    }
-
-    setCurrentSkeletonType(skeletonType);
-    setIsPageLoading(true);
-
     setActiveTab(tab);
     setSelectedProduct(product);
     setIsCreatingProduct(isCreating);
@@ -76,10 +83,6 @@ export default function App() {
       };
       window.history.pushState(stateObj, "");
     }
-
-    setTimeout(() => {
-      setIsPageLoading(false);
-    }, 450);
   };
 
   const handleGoBack = () => {
@@ -212,7 +215,7 @@ export default function App() {
     setActiveTab("home");
   };
 
-  const handleCreateProductSubmit = (values: ProductDraftValues) => {
+  const handleCreateProductSubmit = async (values: ProductDraftValues) => {
     const newId = `knqr-${values.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
     const newProduct: Product = {
       id: newId,
@@ -233,14 +236,35 @@ export default function App() {
         available: values.deliveryMethod !== "Pickup",
         methods: [values.deliveryMethod].filter(Boolean) as string[],
         note: values.deliveryNote
-      }
+      },
+      fit: values.fit,
+      material: values.material,
+      apparelGender: values.apparelGender,
+      sleeveType: values.sleeveType,
+      bagType: values.bagType,
+      bagMaterial: values.bagMaterial,
+      strapType: values.strapType,
+      bagCapacity: values.bagCapacity,
+      useCase: values.useCase,
+      volume: values.volume,
+      scentFamily: values.scentFamily,
+      fragranceGender: values.fragranceGender,
+      concentration: values.concentration,
+      longevity: values.longevity,
+      notes: values.notes,
     };
 
-    setProductsList((prev) => [newProduct, ...prev]);
-    setIsCreatingProduct(false);
+    try {
+      await createProduct(newProduct);
+      setProductsList((prev) => [newProduct, ...prev]);
+      setIsCreatingProduct(false);
+    } catch (err) {
+      console.error("Failed to create product in Firestore:", err);
+      alert("Failed to save product to database. Please try again.");
+    }
   };
 
-  const handleEditProductSubmit = (values: ProductDraftValues) => {
+  const handleEditProductSubmit = async (values: ProductDraftValues) => {
     if (!editingProduct) return;
 
     const updatedProduct: Product = {
@@ -262,44 +286,45 @@ export default function App() {
         available: values.deliveryMethod !== "Pickup",
         methods: [values.deliveryMethod].filter(Boolean) as string[],
         note: values.deliveryNote
-      }
+      },
+      fit: values.fit,
+      material: values.material,
+      apparelGender: values.apparelGender,
+      sleeveType: values.sleeveType,
+      bagType: values.bagType,
+      bagMaterial: values.bagMaterial,
+      strapType: values.strapType,
+      bagCapacity: values.bagCapacity,
+      useCase: values.useCase,
+      volume: values.volume,
+      scentFamily: values.scentFamily,
+      fragranceGender: values.fragranceGender,
+      concentration: values.concentration,
+      longevity: values.longevity,
+      notes: values.notes,
     };
 
-    setProductsList((prev) =>
-      prev.map((p) => (p.id === editingProduct.id ? updatedProduct : p))
-    );
-    setEditingProduct(null);
+    try {
+      await updateProduct(updatedProduct);
+      setProductsList((prev) =>
+        prev.map((p) => (p.id === editingProduct.id ? updatedProduct : p))
+      );
+      
+      if (selectedProduct && selectedProduct.id === editingProduct.id) {
+        setSelectedProduct(updatedProduct);
+      }
+
+      setEditingProduct(null);
+    } catch (err) {
+      console.error("Failed to update product in Firestore:", err);
+      alert("Failed to save product modifications. Please try again.");
+    }
   };
 
   return (
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
-        {isPageLoading ? (
-          <motion.div
-            key="skeleton-loader-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex-grow flex flex-col justify-center"
-          >
-            {currentSkeletonType === "grid" || currentSkeletonType === "home" ? (
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <Navigation 
-                  activeTab={activeTab} 
-                  setActiveTab={(tab) => transitionTo(tab, null, false, null)} 
-                  onNavigate={handleNavigation} 
-                  onCreateProduct={() => transitionTo(activeTab, null, true, null)}
-                />
-                <Skeleton type={currentSkeletonType} />
-                <Footer />
-              </div>
-            ) : (
-              <Skeleton type={currentSkeletonType} />
-            )}
-          </motion.div>
-        ) : isCreatingProduct ? (
+        {isCreatingProduct ? (
           <AddProduct
             key="add-product-screen"
             onCancel={handleGoBack}
@@ -344,7 +369,37 @@ export default function App() {
             />
 
             <AnimatePresence mode="wait">
-              {activeTab === "shop" ? (
+              {isLoadingProducts ? (
+                <motion.div
+                  key="loading-skeleton"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-grow bg-light-brown"
+                >
+                  <Skeleton type={activeTab === "home" ? "home" : "grid"} />
+                </motion.div>
+              ) : productsError ? (
+                <motion.div
+                  key="error-state"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-grow flex flex-col items-center justify-center py-20 px-6 text-center bg-light-brown text-chocolate"
+                >
+                  <p className="text-sm font-mono tracking-widest uppercase text-rose-600 mb-2">Connection Interrupted</p>
+                  <h3 className="font-serif text-2xl mb-4">Could Not Synchronize Catalog</h3>
+                  <p className="max-w-md text-sm text-chocolate/70 leading-relaxed mb-6">
+                    We encountered an issue retrieving the latest bespoke pieces from the database: {productsError}
+                  </p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 bg-chocolate text-cream font-mono text-xs uppercase tracking-wider hover:bg-gold hover:text-chocolate rounded-xl transition-all font-bold cursor-pointer"
+                  >
+                    Reconnect Database
+                  </button>
+                </motion.div>
+              ) : activeTab === "shop" ? (
                 <motion.div
                   key="shop-view"
                   initial={{ opacity: 0, y: 15 }}

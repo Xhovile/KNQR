@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper to validate standard alphanumeric document IDs
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 100;
+    }
+
+    // Helper to validate the Product schema
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+        'id', 'name', 'priceUSD', 'priceMWK', 'image', 'category',
+        'collectionCategory', 'description', 'status', 'stock', 'delivery'
+      ])
+      && data.id is string
+      && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+      && (data.priceUSD is int || data.priceUSD is float) && data.priceUSD >= 0
+      && (data.priceMWK is int || data.priceMWK is float) && data.priceMWK >= 0
+      && data.image is string
+      && data.category is string
+      && data.collectionCategory is string
+      && data.description is string
+      && data.status in ['draft', 'active', 'sold_out', 'archived']
+      && data.stock is int && data.stock >= 0
+      && data.delivery is map;
+    }
+
+    // Products match rule
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if isValidId(productId) && isValidProduct(request.resource.data);
+      allow delete: if true;
+    }
+  }
+}
