@@ -18,6 +18,27 @@ export interface Product {
     methods: string[];
     note?: string;
   };
+
+  // Apparel-specific fields
+  fit?: string;
+  material?: string;
+  apparelGender?: string;
+  sleeveType?: string;
+
+  // Bags & Accessories-specific fields
+  bagType?: string;
+  bagMaterial?: string;
+  strapType?: string;
+  bagCapacity?: string;
+  useCase?: string;
+
+  // Fragrance-specific fields
+  volume?: string;
+  scentFamily?: string;
+  fragranceGender?: string;
+  concentration?: string;
+  longevity?: string;
+  notes?: string[];
 }
 
 export interface CartItem {
