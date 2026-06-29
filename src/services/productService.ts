@@ -1,4 +1,4 @@
-import { db } from "../lib/firebase";
+import { db, auth } from "../lib/firebase";
 import { 
   collection, 
   getDocs, 
@@ -12,6 +12,53 @@ import {
 } from "firebase/firestore";
 import { Product } from "../types";
 import { PRODUCTS } from "../data";
+
+export enum OperationType {
+  CREATE = "create",
+  UPDATE = "update",
+  DELETE = "delete",
+  LIST = "list",
+  GET = "get",
+  WRITE = "write",
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid || null,
+      email: auth.currentUser?.email || null,
+      emailVerified: auth.currentUser?.emailVerified || null,
+      isAnonymous: auth.currentUser?.isAnonymous || null,
+      tenantId: auth.currentUser?.tenantId || null,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error("Firestore Error: ", JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 export interface HeroImages {
   home: string;
@@ -31,6 +78,7 @@ export const DEFAULT_HEROES: HeroImages = {
  * Fetches hero images configuration from Firestore settings collection.
  */
 export async function fetchHeroImages(): Promise<HeroImages> {
+  const path = "settings/heroes";
   try {
     const docRef = doc(db, "settings", "heroes");
     const docSnap = await getDoc(docRef);
@@ -38,7 +86,10 @@ export async function fetchHeroImages(): Promise<HeroImages> {
       return { ...DEFAULT_HEROES, ...docSnap.data() } as HeroImages;
     }
     return DEFAULT_HEROES;
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
     console.error("Error fetching hero images from Firestore:", error);
     return DEFAULT_HEROES;
   }
@@ -48,8 +99,16 @@ export async function fetchHeroImages(): Promise<HeroImages> {
  * Updates a specific page's hero image URL in Firestore.
  */
 export async function updateHeroImageInDb(page: keyof HeroImages, url: string): Promise<void> {
-  const docRef = doc(db, "settings", "heroes");
-  await setDoc(docRef, { [page]: url }, { merge: true });
+  const path = "settings/heroes";
+  try {
+    const docRef = doc(db, "settings", "heroes");
+    await setDoc(docRef, { [page]: url }, { merge: true });
+  } catch (error: any) {
+    if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+    throw error;
+  }
 }
 
 // Helper to remove any undefined properties recursively to prevent Firestore write crashes
@@ -73,6 +132,7 @@ const PRODUCTS_COLLECTION = "products";
  * If the collection is empty, seeds the database with initial products.
  */
 export async function fetchProducts(): Promise<Product[]> {
+  const path = PRODUCTS_COLLECTION;
   try {
     const productsCol = collection(db, PRODUCTS_COLLECTION);
     const q = query(productsCol);
@@ -87,7 +147,10 @@ export async function fetchProducts(): Promise<Product[]> {
     }
     
     return querySnapshot.docs.map(doc => doc.data() as Product);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
     console.error("Error fetching products from Firestore:", error);
     // Return hard-coded products as fallback
     return PRODUCTS;
@@ -101,7 +164,14 @@ async function seedInitialProducts(): Promise<void> {
   try {
     for (const product of PRODUCTS) {
       const cleaned = cleanUndefined(product);
-      await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned);
+      try {
+        await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned);
+      } catch (error: any) {
+        if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+          handleFirestoreError(error, OperationType.WRITE, `${PRODUCTS_COLLECTION}/${product.id}`);
+        }
+        throw error;
+      }
     }
     console.log("Initial products successfully seeded to Firestore.");
   } catch (error) {
@@ -113,21 +183,45 @@ async function seedInitialProducts(): Promise<void> {
  * Creates a new product document in Firestore.
  */
 export async function createProduct(product: Product): Promise<void> {
+  const path = `${PRODUCTS_COLLECTION}/${product.id}`;
   const cleaned = cleanUndefined(product);
-  await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned);
+  try {
+    await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned);
+  } catch (error: any) {
+    if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+    throw error;
+  }
 }
 
 /**
  * Updates an existing product document in Firestore.
  */
 export async function updateProduct(product: Product): Promise<void> {
+  const path = `${PRODUCTS_COLLECTION}/${product.id}`;
   const cleaned = cleanUndefined(product);
-  await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned);
+  try {
+    await setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned);
+  } catch (error: any) {
+    if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+    throw error;
+  }
 }
 
 /**
  * Deletes a product from Firestore.
  */
 export async function deleteProduct(productId: string): Promise<void> {
-  await deleteDoc(doc(db, PRODUCTS_COLLECTION, productId));
+  const path = `${PRODUCTS_COLLECTION}/${productId}`;
+  try {
+    await deleteDoc(doc(db, PRODUCTS_COLLECTION, productId));
+  } catch (error: any) {
+    if (error?.message?.includes("permission") || error?.code === "permission-denied") {
+      handleFirestoreError(error, OperationType.DELETE, path);
+    }
+    throw error;
+  }
 }

@@ -148,6 +148,16 @@ export default function Collection({
   // Extract unique category cards
   const categoryCards = useMemo(() => {
     const uniqueCategories = Array.from(new Set(products.map((p) => p.collectionCategory)));
+    const CATEGORY_ORDER = ["apparel", "bags & accessories", "fragrances"];
+    uniqueCategories.sort((a, b) => {
+      const indexA = CATEGORY_ORDER.indexOf((a || "").toLowerCase());
+      const indexB = CATEGORY_ORDER.indexOf((b || "").toLowerCase());
+      
+      const posA = indexA === -1 ? 999 : indexA;
+      const posB = indexB === -1 ? 999 : indexB;
+      
+      return posA - posB;
+    });
     return uniqueCategories
       .map((cat) => products.find((p) => p.collectionCategory === cat)!)
       .filter(Boolean);

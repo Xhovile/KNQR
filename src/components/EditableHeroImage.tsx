@@ -18,6 +18,7 @@ export default function EditableHeroImage({
 }: EditableHeroImageProps) {
   const [showEditButton, setShowEditButton] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
+  const [rawFile, setRawFile] = useState<File | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -53,6 +54,7 @@ export default function EditableHeroImage({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setRawFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setTempImage(reader.result as string);
@@ -65,15 +67,16 @@ export default function EditableHeroImage({
   };
 
   const handleConfirmSave = async () => {
-    if (!tempImage) return;
+    if (!rawFile) return;
     setIsUploading(true);
     setUploadError(null);
     try {
-      // Direct instant upload to Cloudinary
-      const secureUrl = await uploadToCloudinary(tempImage);
+      // Direct instant upload to Cloudinary using raw File object (exactly like ProductForm)
+      const secureUrl = await uploadToCloudinary(rawFile);
       // Persist to database callback
       await onSave(secureUrl);
       setTempImage(null);
+      setRawFile(null);
       setShowConfirmDialog(false);
     } catch (err: any) {
       console.error("Failed to update hero image:", err);
@@ -86,6 +89,7 @@ export default function EditableHeroImage({
   const handleCancelConfirm = () => {
     if (isUploading) return;
     setTempImage(null);
+    setRawFile(null);
     setShowConfirmDialog(false);
     setUploadError(null);
   };

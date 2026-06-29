@@ -125,12 +125,39 @@
         "stock",
         "delivery"
       ]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Schema representing customizable settings documents such as page hero image URLs",
+      "type": "object",
+      "properties": {
+        "home": {
+          "type": "string",
+          "description": "Hero image URL for the home page"
+        },
+        "apparel": {
+          "type": "string",
+          "description": "Hero image URL for the apparel page"
+        },
+        "bagsAccessories": {
+          "type": "string",
+          "description": "Hero image URL for the bags & accessories page"
+        },
+        "fragrances": {
+          "type": "string",
+          "description": "Hero image URL for the fragrances page"
+        }
+      }
     }
   },
   "firestore": {
     "/products/{productId}": {
       "schema": "Product",
       "description": "The collection storing products for KNQR"
+    },
+    "/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Settings collection storing customizable application state"
     }
   }
 }

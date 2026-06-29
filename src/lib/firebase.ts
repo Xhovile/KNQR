@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import firebaseConfig from "../../firebase-applet-config.json";
 
 // Initialize Firebase App
@@ -11,6 +12,9 @@ const app = initializeApp({
   messagingSenderId: firebaseConfig.messagingSenderId,
   appId: firebaseConfig.appId,
 });
+
+// Initialize Auth
+export const auth = getAuth(app);
 
 // Initialize Firestore (with databaseId if defined)
 export const db = firebaseConfig.firestoreDatabaseId

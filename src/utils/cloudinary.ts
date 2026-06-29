@@ -3,10 +3,12 @@
  * Supports both base64 Data URLs and raw File / Blob objects.
  */
 export async function uploadToCloudinary(fileInput: string | File | Blob): Promise<string> {
-  const metaEnv = (import.meta as any).env || {};
-  const cloudName = metaEnv.VITE_CLOUDINARY_CLOUD_NAME || "db3xx6mn4";
-  const uploadPreset = metaEnv.VITE_CLOUDINARY_UPLOAD_PRESET || "KNQR";
-  const folder = metaEnv.VITE_CLOUDINARY_FOLDER || "KNQR";
+  // @ts-ignore
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "db3xx6mn4";
+  // @ts-ignore
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "KNQR";
+  // @ts-ignore
+  const folder = import.meta.env.VITE_CLOUDINARY_FOLDER || "KNQR";
 
   const formData = new FormData();
   formData.append("file", fileInput);

@@ -59,7 +59,20 @@ export default function ProductDetailPage({
     }, 2500);
   };
 
-  const imagesList = product.images || [product.image];
+  const imagesList = React.useMemo(() => {
+    const list: string[] = [];
+    if (product.image) {
+      list.push(product.image);
+    }
+    if (product.images && product.images.length > 0) {
+      product.images.forEach((img) => {
+        if (img && !list.includes(img)) {
+          list.push(img);
+        }
+      });
+    }
+    return list.length > 0 ? list : [product.image].filter(Boolean) as string[];
+  }, [product.image, product.images]);
 
   const displayPrice =
     priceCurrency === "USD"
