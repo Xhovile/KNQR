@@ -201,83 +201,71 @@ export default function BagsAndAccessoriesPage({
         </div>
 
         {/* Expandable Category Filtering Row */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden border-t border-chocolate/5 pt-4"
-              id="collection-expandable-filters"
-            >
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-[10px] font-mono uppercase text-chocolate/45 mr-2">
-                  Subcategories:
-                </span>
-                {subcategories.map((cat) => {
-                  const isSelected = selectedSubcategory === cat;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedSubcategory(cat)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-chocolate text-cream font-bold shadow-md shadow-chocolate/10"
-                          : "bg-white/60 hover:bg-white border border-chocolate/10 text-chocolate/70 hover:text-chocolate"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {showFilters && (
+          <div
+            className="border-t border-chocolate/5 pt-4"
+            id="collection-expandable-filters"
+          >
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-[10px] font-mono uppercase text-chocolate/45 mr-2">
+                Subcategories:
+              </span>
+              {subcategories.map((cat) => {
+                const isSelected = selectedSubcategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedSubcategory(cat)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-chocolate text-cream font-bold shadow-md shadow-chocolate/10"
+                        : "bg-white/60 hover:bg-white border border-chocolate/10 text-chocolate/70 hover:text-chocolate"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Expandable Sort Options Row */}
-        <AnimatePresence>
-          {showSort && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden border-t border-chocolate/5 pt-4"
-              id="collection-expandable-sort"
-            >
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-[10px] font-mono uppercase text-chocolate/45 mr-2">
-                  Sort By:
-                </span>
-                {[
-                  { value: "price-desc", label: "Price: High to Low" },
-                  { value: "price-asc", label: "Price: Low to High" },
-                  { value: "modified-new", label: "Newest Arrivals" },
-                  { value: "modified-old", label: "Oldest Specs" },
-                  { value: "delivery-available", label: "Delivery Available" },
-                  { value: "delivery-unavailable", label: "Pickup Only" },
-                ].map((opt) => {
-                  const isSelected = sortBy === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setSortBy(opt.value)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-chocolate text-cream font-bold shadow-md shadow-chocolate/10"
-                          : "bg-white/60 hover:bg-white border border-chocolate/10 text-chocolate/70 hover:text-chocolate"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {showSort && (
+          <div
+            className="border-t border-chocolate/5 pt-4"
+            id="collection-expandable-sort"
+          >
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-[10px] font-mono uppercase text-chocolate/45 mr-2">
+                Sort By:
+              </span>
+              {[
+                { value: "price-desc", label: "Price: High to Low" },
+                { value: "price-asc", label: "Price: Low to High" },
+                { value: "modified-new", label: "Newest Arrivals" },
+                { value: "modified-old", label: "Oldest Specs" },
+                { value: "delivery-available", label: "Delivery Available" },
+                { value: "delivery-unavailable", label: "Pickup Only" },
+              ].map((opt) => {
+                const isSelected = sortBy === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSortBy(opt.value)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-chocolate text-cream font-bold shadow-md shadow-chocolate/10"
+                        : "bg-white/60 hover:bg-white border border-chocolate/10 text-chocolate/70 hover:text-chocolate"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bags & Accessories Products Grid */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { 
   ShoppingCart, 
   ArrowUp
@@ -178,6 +178,11 @@ export default function App() {
   }, [productsList]);
 
 
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
   const handleToggleWishlist = useCallback((productId: string) => {
     setWishlist((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
@@ -185,8 +190,8 @@ export default function App() {
   }, []);
 
   const handleViewDetails = useCallback((product: Product) => {
-    transitionTo(activeTab, product, false, null);
-  }, [activeTab]);
+    transitionTo(activeTabRef.current, product, false, null);
+  }, []);
 
   // Monitor scroll for "back to top" button visibility
   useEffect(() => {
@@ -218,6 +223,26 @@ export default function App() {
       return [...prev, { product, quantity, selectedSize: size, selectedColor: color }];
     });
   }, []);
+
+  const handleAddToCartFromShop = useCallback((product: Product, size: string, color: { name: string; value: string }) => {
+    handleAddToCart(product, 1, size, color.name);
+  }, [handleAddToCart]);
+
+  const handleAddToCartFromPages = useCallback((product: Product, size: string, color: { name: string; value: string }) => {
+    handleAddToCart(product, 1, size, color.value);
+  }, [handleAddToCart]);
+
+  const handleUpdateApparelHero = useCallback((url: string) => {
+    return handleUpdateHeroImage("apparel", url);
+  }, [handleUpdateHeroImage]);
+
+  const handleUpdateBagsHero = useCallback((url: string) => {
+    return handleUpdateHeroImage("bagsAccessories", url);
+  }, [handleUpdateHeroImage]);
+
+  const handleUpdateFragrancesHero = useCallback((url: string) => {
+    return handleUpdateHeroImage("fragrances", url);
+  }, [handleUpdateHeroImage]);
 
   const handleUpdateQuantity = (productId: string, quantity: number, size?: string, color?: string) => {
     setCart((prev) =>
@@ -484,7 +509,7 @@ export default function App() {
                   <Shop
                     products={productsList}
                     onViewDetails={handleViewDetails}
-                    onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.name)}
+                    onAddToCart={handleAddToCartFromShop}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
@@ -502,13 +527,13 @@ export default function App() {
                   <ApparelPage
                     products={productsList}
                     onViewDetails={handleViewDetails}
-                    onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.value)}
+                    onAddToCart={handleAddToCartFromPages}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
                     onBackToHome={handleGoBack}
                     heroImage={heroImages.apparel}
-                    onUpdateHeroImage={(url) => handleUpdateHeroImage("apparel", url)}
+                    onUpdateHeroImage={handleUpdateApparelHero}
                   />
                 </motion.div>
               ) : activeTab === "bags-accessories" ? (
@@ -523,13 +548,13 @@ export default function App() {
                   <BagsAndAccessoriesPage
                     products={productsList}
                     onViewDetails={handleViewDetails}
-                    onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.value)}
+                    onAddToCart={handleAddToCartFromPages}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
                     onBackToHome={handleGoBack}
                     heroImage={heroImages.bagsAccessories}
-                    onUpdateHeroImage={(url) => handleUpdateHeroImage("bagsAccessories", url)}
+                    onUpdateHeroImage={handleUpdateBagsHero}
                   />
                 </motion.div>
               ) : activeTab === "fragrances" ? (
@@ -544,26 +569,17 @@ export default function App() {
                   <FragrancesPage
                     products={productsList}
                     onViewDetails={handleViewDetails}
-                    onAddToCart={(product, size, color) => handleAddToCart(product, 1, size, color.value)}
+                    onAddToCart={handleAddToCartFromPages}
                     onToggleWishlist={handleToggleWishlist}
                     wishlist={wishlist}
                     priceCurrency={priceCurrency}
                     onBackToHome={handleGoBack}
                     heroImage={heroImages.fragrances}
-                    onUpdateHeroImage={(url) => handleUpdateHeroImage("fragrances", url)}
+                    onUpdateHeroImage={handleUpdateFragrancesHero}
                   />
                 </motion.div>
               ) : activeTab === "contact" ? (
-                <motion.div
-                  key="contact-view"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.25 }}
-                  className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5"
-                >
-                  <ContactPage />
-                </motion.div>
+                null
               ) : (
                 <motion.div
                   key="home-view"
@@ -610,6 +626,11 @@ export default function App() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Persistent Contact Page view to prevent Google Maps iframe and asset reloading lag */}
+            <div className={!isLoadingProducts && !productsError && activeTab === "contact" ? "flex flex-col flex-grow bg-light-brown" : "hidden"}>
+              <ContactPage />
+            </div>
 
             {/* 6. Centered Chocolate Footer */}
             <Footer />
