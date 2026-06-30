@@ -7,9 +7,10 @@ interface HeroProps {
   onShopClick: () => void;
   heroImage: string;
   onUpdateHeroImage: (url: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
-export default function Hero({ onShopClick, heroImage, onUpdateHeroImage }: HeroProps) {
+export default function Hero({ onShopClick, heroImage, onUpdateHeroImage, isAdmin }: HeroProps) {
   return (
     <section 
       className="relative min-h-[55vh] flex flex-col justify-center items-center px-6 py-6 overflow-hidden border-b-4 border-chocolate bg-white"
@@ -44,6 +45,7 @@ export default function Hero({ onShopClick, heroImage, onUpdateHeroImage }: Hero
             onSave={onUpdateHeroImage}
             alt="KNQR Premium Lifestyle Campaign Model"
             aspectClass="aspect-[3/2]"
+            isAdmin={isAdmin}
           />
         </div>
 

@@ -15,6 +15,7 @@ interface BagsAndAccessoriesPageProps {
   onBackToHome: () => void;
   heroImage: string;
   onUpdateHeroImage: (url: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
 export default function BagsAndAccessoriesPage({
@@ -27,6 +28,7 @@ export default function BagsAndAccessoriesPage({
   onBackToHome,
   heroImage,
   onUpdateHeroImage,
+  isAdmin,
 }: BagsAndAccessoriesPageProps) {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,6 +142,7 @@ export default function BagsAndAccessoriesPage({
               onSave={onUpdateHeroImage}
               alt="Bags and Accessories Showcase"
               aspectClass="aspect-[4/3]"
+              isAdmin={isAdmin}
             />
           </div>
         </div>

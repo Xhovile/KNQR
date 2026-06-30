@@ -15,6 +15,7 @@ interface ApparelPageProps {
   onBackToHome: () => void;
   heroImage: string;
   onUpdateHeroImage: (url: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
 export default function ApparelPage({
@@ -27,6 +28,7 @@ export default function ApparelPage({
   onBackToHome,
   heroImage,
   onUpdateHeroImage,
+  isAdmin,
 }: ApparelPageProps) {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -139,6 +141,7 @@ export default function ApparelPage({
               onSave={onUpdateHeroImage}
               alt="Apparel Campaign model wearing premium knitwear"
               aspectClass="aspect-[4/3]"
+              isAdmin={isAdmin}
             />
           </div>
         </div>

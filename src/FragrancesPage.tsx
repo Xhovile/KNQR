@@ -15,6 +15,7 @@ interface FragrancesPageProps {
   onBackToHome: () => void;
   heroImage: string;
   onUpdateHeroImage: (url: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
 export default function FragrancesPage({
@@ -27,6 +28,7 @@ export default function FragrancesPage({
   onBackToHome,
   heroImage,
   onUpdateHeroImage,
+  isAdmin,
 }: FragrancesPageProps) {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -129,6 +131,7 @@ export default function FragrancesPage({
               onSave={onUpdateHeroImage}
               alt="Fragrance perfume bottle campaign asset"
               aspectClass="aspect-[4/3]"
+              isAdmin={isAdmin}
             />
           </div>
         </div>

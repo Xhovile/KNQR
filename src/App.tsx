@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { 
   ShoppingCart, 
-  ArrowUp
+  ArrowUp,
+  ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -22,6 +23,8 @@ import FragrancesPage from "./FragrancesPage";
 import ContactPage from "./ContactPage";
 import Skeleton from "./components/Skeleton";
 import { ProductDraftValues } from "./productSchema";
+import { auth } from "./lib/firebase";
+import AuthForm from "./components/AuthForm";
 
 import { PRODUCTS } from "./data";
 import { Product, CartItem, ActiveTab } from "./types";
@@ -49,6 +52,31 @@ export default function App() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [heroImages, setHeroImages] = useState<HeroImages>(DEFAULT_HEROES);
+  const [user, setUser] = useState<any>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [showAdminGuardModal, setShowAdminGuardModal] = useState(false);
+  const [adminGuardAction, setAdminGuardAction] = useState<"add" | "edit" | "hero" | null>(null);
+
+  const isAdmin = user && user.email === "xhovilepublications@gmail.com";
+
+  // Subscribe to Authentication State
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      setIsLoadingAuth(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      setUser(null);
+      transitionTo("home");
+    } catch (err) {
+      console.error("Failed to sign out:", err);
+    }
+  };
 
   // Load products and hero images from Firestore on boot
   useEffect(() => {
@@ -440,7 +468,12 @@ export default function App() {
             onAddToCart={handleAddToCart}
             priceCurrency={priceCurrency}
             onEditProduct={(prod) => {
-              transitionTo(activeTab, null, false, prod);
+              if (!isAdmin) {
+                setAdminGuardAction("edit");
+                setShowAdminGuardModal(true);
+              } else {
+                transitionTo(activeTab, null, false, prod);
+              }
             }}
           />
         ) : (
@@ -463,7 +496,16 @@ export default function App() {
               activeTab={activeTab} 
               setActiveTab={(tab) => transitionTo(tab, null, false, null)} 
               onNavigate={handleNavigation} 
-              onCreateProduct={() => transitionTo(activeTab, null, true, null)}
+              onCreateProduct={() => {
+                if (!isAdmin) {
+                  setAdminGuardAction("add");
+                  setShowAdminGuardModal(true);
+                } else {
+                  transitionTo(activeTab, null, true, null);
+                }
+              }}
+              user={user}
+              onSignOut={handleSignOut}
             />
 
             <AnimatePresence mode="wait">
@@ -534,6 +576,7 @@ export default function App() {
                     onBackToHome={handleGoBack}
                     heroImage={heroImages.apparel}
                     onUpdateHeroImage={handleUpdateApparelHero}
+                    isAdmin={isAdmin}
                   />
                 </motion.div>
               ) : activeTab === "bags-accessories" ? (
@@ -555,6 +598,7 @@ export default function App() {
                     onBackToHome={handleGoBack}
                     heroImage={heroImages.bagsAccessories}
                     onUpdateHeroImage={handleUpdateBagsHero}
+                    isAdmin={isAdmin}
                   />
                 </motion.div>
               ) : activeTab === "fragrances" ? (
@@ -576,7 +620,80 @@ export default function App() {
                     onBackToHome={handleGoBack}
                     heroImage={heroImages.fragrances}
                     onUpdateHeroImage={handleUpdateFragrancesHero}
+                    isAdmin={isAdmin}
                   />
+                </motion.div>
+              ) : activeTab === "auth" ? (
+                <motion.div
+                  key="auth-view"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex-grow flex flex-col items-center justify-center py-12 px-4 bg-light-brown text-chocolate"
+                >
+                  {user ? (
+                    <div className="bg-chocolate-dark text-cream p-8 sm:p-12 rounded-2xl shadow-2xl border border-cream/10 max-w-xl w-full mx-auto my-8 luxury-glow" id="knqr-profile-card">
+                      <div className="flex flex-col items-center text-center">
+                        {user.photoURL ? (
+                          <img 
+                            src={user.photoURL} 
+                            alt={user.displayName || "User Avatar"} 
+                            className="w-24 h-24 rounded-full border-2 border-gold mb-6 object-cover shadow-lg"
+                            referrerPolicy="no-referrer"
+                            id="profile-avatar-img"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-full border-2 border-gold bg-chocolate flex items-center justify-center text-gold text-3xl font-serif mb-6 shadow-lg" id="profile-avatar-fallback">
+                            {user.displayName ? user.displayName[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : "U")}
+                          </div>
+                        )}
+                        
+                        <span className="px-3 py-1 bg-gold/10 text-gold text-[10px] tracking-[0.2em] font-mono uppercase rounded-full mb-3 border border-gold/20" id="profile-badge">
+                          Bespoke VIP Patron
+                        </span>
+                        
+                        <h2 className="font-serif text-3xl text-cream mb-1" id="profile-display-name">{user.displayName || "Elite Member"}</h2>
+                        <p className="font-mono text-xs text-gold tracking-widest uppercase mb-8" id="profile-id-text">KNQR Club ID: #{user.uid.substring(0, 8).toUpperCase()}</p>
+                        
+                        <div className="w-full space-y-4 border-t border-cream/5 pt-6 text-left max-w-sm" id="profile-details-table">
+                          <div className="flex justify-between items-center text-xs font-mono py-1.5 border-b border-cream/5" id="profile-email-row">
+                            <span className="text-cream/40 uppercase tracking-wider">Email Address</span>
+                            <span className="text-cream font-medium select-all">{user.email || "N/A"}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs font-mono py-1.5 border-b border-cream/5" id="profile-status-row">
+                            <span className="text-cream/40 uppercase tracking-wider">Status</span>
+                            <span className="text-emerald-400 font-medium flex items-center space-x-1">
+                              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse mr-1" />
+                              <span>Active Session</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 mt-10 w-full max-w-sm" id="profile-actions">
+                          <button
+                            onClick={() => transitionTo("shop")}
+                            className="flex-1 px-6 py-3 bg-gold text-chocolate hover:bg-cream hover:text-chocolate font-mono text-xs uppercase tracking-wider rounded-xl transition-all font-bold cursor-pointer text-center shadow-lg hover:scale-[1.02]"
+                            id="profile-shop-btn"
+                          >
+                            Explore Collections
+                          </button>
+                          <button
+                            onClick={handleSignOut}
+                            className="flex-1 px-6 py-3 border border-cream/10 hover:border-rose-500/30 hover:bg-rose-500/5 hover:text-rose-400 font-mono text-xs uppercase tracking-wider rounded-xl transition-all text-center cursor-pointer hover:scale-[1.02]"
+                            id="profile-signout-btn"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <AuthForm onSuccess={(u) => {
+                      setUser(u);
+                      transitionTo("home");
+                    }} />
+                  )}
                 </motion.div>
               ) : activeTab === "contact" ? (
                 null
@@ -594,6 +711,7 @@ export default function App() {
                     onShopClick={() => transitionTo("shop", null, false, null)} 
                     heroImage={heroImages.home}
                     onUpdateHeroImage={(url) => handleUpdateHeroImage("home", url)}
+                    isAdmin={isAdmin}
                   />
 
                   {/* 4. Featured Collections Shelf */}
@@ -675,6 +793,64 @@ export default function App() {
         onClearCart={handleClearCart}
         priceCurrency={priceCurrency}
       />
+
+      {/* Admin Guard Dialog Modal */}
+      <AnimatePresence>
+        {showAdminGuardModal && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-chocolate-dark/80 backdrop-blur-sm p-4" id="admin-guard-modal-backdrop">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-xs w-full bg-[#18191b] border border-cream/15 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-cream"
+              id="admin-guard-modal-content"
+            >
+              {/* Premium Geometric Accent */}
+              <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
+              
+              <div className="w-12 h-12 rounded-full border border-gold/20 bg-gold/5 flex items-center justify-center mx-auto mb-4">
+                <ShieldAlert className="w-6 h-6 text-gold" />
+              </div>
+              
+              <h3 className="font-serif text-lg tracking-widest text-gold uppercase mb-1" id="admin-guard-title">
+                Admin Access
+              </h3>
+              <p className="font-mono text-[8px] tracking-[0.2em] text-cream/40 uppercase mb-3">
+                Authorized Personnel Only
+              </p>
+              
+              <p className="text-xs text-cream/70 leading-relaxed mb-6 font-sans">
+                {adminGuardAction === "add" 
+                  ? "Adding new products is restricted to Authorized Brand Administrators."
+                  : "Modifying catalog products is restricted to Authorized Brand Administrators."}
+                {" "}Please sign in with an administrator account.
+              </p>
+
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminGuardModal(false)}
+                  className="flex-1 py-2 border border-cream/10 hover:border-cream/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-cream/60 hover:text-cream transition-all cursor-pointer"
+                  id="admin-guard-cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAdminGuardModal(false);
+                    transitionTo("auth");
+                  }}
+                  className="flex-1 py-2 bg-gold text-chocolate font-bold hover:bg-cream rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer"
+                  id="admin-guard-signin-btn"
+                >
+                  Sign In
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 

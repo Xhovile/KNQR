@@ -680,14 +680,14 @@ export default function ContactPage() {
       </div>
 
       {/* 7. Bottom Statement Section */}
-      <div className="max-w-4xl mx-auto w-full mt-20 text-center space-y-5 bg-chocolate text-cream border border-cream/15 p-8 rounded-3xl relative overflow-hidden">
+      <div className="max-w-4xl mx-auto w-full mt-20 text-center space-y-5 bg-white text-chocolate border border-chocolate/10 p-8 rounded-3xl relative overflow-hidden shadow-sm">
         <div className="absolute -top-12 -left-12 w-20 h-20 bg-gold/5 rounded-full blur-xl" />
         <div className="absolute -bottom-12 -right-12 w-20 h-20 bg-gold/5 rounded-full blur-xl" />
         
         <span className="text-[9px] font-mono tracking-[0.4em] text-gold uppercase font-bold">
           WE'RE HERE TO HELP
         </span>
-        <p className="text-sm text-cream/85 max-w-xl mx-auto leading-relaxed font-light">
+        <p className="text-sm text-chocolate/85 max-w-xl mx-auto leading-relaxed font-light">
           Whether you're shopping for your next look, need assistance with an order, or want to collaborate with KNQR, our team is ready to assist you.
         </p>
       </div>

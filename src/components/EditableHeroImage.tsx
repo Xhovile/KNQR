@@ -8,13 +8,15 @@ interface EditableHeroImageProps {
   onSave: (url: string) => Promise<void>;
   alt?: string;
   aspectClass?: string;
+  isAdmin?: boolean;
 }
 
 export default function EditableHeroImage({
   src,
   onSave,
   alt = "KNQR Premium Campaign Asset",
-  aspectClass = "aspect-[3/2]"
+  aspectClass = "aspect-[3/2]",
+  isAdmin = false
 }: EditableHeroImageProps) {
   const [showEditButton, setShowEditButton] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function EditableHeroImage({
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startLongPress = () => {
+    if (!isAdmin) return;
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = setTimeout(() => {
       setShowEditButton(true);
@@ -123,9 +126,11 @@ export default function EditableHeroImage({
         )}
 
         {/* Floating subtle helper hint for better user discoverability */}
-        <div className="absolute top-3 right-3 bg-chocolate/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-mono uppercase tracking-widest text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          Hold to Edit
-        </div>
+        {isAdmin && (
+          <div className="absolute top-3 right-3 bg-chocolate/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-mono uppercase tracking-widest text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            Hold to Edit
+          </div>
+        )}
 
         {/* Hidden file input */}
         <input

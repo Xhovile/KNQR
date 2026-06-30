@@ -1,16 +1,18 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ActiveTab } from "../types";
-import { Menu, X, Plus, User, Settings as SettingsIcon, UserPlus, LogIn } from "lucide-react";
+import { Menu, X, Plus, User, Settings as SettingsIcon, LogIn, LogOut } from "lucide-react";
 
 interface NavigationProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   onNavigate: (tab: ActiveTab) => void;
   onCreateProduct?: () => void;
+  user?: any;
+  onSignOut?: () => void;
 }
 
-export default function Navigation({ activeTab, setActiveTab, onNavigate, onCreateProduct }: NavigationProps) {
+export default function Navigation({ activeTab, setActiveTab, onNavigate, onCreateProduct, user, onSignOut }: NavigationProps) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [activeNotification, setActiveNotification] = React.useState<string | null>(null);
 
@@ -20,17 +22,31 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
     { id: "contact", label: "Contact" },
   ];
 
-  const menuItems = [
-    { label: "Add Product", icon: Plus },
-    { label: "Profile", icon: User },
-    { label: "Settings", icon: SettingsIcon },
-    { label: "Sign Up", icon: UserPlus },
-    { label: "Sign In", icon: LogIn },
-  ];
+  const menuItems = user
+    ? [
+        { label: "Profile", icon: User },
+        { label: "Add Product", icon: Plus },
+        { label: "Settings", icon: SettingsIcon },
+        { label: "Sign Out", icon: LogOut },
+      ]
+    : [
+        { label: "Sign In", icon: LogIn },
+      ];
 
   const handlePlaceholderClick = (actionName: string) => {
     if (actionName === "Add Product" && onCreateProduct) {
       onCreateProduct();
+      setDropdownOpen(false);
+      return;
+    }
+    if ((actionName === "Profile" || actionName === "Sign In")) {
+      setActiveTab("auth");
+      onNavigate("auth");
+      setDropdownOpen(false);
+      return;
+    }
+    if (actionName === "Sign Out" && onSignOut) {
+      onSignOut();
       setDropdownOpen(false);
       return;
     }
