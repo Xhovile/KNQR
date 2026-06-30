@@ -38,7 +38,6 @@ import {
 export default function App() {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isTabLoading, setIsTabLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -107,14 +106,6 @@ export default function App() {
       finalEditing = null;
     }
 
-    const isTabChange = tab !== activeTab || (product !== null && product !== selectedProduct);
-    if (isTabChange && !finalIsCreating && !finalEditing) {
-      setIsTabLoading(true);
-      requestAnimationFrame(() => {
-        setIsTabLoading(false);
-      });
-    }
-
     setActiveTab(tab);
     setSelectedProduct(product);
     setIsCreatingProduct(finalIsCreating);
@@ -152,13 +143,6 @@ export default function App() {
         const foundEditing = PRODUCTS.find((p) => p.id === state.editingProductId) || null;
         const actualEditing = productsList.find((p) => p.id === state.editingProductId) || foundEditing;
 
-        if (state.activeTab !== activeTab) {
-          setIsTabLoading(true);
-          requestAnimationFrame(() => {
-            setIsTabLoading(false);
-          });
-        }
-
         const shouldSkipEditor = (window as any).hasPublishedProduct;
         const isCreatingParam = shouldSkipEditor ? false : !!state.isCreatingProduct;
         const editingParam = shouldSkipEditor ? null : actualEditing;
@@ -171,10 +155,6 @@ export default function App() {
           true
         );
       } else {
-        setIsTabLoading(true);
-        requestAnimationFrame(() => {
-          setIsTabLoading(false);
-        });
         transitionTo("home", null, false, null, true);
       }
     };
@@ -462,7 +442,7 @@ export default function App() {
             />
 
             <AnimatePresence mode="wait">
-              {isLoadingProducts || isTabLoading ? (
+              {isLoadingProducts ? (
                 <motion.div
                   key="loading-skeleton"
                   initial={{ opacity: 0 }}
