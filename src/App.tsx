@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from "motion/react";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Hero from "./components/Hero";
-import Collection from "./components/Collection";
-import Promo from "./components/Promo";
+const Collection = React.lazy(() => import("./components/Collection"));
+const Promo = React.lazy(() => import("./components/Promo"));
 import Footer from "./components/Footer";
 import Cart from "./components/Cart";
 import ProductDetailPage from "./ProductDetailPage";
@@ -51,25 +51,26 @@ export default function App() {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [heroImages, setHeroImages] = useState<HeroImages>(DEFAULT_HEROES);
 
-  // Load products and hero images from Firestore on boot in parallel
+  // Load products and hero images from Firestore on boot
   useEffect(() => {
     async function initApp() {
       setIsLoadingProducts(true);
       try {
-        const [fetchedProducts, fetchedHeroes] = await Promise.all([
-          fetchProducts(),
-          fetchHeroImages()
-        ]);
+        const fetchedProducts = await fetchProducts();
         setProductsList(fetchedProducts);
-        setHeroImages(fetchedHeroes);
         setProductsError(null);
       } catch (err: any) {
-        console.error("Failed to load initial bespoke catalog data:", err);
         setProductsError(err?.message || "An error occurred while loading catalog.");
       } finally {
         setIsLoadingProducts(false);
       }
+
+      // fetch hero images after first paint
+      fetchHeroImages()
+        .then(setHeroImages)
+        .catch((err) => console.error("Failed to load hero images:", err));
     }
+
     initApp();
   }, []);
 
@@ -109,9 +110,9 @@ export default function App() {
     const isTabChange = tab !== activeTab || (product !== null && product !== selectedProduct);
     if (isTabChange && !finalIsCreating && !finalEditing) {
       setIsTabLoading(true);
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         setIsTabLoading(false);
-      }, 450);
+      });
     }
 
     setActiveTab(tab);
@@ -119,8 +120,8 @@ export default function App() {
     setIsCreatingProduct(finalIsCreating);
     setEditingProduct(finalEditing);
 
-    // Scroll to top of the page on transition
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll to top of the page on transition instantly
+    window.scrollTo(0, 0);
 
     if (!skipPush) {
       const stateObj = {
@@ -153,9 +154,9 @@ export default function App() {
 
         if (state.activeTab !== activeTab) {
           setIsTabLoading(true);
-          setTimeout(() => {
+          requestAnimationFrame(() => {
             setIsTabLoading(false);
-          }, 450);
+          });
         }
 
         const shouldSkipEditor = (window as any).hasPublishedProduct;
@@ -171,9 +172,9 @@ export default function App() {
         );
       } else {
         setIsTabLoading(true);
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           setIsTabLoading(false);
-        }, 450);
+        });
         transitionTo("home", null, false, null, true);
       }
     };
@@ -269,16 +270,16 @@ export default function App() {
 
   const handleNavigation = (tab: ActiveTab) => {
     if (tab === "home") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     } else if (tab === "shop") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     } else if (tab === "contact") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     }
   };
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo(0, 0);
     setActiveTab("home");
   };
 
@@ -600,24 +601,32 @@ export default function App() {
                   />
 
                   {/* 4. Featured Collections Shelf */}
-                  <Collection
-                    products={productsList}
-                    onSelectCollection={(collectionCategory) => {
-                      const lower = collectionCategory.toLowerCase();
-                      let tab: ActiveTab = "apparel";
-                      if (lower.includes("bags") || lower.includes("accessories")) {
-                        tab = "bags-accessories";
-                      } else if (lower.includes("fragrance")) {
-                        tab = "fragrances";
-                      }
-                      transitionTo(tab, null, false, null);
-                    }}
-                    onAddToCart={(prod) => handleAddToCart(prod, 1, prod.sizes?.[0], prod.colors?.[0])}
-                    priceCurrency={priceCurrency}
-                  />
+                  <React.Suspense fallback={
+                    <div className="py-12 flex items-center justify-center text-xs font-mono tracking-widest text-chocolate/40 bg-light-brown">
+                      Loading Curated Collections...
+                    </div>
+                  }>
+                    <Collection
+                      products={productsList}
+                      onSelectCollection={(collectionCategory) => {
+                        const lower = collectionCategory.toLowerCase();
+                        let tab: ActiveTab = "apparel";
+                        if (lower.includes("bags") || lower.includes("accessories")) {
+                          tab = "bags-accessories";
+                        } else if (lower.includes("fragrance")) {
+                          tab = "fragrances";
+                        }
+                        transitionTo(tab, null, false, null);
+                      }}
+                      onAddToCart={(prod) => handleAddToCart(prod, 1, prod.sizes?.[0], prod.colors?.[0])}
+                      priceCurrency={priceCurrency}
+                    />
+                  </React.Suspense>
 
                   {/* 5. Promotional Banner Overlay */}
-                  <Promo onShopClick={() => transitionTo("shop", null, false, null)} />
+                  <React.Suspense fallback={null}>
+                    <Promo onShopClick={() => transitionTo("shop", null, false, null)} />
+                  </React.Suspense>
                 </motion.div>
               )}
             </AnimatePresence>

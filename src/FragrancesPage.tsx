@@ -273,30 +273,24 @@ export default function FragrancesPage({
       <div className="min-h-[400px]">
         {filteredAndSortedProducts.length > 0 ? (
           <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
             className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
           >
-            <AnimatePresence>
-              {filteredAndSortedProducts.map((product) => {
-                const isWishlisted = wishlist.includes(product.id);
-                return (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.25 }}
-                    key={product.id}
-                  >
-                    <ProductCard
-                      product={product}
-                      onViewDetails={onViewDetails}
-                      onAddToCart={onAddToCart}
-                      onToggleWishlist={onToggleWishlist}
-                      isWishlisted={isWishlisted}
-                    />
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+            {filteredAndSortedProducts.map((product) => {
+              const isWishlisted = wishlist.includes(product.id);
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onViewDetails={onViewDetails}
+                  onAddToCart={onAddToCart}
+                  onToggleWishlist={onToggleWishlist}
+                  isWishlisted={isWishlisted}
+                />
+              );
+            })}
           </motion.div>
         ) : (
           <div className="flex flex-col items-center justify-center text-center py-24 px-6 border border-chocolate/10 rounded-2xl bg-white/20 space-y-4">
