@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Trash2, ShieldCheck, CreditCard, Landmark, Check, ShoppingBag, Plus, Minus } from "lucide-react";
+import { X, Trash2, ShieldCheck, CreditCard, Landmark, Check, ShoppingCart, Plus, Minus } from "lucide-react";
 import { CartItem } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -75,9 +75,9 @@ export default function Cart({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-cream/5 select-none">
             <div className="flex items-center space-x-2">
-              <ShoppingBag className="w-5 h-5 text-gold" />
+              <ShoppingCart className="w-5 h-5 text-gold" />
               <h3 className="font-serif text-xl text-cream font-medium tracking-wide">
-                Your Bag ({cartItems.reduce((acc, item) => acc + item.quantity, 0)})
+                Your Cart ({cartItems.reduce((acc, item) => acc + item.quantity, 0)})
               </h3>
             </div>
             <button
@@ -94,10 +94,10 @@ export default function Cart({
             {cartItems.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-4 px-4 select-none">
                 <div className="w-16 h-16 rounded-full border border-cream/10 flex items-center justify-center text-cream/30">
-                  <ShoppingBag className="w-8 h-8" />
+                  <ShoppingCart className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="font-serif text-lg text-cream font-medium">Your Bag is Empty</h4>
+                  <h4 className="font-serif text-lg text-cream font-medium">Your Cart is Empty</h4>
                   <p className="text-xs text-cream/50 mt-1 max-w-xs font-sans">
                     Browse our luxury collection of custom Malawian apparel and discover your perfect conquer vibe.
                   </p>
