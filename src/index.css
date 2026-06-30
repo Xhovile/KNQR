@@ -190,4 +190,13 @@ body {
   color: #18191b !important;
 }
 
+/* Ensure email icon is visible (darkened) on the light background, but becomes white again on hover */
+#knqr-auth-form-container .firebaseui-idp-button[data-provider-id="password"] .firebaseui-idp-icon {
+  filter: brightness(0) !important;
+}
+
+#knqr-auth-form-container .firebaseui-idp-button[data-provider-id="password"]:hover .firebaseui-idp-icon {
+  filter: none !important;
+}
+
 

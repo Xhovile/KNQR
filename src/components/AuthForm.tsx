@@ -25,6 +25,11 @@ interface AuthFormProps {
 
 export default function AuthForm({ onSuccess }: AuthFormProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onSuccessRef = useRef(onSuccess);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+  }, [onSuccess]);
 
   useEffect(() => {
     // Get or create FirebaseUI instance
@@ -33,8 +38,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     const uiConfig: firebaseui.auth.Config = {
       callbacks: {
         signInSuccessWithAuthResult: (authResult) => {
-          if (onSuccess && authResult.user) {
-            onSuccess(authResult.user);
+          if (onSuccessRef.current && authResult.user) {
+            onSuccessRef.current(authResult.user);
           }
           // Return false to handle redirect/routing manually in React
           return false;
@@ -60,7 +65,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     return () => {
       ui.reset();
     };
-  }, [onSuccess]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-white border border-gray-200 rounded-2xl shadow-2xl max-w-md w-full mx-auto my-12" id="knqr-auth-form-container">
