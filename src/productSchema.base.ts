@@ -283,3 +283,47 @@ export function createEmptyBaseProductDraft(): ProductDraftValues {
 export function getBaseProductSchemaField(key: string): ProductSchemaField | undefined {
   return BASE_PRODUCT_SCHEMA.fields.find((field) => field.key === key);
 }
+
+// Backward compatibility exports
+export const PRODUCT_SCHEMA = BASE_PRODUCT_SCHEMA;
+
+export function createEmptyProductDraft(): ProductDraftValues {
+  return {
+    name: "",
+    priceUSD: null,
+    priceMWK: null,
+    collectionCategory: "Apparel",
+    category: "T-shirts",
+    image: "",
+    images: [],
+    sizes: [],
+    colors: [],
+    description: "",
+    status: "draft",
+    stock: null,
+    deliveryMethod: "",
+    deliveryNote: "",
+    details: [],
+
+    // Defaults for Apparel
+    fit: "Regular Fit",
+    material: "100% Malawian Cotton",
+    apparelGender: "Unisex",
+    sleeveType: "Short Sleeve",
+
+    // Defaults for Bags
+    bagType: "Backpack",
+    bagMaterial: "Full-Grain Genuine Leather",
+    strapType: "Adjustable Padded Shoulder Straps",
+    bagCapacity: "15L - 30L (Daily)",
+    useCase: "Daily Commute & Office",
+
+    // Defaults for Fragrances
+    volume: "100ml",
+    scentFamily: "Woody & Earthy",
+    fragranceGender: "Unisex / Fluid",
+    concentration: "Eau de Parfum (EDP)",
+    longevity: "Long-Lasting (6-8 Hours)",
+    notes: []
+  };
+}

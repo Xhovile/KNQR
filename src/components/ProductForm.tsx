@@ -3,11 +3,12 @@ import { Undo, Eye, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ProductDraftValues,
-  createEmptyBaseProductDraft,
+  PRODUCT_SCHEMA,
+  createEmptyProductDraft,
   SUBCATEGORIES_MAP,
   ProductDeliveryMethod,
   ProductSchemaField,
-  getProductSchemaForCategory,
+  ProductCollectionCategory,
 } from "../productSchema";
 import { Product } from "../types";
 import { uploadToCloudinary } from "../utils/cloudinary";
@@ -39,7 +40,7 @@ export default function ProductForm({
   onSubmit,
 }: ProductFormProps) {
   const [values, setValues] = useState<ProductDraftValues>(() => {
-    const defaultDraft = createEmptyBaseProductDraft();
+    const defaultDraft = createEmptyProductDraft();
     if (!initialValues) return defaultDraft;
 
     const isFullProduct = "id" in initialValues;
@@ -50,7 +51,7 @@ export default function ProductForm({
         name: prod.name || "",
         priceUSD: prod.priceUSD ?? null,
         priceMWK: prod.priceMWK ?? null,
-        collectionCategory: (prod.collectionCategory as ProductDraftValues["collectionCategory"]) || "Apparel",
+        collectionCategory: (prod.collectionCategory as ProductCollectionCategory) || "Apparel",
         category: prod.category || "T-shirts",
         image: prod.image || "",
         images: prod.images || (prod.image ? [prod.image] : []),
@@ -89,11 +90,6 @@ export default function ProductForm({
     } as ProductDraftValues;
   });
 
-  const activeSchema = useMemo(
-    () => getProductSchemaForCategory(values.collectionCategory),
-    [values.collectionCategory]
-  );
-
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,11 +97,9 @@ export default function ProductForm({
     basic: true,
     pricing: false,
     media: false,
+    variants: false,
     delivery: false,
     extras: false,
-    "apparel-variants": false,
-    "bag-variants": false,
-    "fragrance-variants": false,
   });
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [isUploading, setIsUploading] = useState(false);
@@ -139,7 +133,7 @@ export default function ProductForm({
   };
 
   const doesSectionHaveError = (sectionKey: string) => {
-    const sectionFields = activeSchema.sections.find((s) => s.key === sectionKey)?.fields || [];
+    const sectionFields = PRODUCT_SCHEMA.sections.find((s) => s.key === sectionKey)?.fields || [];
     return sectionFields.some((fKey) => !!errors[fKey]);
   };
 
@@ -155,7 +149,7 @@ export default function ProductForm({
       const next = { ...prev, [key]: val };
 
       if (key === "collectionCategory") {
-        const subcategories = SUBCATEGORIES_MAP[val as ProductDraftValues["collectionCategory"]] || [];
+        const subcategories = SUBCATEGORIES_MAP[val] || [];
         next.category = subcategories[0] || "";
       }
 
@@ -198,7 +192,7 @@ export default function ProductForm({
   const handlePublish = async () => {
     const validationErrors: Record<string, string> = {};
 
-    activeSchema.fields.forEach((field) => {
+    PRODUCT_SCHEMA.fields.forEach((field) => {
       if (!isFieldActive(field, values)) return;
       if (field.key === "image" || field.key === "images") return;
 
@@ -217,7 +211,7 @@ export default function ProductForm({
       setErrors(validationErrors);
 
       const newOpenState = { ...openSections };
-      activeSchema.sections.forEach((section) => {
+      PRODUCT_SCHEMA.sections.forEach((section) => {
         const hasSectionError = section.fields.some((fKey) => !!validationErrors[fKey]);
         if (hasSectionError) {
           newOpenState[section.key] = true;
@@ -322,9 +316,9 @@ export default function ProductForm({
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className={`space-y-6 lg:col-span-7 ${previewTab === "preview" ? "hidden lg:block" : "block"}`}>
-          {activeSchema.sections.map((section) => {
+          {PRODUCT_SCHEMA.sections.map((section) => {
             const hasError = doesSectionHaveError(section.key);
-            const activeFields = activeSchema.fields.filter(
+            const activeFields = PRODUCT_SCHEMA.fields.filter(
               (f) => f.section === section.key && isFieldActive(f, values)
             );
 
@@ -360,10 +354,7 @@ export default function ProductForm({
                           {existingImages.map((url, idx) => {
                             const isPrimary = values.image === url;
                             return (
-                              <div
-                                key={`${url}-${idx}`}
-                                className={`overflow-hidden rounded-xl border bg-slate-50 ${isPrimary ? "border-gold ring-1 ring-gold/20" : "border-slate-200"}`}
-                              >
+                              <div key={`${url}-${idx}`} className={`overflow-hidden rounded-xl border bg-slate-50 ${isPrimary ? "border-gold ring-1 ring-gold/20" : "border-slate-200"}`}>
                                 <div className="aspect-square w-full bg-slate-100">
                                   <img src={url} alt={`Current product image ${idx + 1}`} className="h-full w-full object-cover" />
                                 </div>
