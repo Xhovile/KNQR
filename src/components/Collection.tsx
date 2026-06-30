@@ -105,9 +105,8 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
           </div>
         )}
 
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] font-bold tracking-[0.25em] uppercase text-cream/90 z-10 bg-chocolate/40 backdrop-blur-sm px-3 py-2 rounded-xl border border-cream/5">
-          <span>{product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}</span>
-          <span>{product.delivery.available ? "Delivery available" : "Pickup only"}</span>
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center text-[10px] font-bold tracking-[0.25em] uppercase text-cream/90 z-10 bg-chocolate/40 backdrop-blur-sm px-3 py-2 rounded-xl border border-cream/5">
+          <span>{allProducts.filter(p => p.collectionCategory === product.collectionCategory && p.status === "active").reduce((sum, p) => sum + (p.stock || 0), 0)} In Stock</span>
         </div>
 
         <div className="absolute inset-0 bg-chocolate/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3 pointer-events-none group-hover:pointer-events-auto">
