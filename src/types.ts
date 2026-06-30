@@ -13,6 +13,8 @@ export interface Product {
   details?: string[];
   status: "draft" | "active" | "sold_out" | "archived";
   stock: number;
+  sold?: number;
+  totalStock?: number;
   delivery: {
     available: boolean;
     methods: string[];

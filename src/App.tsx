@@ -55,7 +55,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [showAdminGuardModal, setShowAdminGuardModal] = useState(false);
-  const [adminGuardAction, setAdminGuardAction] = useState<"add" | "edit" | "hero" | null>(null);
+  const [adminGuardAction, setAdminGuardAction] = useState<"add" | "edit" | "hero" | "restock" | "record_sale" | null>(null);
 
   const isAdmin = user && user.email === "xhovilepublications@gmail.com";
 
@@ -444,6 +444,21 @@ export default function App() {
     }
   };
 
+  const handleUpdateProduct = async (updatedProduct: Product) => {
+    try {
+      await updateProduct(updatedProduct);
+      setProductsList((prev) =>
+        prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+      );
+      if (selectedProduct && selectedProduct.id === updatedProduct.id) {
+        setSelectedProduct(updatedProduct);
+      }
+    } catch (err) {
+      console.error("Failed to update product:", err);
+      throw err;
+    }
+  };
+
   return (
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
@@ -474,6 +489,12 @@ export default function App() {
               } else {
                 transitionTo(activeTab, null, false, prod);
               }
+            }}
+            isAdmin={isAdmin}
+            onUpdateProduct={handleUpdateProduct}
+            onTriggerAdminGuard={(action) => {
+              setAdminGuardAction(action);
+              setShowAdminGuardModal(true);
             }}
           />
         ) : (
@@ -822,6 +843,10 @@ export default function App() {
               <p className="text-xs text-cream/70 leading-relaxed mb-6 font-sans">
                 {adminGuardAction === "add" 
                   ? "Adding new products is restricted to Authorized Brand Administrators."
+                  : adminGuardAction === "restock"
+                  ? "Restocking product inventory is restricted to Authorized Brand Administrators."
+                  : adminGuardAction === "record_sale"
+                  ? "Recording custom sales is restricted to Authorized Brand Administrators."
                   : "Modifying catalog products is restricted to Authorized Brand Administrators."}
                 {" "}Please sign in with an administrator account.
               </p>
