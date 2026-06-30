@@ -278,15 +278,13 @@ export default function BagsAndAccessoriesPage({
       <div className="min-h-[400px]">
         {filteredAndSortedProducts.length > 0 ? (
           <motion.div
-            layout
             className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
           >
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {filteredAndSortedProducts.map((product) => {
                 const isWishlisted = wishlist.includes(product.id);
                 return (
                   <motion.div
-                    layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}

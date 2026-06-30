@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Check, MoreHorizontal, X, Pencil, PackagePlus, BadgePercent, Share2, Sparkles } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Check, MoreHorizontal, X, Pencil, PackagePlus, BadgePercent, Share2, Sparkles, MessageCircle } from "lucide-react";
 import { Product } from "./types";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -398,6 +398,19 @@ export default function ProductDetailPage({
                 </>
               )}
             </button>
+
+            <a
+              href={`https://wa.me/265883184144?text=${encodeURIComponent(
+                `Hello, I am interested in: ${product.name} (${displayPrice}). Size: ${selectedSize || 'Any'}, Color: ${selectedColor || 'Any'}.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-4 rounded-xl border border-chocolate/20 text-chocolate hover:border-gold hover:text-gold hover:bg-chocolate/5 transition-all duration-300 flex items-center justify-center space-x-3 cursor-pointer text-xs tracking-[0.3em] uppercase font-semibold"
+              id="detail-whatsapp-chat-cta"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-600" />
+              <span>Chat on WhatsApp</span>
+            </a>
           </div>
         </div>
       </div>

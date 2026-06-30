@@ -271,7 +271,6 @@ export default function ContactPage() {
                 </div>
                 <div className="space-y-2 flex-grow">
                   <div>
-                    <p className="text-[11px] font-mono tracking-wider text-chocolate/50 uppercase">📞 Call & WhatsApp</p>
                     <p className="text-base font-semibold text-chocolate">+265 883 184 144</p>
                   </div>
                   <a 
@@ -294,7 +293,6 @@ export default function ContactPage() {
                 </div>
                 <div className="space-y-2 flex-grow">
                   <div>
-                    <p className="text-[11px] font-mono tracking-wider text-chocolate/50 uppercase">✉️ Email Enquiry</p>
                     <p className="text-base font-semibold text-chocolate">knqronline@gmail.com</p>
                   </div>
                   <a 
@@ -315,7 +313,6 @@ export default function ContactPage() {
                 </div>
                 <div className="space-y-2 flex-grow">
                   <div>
-                    <p className="text-[11px] font-mono tracking-wider text-chocolate/50 uppercase">📍 Flagship Outlet</p>
                     <p className="text-sm font-semibold text-chocolate leading-snug">
                       KNQR Outlet<br />Blantyre, Malawi
                     </p>

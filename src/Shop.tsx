@@ -286,16 +286,14 @@ export default function Shop({
       <div className="relative z-10 flex-grow" id="shop-cards-grid-wrapper">
         {filteredAndSortedProducts.length > 0 ? (
           <motion.div
-            layout
             className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8"
             id="shop-products-grid"
           >
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {filteredAndSortedProducts.map((product) => {
                 const isWishlisted = wishlist.includes(product.id);
                 return (
                   <motion.div
-                    layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
