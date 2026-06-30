@@ -317,6 +317,11 @@ export default function App() {
   };
 
   const handleCreateProductSubmit = async (values: ProductDraftValues) => {
+    if (!isAdmin) {
+      setAdminGuardAction("add");
+      setShowAdminGuardModal(true);
+      return;
+    }
     const newId = `knqr-${values.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
     const newProduct: Product = {
       id: newId,
@@ -377,6 +382,11 @@ export default function App() {
   };
 
   const handleEditProductSubmit = async (values: ProductDraftValues) => {
+    if (!isAdmin) {
+      setAdminGuardAction("edit");
+      setShowAdminGuardModal(true);
+      return;
+    }
     if (!editingProduct) return;
 
     const updatedProduct: Product = {
@@ -445,6 +455,11 @@ export default function App() {
   };
 
   const handleUpdateProduct = async (updatedProduct: Product) => {
+    if (!isAdmin) {
+      setAdminGuardAction("edit");
+      setShowAdminGuardModal(true);
+      return;
+    }
     try {
       await updateProduct(updatedProduct);
       setProductsList((prev) =>

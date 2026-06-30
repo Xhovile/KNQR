@@ -56,6 +56,10 @@ export default function ProductDetailPage({
 
   const handleRestockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      if (onTriggerAdminGuard) onTriggerAdminGuard("restock");
+      return;
+    }
     if (restockAmount <= 0) {
       setModalError("Please enter a valid restock quantity.");
       return;
@@ -85,6 +89,10 @@ export default function ProductDetailPage({
 
   const handleRecordSaleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      if (onTriggerAdminGuard) onTriggerAdminGuard("record_sale");
+      return;
+    }
     if (saleAmount <= 0) {
       setModalError("Please enter a valid sale quantity.");
       return;
