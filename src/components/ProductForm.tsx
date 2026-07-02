@@ -269,7 +269,7 @@ export default function ProductForm({
 
   return (
     <div className="min-h-screen bg-light-brown text-chocolate flex flex-col font-sans" id="product-form-root">
-      <div className="sticky top-0 z-40 bg-white/40 border-b border-chocolate/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between text-chocolate">
+      <div className="relative md:sticky top-0 z-40 bg-white/40 border-b border-chocolate/10 backdrop-blur-md py-4 px-6 md:px-12 flex items-center justify-between text-chocolate">
         <div className="flex items-center space-x-4">
           <button
             type="button"
