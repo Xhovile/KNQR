@@ -1,10 +1,10 @@
 {
-  "projectId": "caramel-impulse-p3t6m",
-  "appId": "1:15701095090:web:267880beb74c0e22d94fab",
-  "apiKey": "AIzaSyCmDwvSDRWE5ydTxSOmNoIDm6nInXVUAs8",
-  "authDomain": "caramel-impulse-p3t6m.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-knqronline-41a85d60-4c43-4c9d-a21c-798d67f4ef9f",
-  "storageBucket": "caramel-impulse-p3t6m.firebasestorage.app",
-  "messagingSenderId": "15701095090",
-  "measurementId": ""
+  "projectId": "knqr-online",
+  "appId": "1:1084187137974:web:590d542a96a40c032bd317",
+  "apiKey": "AIzaSyCV4SEuLywDxhAJE9PoDRFcQ7DJQEmG4m0",
+  "authDomain": "knqr-online.firebaseapp.com",
+  "firestoreDatabaseId": "",
+  "storageBucket": "knqr-online.firebasestorage.app",
+  "messagingSenderId": "1084187137974",
+  "measurementId": "G-GT4KL13CRP"
 }
