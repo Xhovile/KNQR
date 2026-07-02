@@ -13,16 +13,14 @@ const Collection = React.lazy(() => import("./components/Collection"));
 const Promo = React.lazy(() => import("./components/Promo"));
 import Footer from "./components/Footer";
 import Cart from "./components/Cart";
-
-const ProductDetailPage = React.lazy(() => import("./ProductDetailPage"));
-const AddProduct = React.lazy(() => import("./AddProduct"));
-const EditProduct = React.lazy(() => import("./EditProduct"));
-const Shop = React.lazy(() => import("./Shop"));
-const ApparelPage = React.lazy(() => import("./ApparelPage"));
-const BagsAndAccessoriesPage = React.lazy(() => import("./BagsAndAccessoriesPage"));
-const FragrancesPage = React.lazy(() => import("./FragrancesPage"));
-const ContactPage = React.lazy(() => import("./ContactPage"));
-
+import ProductDetailPage from "./ProductDetailPage";
+import AddProduct from "./AddProduct";
+import EditProduct from "./EditProduct";
+import Shop from "./Shop";
+import ApparelPage from "./ApparelPage";
+import BagsAndAccessoriesPage from "./BagsAndAccessoriesPage";
+import FragrancesPage from "./FragrancesPage";
+import ContactPage from "./ContactPage";
 import Skeleton from "./components/Skeleton";
 import { ProductDraftValues } from "./productSchema";
 import { auth } from "./lib/firebase";
@@ -38,13 +36,12 @@ import {
   fetchHeroImages,
   updateHeroImageInDb,
   DEFAULT_HEROES,
-  HeroImages,
-  getCachedProducts
+  HeroImages
 } from "./services/productService";
 
 export default function App() {
-  const [productsList, setProductsList] = useState<Product[]>(() => getCachedProducts());
-  const [isLoadingProducts, setIsLoadingProducts] = useState(() => getCachedProducts().length === 0);
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -86,29 +83,21 @@ export default function App() {
   // Load products and hero images from Firestore on boot
   useEffect(() => {
     async function initApp() {
-      const cached = getCachedProducts();
-      if (cached.length === 0) {
-        setIsLoadingProducts(true);
-      }
-
+      setIsLoadingProducts(true);
       try {
-        // Load products and hero images in parallel
-        const [fetchedProducts, fetchedHeroes] = await Promise.all([
-          fetchProducts(),
-          fetchHeroImages()
-        ]);
+        const fetchedProducts = await fetchProducts();
         setProductsList(fetchedProducts);
-        setHeroImages(fetchedHeroes);
         setProductsError(null);
       } catch (err: any) {
-        console.warn("Firestore background loading failed:", err?.message || String(err));
-        // Only set error state if we have absolutely no products to display
-        if (productsList.length === 0 && cached.length === 0) {
-          setProductsError(err?.message || "An error occurred while loading catalog.");
-        }
+        setProductsError(err?.message || "An error occurred while loading catalog.");
       } finally {
         setIsLoadingProducts(false);
       }
+
+      // fetch hero images after first paint
+      fetchHeroImages()
+        .then(setHeroImages)
+        .catch((err) => console.error("Failed to load hero images:", err?.message || String(err)));
     }
 
     initApp();
@@ -492,46 +481,40 @@ export default function App() {
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
         {isCreatingProduct ? (
-          <React.Suspense fallback={<Skeleton type="home" />}>
-            <AddProduct
-              key="add-product-screen"
-              onCancel={handleGoBack}
-              onSubmit={handleCreateProductSubmit}
-            />
-          </React.Suspense>
+          <AddProduct
+            key="add-product-screen"
+            onCancel={handleGoBack}
+            onSubmit={handleCreateProductSubmit}
+          />
         ) : editingProduct ? (
-          <React.Suspense fallback={<Skeleton type="home" />}>
-            <EditProduct
-              key="edit-product-screen"
-              product={editingProduct}
-              onCancel={handleGoBack}
-              onSubmit={handleEditProductSubmit}
-            />
-          </React.Suspense>
+          <EditProduct
+            key="edit-product-screen"
+            product={editingProduct}
+            onCancel={handleGoBack}
+            onSubmit={handleEditProductSubmit}
+          />
         ) : selectedProduct ? (
-          <React.Suspense fallback={<Skeleton type="detail" />}>
-            <ProductDetailPage
-              key="product-detail-screen"
-              product={selectedProduct}
-              onBack={handleGoBack}
-              onAddToCart={handleAddToCart}
-              priceCurrency={priceCurrency}
-              onEditProduct={(prod) => {
-                if (!isAdmin) {
-                  setAdminGuardAction("edit");
-                  setShowAdminGuardModal(true);
-                } else {
-                  transitionTo(activeTab, null, false, prod);
-                }
-              }}
-              isAdmin={isAdmin}
-              onUpdateProduct={handleUpdateProduct}
-              onTriggerAdminGuard={(action) => {
-                setAdminGuardAction(action);
+          <ProductDetailPage
+            key="product-detail-screen"
+            product={selectedProduct}
+            onBack={handleGoBack}
+            onAddToCart={handleAddToCart}
+            priceCurrency={priceCurrency}
+            onEditProduct={(prod) => {
+              if (!isAdmin) {
+                setAdminGuardAction("edit");
                 setShowAdminGuardModal(true);
-              }}
-            />
-          </React.Suspense>
+              } else {
+                transitionTo(activeTab, null, false, prod);
+              }
+            }}
+            isAdmin={isAdmin}
+            onUpdateProduct={handleUpdateProduct}
+            onTriggerAdminGuard={(action) => {
+              setAdminGuardAction(action);
+              setShowAdminGuardModal(true);
+            }}
+          />
         ) : (
           <motion.div
             key="main-catalog"
@@ -605,16 +588,14 @@ export default function App() {
                   transition={{ duration: 0.25 }}
                   className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5"
                 >
-                  <React.Suspense fallback={<Skeleton type="grid" />}>
-                    <Shop
-                      products={productsList}
-                      onViewDetails={handleViewDetails}
-                      onAddToCart={handleAddToCartFromShop}
-                      onToggleWishlist={handleToggleWishlist}
-                      wishlist={wishlist}
-                      priceCurrency={priceCurrency}
-                    />
-                  </React.Suspense>
+                  <Shop
+                    products={productsList}
+                    onViewDetails={handleViewDetails}
+                    onAddToCart={handleAddToCartFromShop}
+                    onToggleWishlist={handleToggleWishlist}
+                    wishlist={wishlist}
+                    priceCurrency={priceCurrency}
+                  />
                 </motion.div>
               ) : activeTab === "apparel" ? (
                 <motion.div
@@ -625,20 +606,18 @@ export default function App() {
                   transition={{ duration: 0.25 }}
                   className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5"
                 >
-                  <React.Suspense fallback={<Skeleton type="grid" />}>
-                    <ApparelPage
-                      products={productsList}
-                      onViewDetails={handleViewDetails}
-                      onAddToCart={handleAddToCartFromPages}
-                      onToggleWishlist={handleToggleWishlist}
-                      wishlist={wishlist}
-                      priceCurrency={priceCurrency}
-                      onBackToHome={handleGoBack}
-                      heroImage={heroImages.apparel}
-                      onUpdateHeroImage={handleUpdateApparelHero}
-                      isAdmin={isAdmin}
-                    />
-                  </React.Suspense>
+                  <ApparelPage
+                    products={productsList}
+                    onViewDetails={handleViewDetails}
+                    onAddToCart={handleAddToCartFromPages}
+                    onToggleWishlist={handleToggleWishlist}
+                    wishlist={wishlist}
+                    priceCurrency={priceCurrency}
+                    onBackToHome={handleGoBack}
+                    heroImage={heroImages.apparel}
+                    onUpdateHeroImage={handleUpdateApparelHero}
+                    isAdmin={isAdmin}
+                  />
                 </motion.div>
               ) : activeTab === "bags-accessories" ? (
                 <motion.div
@@ -649,20 +628,18 @@ export default function App() {
                   transition={{ duration: 0.25 }}
                   className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5"
                 >
-                  <React.Suspense fallback={<Skeleton type="grid" />}>
-                    <BagsAndAccessoriesPage
-                      products={productsList}
-                      onViewDetails={handleViewDetails}
-                      onAddToCart={handleAddToCartFromPages}
-                      onToggleWishlist={handleToggleWishlist}
-                      wishlist={wishlist}
-                      priceCurrency={priceCurrency}
-                      onBackToHome={handleGoBack}
-                      heroImage={heroImages.bagsAccessories}
-                      onUpdateHeroImage={handleUpdateBagsHero}
-                      isAdmin={isAdmin}
-                    />
-                  </React.Suspense>
+                  <BagsAndAccessoriesPage
+                    products={productsList}
+                    onViewDetails={handleViewDetails}
+                    onAddToCart={handleAddToCartFromPages}
+                    onToggleWishlist={handleToggleWishlist}
+                    wishlist={wishlist}
+                    priceCurrency={priceCurrency}
+                    onBackToHome={handleGoBack}
+                    heroImage={heroImages.bagsAccessories}
+                    onUpdateHeroImage={handleUpdateBagsHero}
+                    isAdmin={isAdmin}
+                  />
                 </motion.div>
               ) : activeTab === "fragrances" ? (
                 <motion.div
@@ -673,20 +650,18 @@ export default function App() {
                   transition={{ duration: 0.25 }}
                   className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5"
                 >
-                  <React.Suspense fallback={<Skeleton type="grid" />}>
-                    <FragrancesPage
-                      products={productsList}
-                      onViewDetails={handleViewDetails}
-                      onAddToCart={handleAddToCartFromPages}
-                      onToggleWishlist={handleToggleWishlist}
-                      wishlist={wishlist}
-                      priceCurrency={priceCurrency}
-                      onBackToHome={handleGoBack}
-                      heroImage={heroImages.fragrances}
-                      onUpdateHeroImage={handleUpdateFragrancesHero}
-                      isAdmin={isAdmin}
-                    />
-                  </React.Suspense>
+                  <FragrancesPage
+                    products={productsList}
+                    onViewDetails={handleViewDetails}
+                    onAddToCart={handleAddToCartFromPages}
+                    onToggleWishlist={handleToggleWishlist}
+                    wishlist={wishlist}
+                    priceCurrency={priceCurrency}
+                    onBackToHome={handleGoBack}
+                    heroImage={heroImages.fragrances}
+                    onUpdateHeroImage={handleUpdateFragrancesHero}
+                    isAdmin={isAdmin}
+                  />
                 </motion.div>
               ) : activeTab === "auth" ? (
                 <motion.div
@@ -827,9 +802,7 @@ export default function App() {
 
             {/* Persistent Contact Page view to prevent Google Maps iframe and asset reloading lag */}
             <div className={!isLoadingProducts && !productsError && activeTab === "contact" ? "flex flex-col flex-grow bg-light-brown" : "hidden"}>
-              <React.Suspense fallback={<Skeleton type="home" />}>
-                <ContactPage />
-              </React.Suspense>
+              <ContactPage />
             </div>
 
             {/* 6. Centered Chocolate Footer */}

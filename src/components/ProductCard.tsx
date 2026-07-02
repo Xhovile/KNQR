@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Eye, ShoppingBag, Heart, Check, Sparkles } from "lucide-react";
 import { Product } from "../types";
-import { motion } from "motion/react";
 
 interface ProductCardProps {
   product: Product;
@@ -21,7 +20,6 @@ function ProductCard({
 }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Fallback default colors and sizes for safe interaction
   const defaultColor = product.colors?.[0] || "Default";
@@ -55,12 +53,7 @@ function ProductCard({
   const formattedUSD = product.priceUSD ? product.priceUSD.toLocaleString() : "0";
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.25, ease: "easeInOut" }}
+    <div
       onClick={() => onViewDetails(product)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -99,12 +92,7 @@ function ProductCard({
             src={isHovered ? secondaryImage : primaryImage}
             alt={product.name}
             referrerPolicy="no-referrer"
-            loading="lazy"
-            decoding="async"
-            onLoad={() => setImageLoaded(true)}
-            className={`w-full h-full object-cover object-center transition-all duration-700 ease-out scale-100 group-hover:scale-104 ${
-              imageLoaded ? "opacity-100" : "opacity-0"
-            }`}
+            className="w-full h-full object-cover object-center transition-all duration-700 ease-out scale-100 group-hover:scale-104"
             id={`product-card-image-${product.id}`}
           />
         ) : (
@@ -168,7 +156,7 @@ function ProductCard({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
