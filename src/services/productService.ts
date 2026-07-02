@@ -178,6 +178,24 @@ function cleanUndefined(obj: any): any {
 const PRODUCTS_COLLECTION = "products";
 
 /**
+ * Reads products from localStorage first, falling back to initial PRODUCTS data.
+ */
+export function getCachedProducts(): Product[] {
+  try {
+    const local = localStorage.getItem("knqr_products");
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Error reading cached products:", e);
+  }
+  return PRODUCTS;
+}
+
+/**
  * Fetches all products from Firestore.
  * If the collection is empty, seeds the database with initial products.
  */
@@ -201,6 +219,12 @@ export async function fetchProducts(): Promise<Product[]> {
         } catch (e: any) {}
       }
       products = products.filter(p => !hardcodedIds.includes(p.id));
+    }
+
+    if (products.length === 0) {
+      console.log("No products found in Firestore. Seeding default products...");
+      await seedInitialProducts();
+      products = [...PRODUCTS];
     }
     
     // Sync to localStorage

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useDeferredValue } from "react";
 import { Search, SlidersHorizontal, ArrowUpDown, RefreshCw } from "lucide-react";
 import { Product } from "./types";
 import ProductCard from "./components/ProductCard";
+import { motion, AnimatePresence } from "motion/react";
 
 interface ShopProps {
   products: Product[];
@@ -198,24 +199,27 @@ const ProductGrid = React.memo(function ProductGrid({
   return (
     <div className="relative z-10 flex-grow" id="shop-cards-grid-wrapper">
       {products.length > 0 ? (
-        <div
+        <motion.div
+          layout
           className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8"
           id="shop-products-grid"
         >
-          {products.map((product) => {
-            const isWishlisted = wishlist.includes(product.id);
-            return (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onViewDetails={onViewDetails}
-                onAddToCart={onAddToCart}
-                onToggleWishlist={onToggleWishlist}
-                isWishlisted={isWishlisted}
-              />
-            );
-          })}
-        </div>
+          <AnimatePresence mode="popLayout">
+            {products.map((product) => {
+              const isWishlisted = wishlist.includes(product.id);
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onViewDetails={onViewDetails}
+                  onAddToCart={onAddToCart}
+                  onToggleWishlist={onToggleWishlist}
+                  isWishlisted={isWishlisted}
+                />
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
       ) : (
         /* Empty Catalog State */
         <div

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 import firebaseConfig from "../../firebase-applet-config.json";
@@ -18,10 +18,40 @@ const app = initializeApp({
 // Initialize Auth
 export const auth = getAuth(app);
 
-// Initialize Firestore (with databaseId if defined and is not the default database name)
-export const db = (firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "default" && firebaseConfig.firestoreDatabaseId !== "(default)")
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-  : getFirestore(app);
+const hasCustomDb = !!(firebaseConfig.firestoreDatabaseId && 
+                      firebaseConfig.firestoreDatabaseId !== "default" && 
+                      firebaseConfig.firestoreDatabaseId !== "(default)");
+
+// Configure Firestore cache settings for robust offline caching
+let db;
+try {
+  const dbSettings = {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    }),
+  };
+  db = hasCustomDb
+    ? initializeFirestore(app, dbSettings, firebaseConfig.firestoreDatabaseId)
+    : initializeFirestore(app, dbSettings);
+} catch (err) {
+  console.warn("Failed to initialize Firestore with persistent local cache (IndexedDB might be blocked/disabled in iframe or browser):", err);
+  try {
+    const fallbackSettings = {
+      localCache: memoryLocalCache(),
+    };
+    db = hasCustomDb
+      ? initializeFirestore(app, fallbackSettings, firebaseConfig.firestoreDatabaseId)
+      : initializeFirestore(app, fallbackSettings);
+  } catch (fallbackErr) {
+    console.error("Critical: Failed to initialize Firestore even with memory cache fallback:", fallbackErr);
+    // Ultimate last-resort fallback: default initializeFirestore with no extra settings.
+    db = hasCustomDb 
+      ? initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId)
+      : initializeFirestore(app, {});
+  }
+}
+
+export { db };
 
 // Initialize Analytics conditionally
 export let analytics: Analytics | null = null;
@@ -34,18 +64,3 @@ isSupported().then((supported) => {
   console.warn("Analytics not supported or blocked in this environment:", err);
 });
 
-// Validate Connection to Firestore on initial boot
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, "test", "connection"));
-    console.log("Firestore connection validated successfully.");
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("the client is offline")) {
-      console.warn("Firestore initialized in local/offline fallback mode: " + error.message);
-    } else {
-      console.log("Firestore connection initialized.");
-    }
-  }
-}
-
-testConnection();
