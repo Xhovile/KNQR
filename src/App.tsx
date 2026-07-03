@@ -39,6 +39,7 @@ export default function App() {
     isLoadingProducts,
     heroImages,
     setHeroImages,
+    productsError,
   } = useProductsBootstrap();
 
   const {
@@ -83,9 +84,8 @@ export default function App() {
     }
   };
 
-  const handleToggleWishlist = useCallback((productId: string) => {
+  const handleToggleWishlist = useCallback(() => {
     // kept locally in App for now if you want to move it to a hook in a third pass
-    setWishlist((prev) => (prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]));
   }, []);
 
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -229,6 +229,7 @@ export default function App() {
             setActiveTab={(tab) => transitionTo(tab, null, false, null)}
             productsList={productsList}
             isLoadingProducts={isLoadingProducts}
+            productsError={productsError}
             selectedProduct={selectedProduct}
             wishlist={wishlist}
             priceCurrency={priceCurrency}
