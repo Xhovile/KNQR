@@ -9,14 +9,14 @@ import {
 export const APPAREL_SCHEMA: ProductSchema = {
   key: "product-apparel",
   title: "Apparel Schema",
-  description: "Schema for shirts, hoodies, jackets, tracksuits, caps, and other clothing products.",
+  description: "Schema for shirts, hoodies, jackets, tracksuits, caps, and premium clothing products.",
   requiredKeys: [...BASE_PRODUCT_SCHEMA.requiredKeys, "fit", "material", "apparelGender", "sleeveType"],
   sections: [
     ...BASE_PRODUCT_SCHEMA.sections,
     {
       key: "apparel-variants",
-      title: "Apparel Variants",
-      description: "Clothing-specific sizing and construction details.",
+      title: "Apparel Specifications",
+      description: "Clothing-specific fit, construction, and styling details.",
       fields: ["sizes", "colors", "fit", "material", "apparelGender", "sleeveType"],
     },
   ],
@@ -24,7 +24,7 @@ export const APPAREL_SCHEMA: ProductSchema = {
     ...BASE_PRODUCT_SCHEMA.fields,
     {
       key: "fit",
-      label: "Product Fit Style",
+      label: "Fit Profile",
       type: "select",
       section: "apparel-variants",
       options: ["Regular Fit", "Slim Fit", "Oversized", "Relaxed Fit", "Athletic Fit"],
@@ -53,7 +53,7 @@ export const APPAREL_SCHEMA: ProductSchema = {
     },
     {
       key: "apparelGender",
-      label: "Target Gender Profile",
+      label: "Wear Profile",
       type: "radio",
       section: "apparel-variants",
       options: ["Unisex", "Men", "Women"],
@@ -64,7 +64,7 @@ export const APPAREL_SCHEMA: ProductSchema = {
     },
     {
       key: "sleeveType",
-      label: "Sleeve Type",
+      label: "Sleeve Profile",
       type: "select",
       section: "apparel-variants",
       options: ["Short Sleeve", "Long Sleeve", "Sleeveless", "3/4 Sleeve", "None"],
