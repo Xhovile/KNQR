@@ -1,15 +1,5 @@
 import { db, auth } from "../lib/firebase";
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc,
-  setDoc, 
-  updateDoc, 
-  deleteDoc,
-  query,
-  orderBy
-} from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { Product } from "../types";
 import { PRODUCTS } from "../data";
 
@@ -39,42 +29,6 @@ export interface FirestoreErrorInfo {
   };
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
-  let serializedErr = "";
-  try {
-    const errInfo: FirestoreErrorInfo = {
-      error: error instanceof Error ? error.message : String(error),
-      authInfo: {
-        userId: auth.currentUser?.uid || null,
-        email: auth.currentUser?.email || null,
-        emailVerified: auth.currentUser?.emailVerified || null,
-        isAnonymous: auth.currentUser?.isAnonymous || null,
-        tenantId: auth.currentUser?.tenantId || null,
-        providerInfo: auth.currentUser?.providerData?.map(provider => ({
-          providerId: provider.providerId,
-          email: provider.email,
-        })) || []
-      },
-      operationType,
-      path
-    };
-    serializedErr = JSON.stringify(errInfo);
-  } catch (serializationError) {
-    serializedErr = JSON.stringify({
-      error: error instanceof Error ? error.message : String(error),
-      authInfo: {
-        userId: auth.currentUser?.uid || null,
-        email: auth.currentUser?.email || null
-      },
-      operationType,
-      path,
-      serializationFailed: true
-    });
-  }
-  console.error("Firestore Error: ", serializedErr);
-  throw new Error(serializedErr);
-}
-
 export interface HeroImages {
   home: string;
   apparel: string;
@@ -89,188 +43,206 @@ export const DEFAULT_HEROES: HeroImages = {
   fragrances: "",
 };
 
-/**
- * Helper utility to wrap standard promises with a timeout to prevent infinite loaders
- * when connection to Firestore is blocked (e.g. by Brave Shields, ad-blockers, or firewalls).
- */
+export const STRICT_REMOTE_CATALOG = true;
+
+const PRODUCTS_COLLECTION = "products";
+const PRODUCTS_CACHE_KEY = "knqr_products_cache";
+const HEROES_CACHE_KEY = "knqr_heroes";
+
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    return typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): void {
+  try {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function readProductsCache(): Product[] | null {
+  const raw = safeLocalStorageGet(PRODUCTS_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Product[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeProductsCache(products: Product[]): void {
+  safeLocalStorageSet(PRODUCTS_CACHE_KEY, JSON.stringify(products));
+}
+
+function readHeroesCache(): HeroImages | null {
+  const raw = safeLocalStorageGet(HEROES_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_HEROES, ...(parsed || {}) } as HeroImages;
+  } catch {
+    return null;
+  }
+}
+
+function writeHeroesCache(heroes: HeroImages): void {
+  safeLocalStorageSet(HEROES_CACHE_KEY, JSON.stringify(heroes));
+}
+
+function cleanUndefined<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map(cleanUndefined) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, cleanUndefined(v)])
+    ) as T;
+  }
+  return value;
+}
+
 export async function withTimeout<T>(
   promise: Promise<T>,
-  timeoutMs: number = 4000,
-  errorMsg: string = "Database operation timed out. This is usually caused by an ad-blocker, Brave Shields, or firewall blocking the connection to Google Firestore. Please try disabling your browser shields / ad-blockers or check your connection, then try again."
+  timeoutMs = 4000,
+  errorMsg = "Database operation timed out. Firestore may be blocked by browser privacy tools, network restrictions, or an incorrect Firebase configuration."
 ): Promise<T> {
-  let timeoutId: any;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error(errorMsg));
-    }, timeoutMs);
+    timeoutId = setTimeout(() => reject(new Error(errorMsg)), timeoutMs);
   });
+
   return Promise.race([promise, timeoutPromise]).finally(() => {
     if (timeoutId) clearTimeout(timeoutId);
   });
 }
 
-/**
- * Fetches hero images configuration from Firestore settings collection.
- */
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const info: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path,
+    authInfo: {
+      userId: auth.currentUser?.uid || null,
+      email: auth.currentUser?.email || null,
+      emailVerified: auth.currentUser?.emailVerified || null,
+      isAnonymous: auth.currentUser?.isAnonymous || null,
+      tenantId: auth.currentUser?.tenantId || null,
+      providerInfo: auth.currentUser?.providerData?.map((provider) => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || [],
+    },
+  };
+
+  const serialized = JSON.stringify(info);
+  console.error("Firestore Error:", serialized);
+  throw new Error(serialized);
+}
+
 export async function fetchHeroImages(): Promise<HeroImages> {
-  const path = "settings/heroes";
   try {
-    const docRef = doc(db, "settings", "heroes");
-    const docSnap = await withTimeout(getDoc(docRef), 3000);
+    const docSnap = await withTimeout(getDoc(doc(db, "settings", "heroes")), 3000);
     if (docSnap.exists()) {
-      const data = docSnap.data();
-      localStorage.setItem("knqr_heroes", JSON.stringify(data));
-      return { ...DEFAULT_HEROES, ...data } as HeroImages;
+      const data = { ...DEFAULT_HEROES, ...(docSnap.data() as Partial<HeroImages>) } as HeroImages;
+      writeHeroesCache(data);
+      return data;
     }
-    const local = localStorage.getItem("knqr_heroes");
-    if (local) {
-      try { return { ...DEFAULT_HEROES, ...JSON.parse(local) }; } catch {}
-    }
-    return DEFAULT_HEROES;
   } catch (error: any) {
-    console.warn("Error fetching hero images from Firestore (falling back to localStorage/defaults):", error?.message || String(error));
-    const local = localStorage.getItem("knqr_heroes");
-    if (local) {
-      try { return { ...DEFAULT_HEROES, ...JSON.parse(local) }; } catch {}
-    }
-    return DEFAULT_HEROES;
+    console.warn("Hero image sync failed, using local cache:", error?.message || String(error));
   }
+
+  return readHeroesCache() ?? DEFAULT_HEROES;
 }
 
-/**
- * Updates a specific page's hero image URL in Firestore.
- */
 export async function updateHeroImageInDb(page: keyof HeroImages, url: string): Promise<void> {
-  const path = "settings/heroes";
-  
-  // Update localStorage first so changes are immediately consistent locally
-  let currentHeroes: HeroImages = { ...DEFAULT_HEROES };
-  const local = localStorage.getItem("knqr_heroes");
-  if (local) {
-    try { currentHeroes = JSON.parse(local); } catch {}
-  }
-  currentHeroes[page] = url;
-  localStorage.setItem("knqr_heroes", JSON.stringify(currentHeroes));
+  const current = readHeroesCache() ?? { ...DEFAULT_HEROES };
+  current[page] = url;
+  writeHeroesCache(current);
 
   try {
-    const docRef = doc(db, "settings", "heroes");
-    await withTimeout(setDoc(docRef, { [page]: url }, { merge: true }), 4000);
+    await withTimeout(setDoc(doc(db, "settings", "heroes"), { [page]: url }, { merge: true }), 4000);
   } catch (error: any) {
-    console.warn("Firestore hero image update failed/timed out, saved to local fallback instead:", error?.message || String(error));
-    // Do NOT throw if we managed to save it locally. This allows the user's action to succeed!
+    console.warn("Hero image update saved locally only:", error?.message || String(error));
   }
 }
 
-// Helper to remove any undefined properties recursively to prevent Firestore write crashes
-function cleanUndefined(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(cleanUndefined);
-  } else if (obj !== null && typeof obj === "object") {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([_, v]) => v !== undefined)
-        .map(([k, v]) => [k, cleanUndefined(v)])
-    );
-  }
-  return obj;
-}
+async function seedInitialProducts(): Promise<Product[]> {
+  const cleaned = PRODUCTS.map((product) => cleanUndefined(product));
+  writeProductsCache(cleaned);
 
-const PRODUCTS_COLLECTION = "products";
-
-export const STRICT_REMOTE_CATALOG = true;
-
-/**
- * Fetches all products from Firestore.
- * If the collection is empty, seeds the database with initial products.
- */
-export async function fetchProducts(): Promise<Product[]> {
-  const path = PRODUCTS_COLLECTION;
-  try {
-    const productsCol = collection(db, PRODUCTS_COLLECTION);
-    const q = query(productsCol);
-    const querySnapshot = await withTimeout(getDocs(q), 8000);
-    
-    let products = querySnapshot.docs.map(doc => doc.data() as Product);
-    
-    // Automatically delete old hardcoded products from Firestore to keep the DB 100% fresh
-    const hardcodedIds = ["knqr-trousers", "knqr-necklace", "knqr-blouse"];
-    const foundHardcoded = products.filter(p => hardcodedIds.includes(p.id));
-    if (foundHardcoded.length > 0) {
-      console.log("Removing legacy hardcoded products from Firestore...");
-      for (const p of foundHardcoded) {
-        try {
-          await deleteDoc(doc(db, PRODUCTS_COLLECTION, p.id));
-        } catch (e: any) {}
-      }
-      products = products.filter(p => !hardcodedIds.includes(p.id));
+  for (const product of cleaned) {
+    try {
+      await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), product), 5000);
+    } catch (error: any) {
+      console.warn(`Failed to seed product ${product.id}:`, error?.message || String(error));
     }
+  }
+
+  return cleaned;
+}
+
+export async function fetchProducts(): Promise<Product[]> {
+  try {
+    const snapshot = await withTimeout(getDocs(collection(db, PRODUCTS_COLLECTION)), 8000);
+    const products = snapshot.docs.map((d) => d.data() as Product);
 
     if (products.length === 0) {
-      console.log("No products found in Firestore. Seeding default products...");
-      await seedInitialProducts();
-      // Fetch again to ensure we get the stored Firestore documents
-      const snapshot = await withTimeout(getDocs(q), 8000);
-      products = snapshot.docs.map(doc => doc.data() as Product);
+      return seedInitialProducts();
     }
-    
+
+    writeProductsCache(products);
     return products;
   } catch (error: any) {
-    handleFirestoreError(error, OperationType.LIST, path);
+    console.warn("Product sync failed, using local cache/default data:", error?.message || String(error));
+    const cached = readProductsCache();
+    if (cached && cached.length > 0) return cached;
+
+    writeProductsCache(PRODUCTS);
+    return PRODUCTS;
   }
 }
 
-/**
- * Seeds initial products into Firestore.
- */
-async function seedInitialProducts(): Promise<void> {
-  for (const product of PRODUCTS) {
-    const cleaned = cleanUndefined(product);
-    try {
-      await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 5000);
-    } catch (error: any) {
-      console.warn(`Failed to seed product ${product.id} to Firestore:`, error?.message || String(error));
-      throw error;
-    }
-  }
-}
-
-/**
- * Creates a new product document in Firestore.
- */
 export async function createProduct(product: Product): Promise<void> {
-  const path = `${PRODUCTS_COLLECTION}/${product.id}`;
   const cleaned = cleanUndefined(product);
+  const cached = readProductsCache() ?? PRODUCTS;
+  writeProductsCache([cleaned, ...cached.filter((item) => item.id !== cleaned.id)]);
 
   try {
-    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 8000);
+    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, cleaned.id), cleaned), 8000);
   } catch (error: any) {
-    handleFirestoreError(error, OperationType.WRITE, path);
+    console.warn("Create product saved locally only:", error?.message || String(error));
   }
 }
 
-/**
- * Updates an existing product document in Firestore.
- */
 export async function updateProduct(product: Product): Promise<void> {
-  const path = `${PRODUCTS_COLLECTION}/${product.id}`;
   const cleaned = cleanUndefined(product);
+  const cached = readProductsCache() ?? PRODUCTS;
+  writeProductsCache(cached.map((item) => (item.id === cleaned.id ? cleaned : item)));
 
   try {
-    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 8000);
+    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, cleaned.id), cleaned), 8000);
   } catch (error: any) {
-    handleFirestoreError(error, OperationType.WRITE, path);
+    console.warn("Update product saved locally only:", error?.message || String(error));
   }
 }
 
-/**
- * Deletes a product from Firestore.
- */
 export async function deleteProduct(productId: string): Promise<void> {
-  const path = `${PRODUCTS_COLLECTION}/${productId}`;
+  const cached = readProductsCache() ?? PRODUCTS;
+  writeProductsCache(cached.filter((item) => item.id !== productId));
 
   try {
     await withTimeout(deleteDoc(doc(db, PRODUCTS_COLLECTION, productId)), 8000);
   } catch (error: any) {
-    handleFirestoreError(error, OperationType.DELETE, path);
+    console.warn("Delete product saved locally only:", error?.message || String(error));
   }
 }
