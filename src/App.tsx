@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { ArrowUp, ShoppingBag, X } from "lucide-react";
+import { ArrowUp, ShoppingCart, X } from "lucide-react";
 
 import Cart from "./components/Cart";
 import Skeleton from "./components/Skeleton";
@@ -274,7 +274,7 @@ export default function App() {
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="Back to top"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/15 bg-chocolate-dark text-cream shadow-2xl transition hover:-translate-y-0.5 hover:bg-chocolate-light hover:border-gold/40"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/15 bg-chocolate-dark text-cream shadow-2xl transition hover:-translate-y-0.5 hover:bg-chocolate-light"
           title="Back to top"
         >
           <ArrowUp className="h-5 w-5" />
@@ -287,7 +287,7 @@ export default function App() {
           className="relative flex h-12 w-12 items-center justify-center rounded-full border border-gold/20 bg-gold text-chocolate shadow-2xl transition hover:-translate-y-0.5 hover:bg-gold-light"
           title={isCartOpen ? "Close cart" : "Open cart"}
         >
-          {isCartOpen ? <X className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
+          {isCartOpen ? <X className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
           {cart.length > 0 && !isCartOpen && (
             <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-md">
               {cart.length}
