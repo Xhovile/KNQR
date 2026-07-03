@@ -16,12 +16,34 @@ export const APPAREL_SCHEMA: ProductSchema = {
     {
       key: "apparel-variants",
       title: "Apparel Specifications",
-      description: "Clothing-specific fit, construction, and styling details.",
+      description: "Clothing-specific fit, construction, styling, size, and colour details.",
       fields: ["sizes", "colors", "fit", "material", "apparelGender", "sleeveType"],
     },
   ],
   fields: [
     ...BASE_PRODUCT_SCHEMA.fields,
+    {
+      key: "sizes",
+      label: "Available Sizes",
+      type: "multiselect",
+      section: "apparel-variants",
+      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Apparel",
+      },
+    },
+    {
+      key: "colors",
+      label: "Accent Colors",
+      type: "multiselect",
+      section: "apparel-variants",
+      options: ["Black", "White", "Gray", "Navy", "Beige", "Olive", "Red", "Brown"],
+      dependsOn: {
+        field: "collectionCategory",
+        value: "Apparel",
+      },
+    },
     {
       key: "fit",
       label: "Fit Profile",
@@ -81,6 +103,8 @@ export function createEmptyApparelProductDraft(): ProductDraftValues {
     ...createEmptyBaseProductDraft(),
     collectionCategory: "Apparel",
     category: "T-shirts",
+    sizes: ["S", "M", "L"],
+    colors: ["Black", "White"],
     fit: "Regular Fit",
     material: "100% Malawian Cotton",
     apparelGender: "Unisex",
