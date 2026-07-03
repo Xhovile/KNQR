@@ -41,7 +41,6 @@ export default function App() {
 
   const {
     cart,
-    isCartOpen,
     setIsCartOpen,
     handleAddToCart,
     handleUpdateQuantity,
@@ -178,7 +177,7 @@ export default function App() {
         {isCartPage ? (
           <CartPage
             isOpen={true}
-            onClose={() => transitionTo(activeTab === "cart" ? "home" : activeTab, null, false, null)}
+            onClose={() => transitionTo("home", null, false, null)}
             cartItems={cart}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
