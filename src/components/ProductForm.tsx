@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   ProductDraftValues,
   PRODUCT_SCHEMA,
-  createEmptyProductDraft,
   SUBCATEGORIES_MAP,
-  ProductDeliveryMethod,
-  ProductSchemaField,
+  createEmptyProductDraft,
+  getProductSchemaForCategory,
   ProductCollectionCategory,
 } from "../productSchema";
+import { createEmptyApparelProductDraft } from "../productSchema.apparel";
+import { createEmptyBagsProductDraft } from "../productSchema.bags";
+import { createEmptyFragrancesProductDraft } from "../productSchema.fragrances";
 import { Product } from "../types";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
@@ -33,80 +35,135 @@ function getExistingImages(values: ProductDraftValues): string[] {
   return uniqueStrings([values.image, ...(values.images || [])]);
 }
 
+function getCategoryDefaults(category: ProductCollectionCategory): ProductDraftValues {
+  switch (category) {
+    case "Bags & Accessories":
+      return createEmptyBagsProductDraft();
+    case "Fragrances":
+      return createEmptyFragrancesProductDraft();
+    case "Apparel":
+    default:
+      return createEmptyApparelProductDraft();
+  }
+}
+
+function mapInitialValues(initialValues?: Partial<ProductDraftValues> | Product): ProductDraftValues {
+  const defaultDraft = createEmptyProductDraft();
+  if (!initialValues) return defaultDraft;
+
+  const isFullProduct = "id" in initialValues;
+  if (!isFullProduct) {
+    return {
+      ...defaultDraft,
+      ...initialValues,
+    } as ProductDraftValues;
+  }
+
+  const prod = initialValues as Product;
+  const category = (prod.collectionCategory as ProductCollectionCategory) || "Apparel";
+  const categoryDefaults = getCategoryDefaults(category);
+  const categorySubCategory = SUBCATEGORIES_MAP[category]?.[0] || defaultDraft.category;
+
+  return {
+    ...defaultDraft,
+    ...categoryDefaults,
+    name: prod.name || "",
+    priceUSD: prod.priceUSD ?? null,
+    priceMWK: prod.priceMWK ?? null,
+    collectionCategory: category,
+    category: prod.category || categorySubCategory,
+    image: prod.image || "",
+    images: prod.images || (prod.image ? [prod.image] : []),
+    sizes: prod.sizes || categoryDefaults.sizes || [],
+    colors: prod.colors || [],
+    description: prod.description || "",
+    status: prod.status || "draft",
+    stock: prod.stock ?? null,
+    deliveryMethod: (prod.delivery?.methods?.[0] as any) || "",
+    deliveryNote: prod.delivery?.note || "",
+    details: prod.details || [],
+    fit: (prod as any).fit || categoryDefaults.fit,
+    material: (prod as any).material || categoryDefaults.material,
+    apparelGender: (prod as any).apparelGender || categoryDefaults.apparelGender,
+    sleeveType: (prod as any).sleeveType || categoryDefaults.sleeveType,
+    bagType: (prod as any).bagType || categoryDefaults.bagType,
+    bagMaterial: (prod as any).bagMaterial || categoryDefaults.bagMaterial,
+    strapType: (prod as any).strapType || categoryDefaults.strapType,
+    bagCapacity: (prod as any).bagCapacity || categoryDefaults.bagCapacity,
+    useCase: (prod as any).useCase || categoryDefaults.useCase,
+    volume: (prod as any).volume || categoryDefaults.volume,
+    scentFamily: (prod as any).scentFamily || categoryDefaults.scentFamily,
+    fragranceGender: (prod as any).fragranceGender || categoryDefaults.fragranceGender,
+    concentration: (prod as any).concentration || categoryDefaults.concentration,
+    longevity: (prod as any).longevity || categoryDefaults.longevity,
+    notes: (prod as any).notes || categoryDefaults.notes || [],
+  };
+}
+
+function buildPreviewRows(values: ProductDraftValues): Array<{ label: string; value: string }> {
+  const rows = [
+    { label: "Collection", value: values.collectionCategory || "—" },
+    { label: "Category", value: values.category || "—" },
+    { label: "Status", value: values.status || "—" },
+    { label: "Stock", value: values.stock !== null && values.stock !== undefined ? String(values.stock) : "—" },
+    { label: "Delivery", value: values.deliveryMethod || "Pickup" },
+  ];
+
+  if (values.collectionCategory === "Apparel") {
+    rows.push(
+      { label: "Fit Profile", value: values.fit || "—" },
+      { label: "Fabric Composition", value: values.material || "—" },
+      { label: "Wear Profile", value: values.apparelGender || "—" },
+      { label: "Sleeve Profile", value: values.sleeveType || "—" },
+      { label: "Available Sizes", value: values.sizes?.length ? values.sizes.join(", ") : "—" },
+      { label: "Accent Colors", value: values.colors?.length ? values.colors.join(", ") : "—" },
+    );
+  } else if (values.collectionCategory === "Bags & Accessories") {
+    rows.push(
+      { label: "Accessory Type", value: values.bagType || "—" },
+      { label: "Material Finish", value: values.bagMaterial || "—" },
+      { label: "Carry Style", value: values.strapType || "—" },
+      { label: "Capacity Profile", value: values.bagCapacity || "—" },
+      { label: "Primary Use", value: values.useCase || "—" },
+      { label: "Accent Colors", value: values.colors?.length ? values.colors.join(", ") : "—" },
+    );
+  } else if (values.collectionCategory === "Fragrances") {
+    rows.push(
+      { label: "Bottle Volume", value: values.volume || "—" },
+      { label: "Scent Family", value: values.scentFamily || "—" },
+      { label: "Wear Profile", value: values.fragranceGender || "—" },
+      { label: "Concentration", value: values.concentration || "—" },
+      { label: "Longevity", value: values.longevity || "—" },
+      { label: "Notes", value: values.notes?.length ? values.notes.join(", ") : "—" },
+    );
+  }
+
+  return rows;
+}
+
 export default function ProductForm({
   mode,
   initialValues,
   onCancel,
   onSubmit,
 }: ProductFormProps) {
-  const [values, setValues] = useState<ProductDraftValues>(() => {
-    const defaultDraft = createEmptyProductDraft();
-    if (!initialValues) return defaultDraft;
-
-    const isFullProduct = "id" in initialValues;
-
-    if (isFullProduct) {
-      const prod = initialValues as Product;
-      return {
-        name: prod.name || "",
-        priceUSD: prod.priceUSD ?? null,
-        priceMWK: prod.priceMWK ?? null,
-        collectionCategory: (prod.collectionCategory as ProductCollectionCategory) || "Apparel",
-        category: prod.category || "T-shirts",
-        image: prod.image || "",
-        images: prod.images || (prod.image ? [prod.image] : []),
-        sizes: prod.sizes || [],
-        colors: prod.colors || [],
-        description: prod.description || "",
-        status: prod.status || "draft",
-        stock: prod.stock ?? null,
-        deliveryMethod: (prod.delivery?.methods?.[0] as ProductDeliveryMethod) || "Pickup",
-        deliveryNote: prod.delivery?.note || "",
-        details: prod.details || [],
-
-        fit: (prod as any).fit || "Regular Fit",
-        material: (prod as any).material || "100% Malawian Cotton",
-        apparelGender: (prod as any).apparelGender || "Unisex",
-        sleeveType: (prod as any).sleeveType || "Short Sleeve",
-
-        bagType: (prod as any).bagType || "Backpack",
-        bagMaterial: (prod as any).bagMaterial || "Full-Grain Genuine Leather",
-        strapType: (prod as any).strapType || "Adjustable Padded Shoulder Straps",
-        bagCapacity: (prod as any).bagCapacity || "15L - 30L (Daily)",
-        useCase: (prod as any).useCase || "Daily Commute & Office",
-
-        volume: (prod as any).volume || "100ml",
-        scentFamily: (prod as any).scentFamily || "Woody & Earthy",
-        fragranceGender: (prod as any).fragranceGender || "Unisex / Fluid",
-        concentration: (prod as any).concentration || "Eau de Parfum (EDP)",
-        longevity: (prod as any).longevity || "Long-Lasting (6-8 Hours)",
-        notes: (prod as any).notes || [],
-      };
-    }
-
-    return {
-      ...defaultDraft,
-      ...initialValues,
-    } as ProductDraftValues;
-  });
-
+  const [values, setValues] = useState<ProductDraftValues>(() => mapInitialValues(initialValues));
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    basic: true,
-    pricing: false,
-    media: false,
-    variants: false,
-    delivery: false,
-    extras: false,
-  });
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgressMsg, setUploadProgressMsg] = useState("");
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const activeSchema = useMemo(() => getProductSchemaForCategory(values.collectionCategory), [values.collectionCategory]);
   const existingImages = useMemo(() => getExistingImages(values), [values.image, values.images]);
+  const previewRows = useMemo(() => buildPreviewRows(values), [values]);
+
+  useEffect(() => {
+    setValues(mapInitialValues(initialValues));
+  }, [initialValues]);
 
   useEffect(() => {
     if (mediaFiles.length === 0) {
@@ -116,13 +173,18 @@ export default function ProductForm({
 
     const preview = URL.createObjectURL(mediaFiles[0]);
     setMediaPreviewUrl(preview);
-
-    return () => {
-      URL.revokeObjectURL(preview);
-    };
+    return () => URL.revokeObjectURL(preview);
   }, [mediaFiles]);
 
-  const isFieldActive = (field: ProductSchemaField, currentValues: ProductDraftValues) => {
+  useEffect(() => {
+    const nextOpenSections: Record<string, boolean> = {};
+    activeSchema.sections.forEach((section, index) => {
+      nextOpenSections[section.key] = index === 0;
+    });
+    setOpenSections(nextOpenSections);
+  }, [activeSchema.key]);
+
+  const isFieldActive = (field: any, currentValues: ProductDraftValues) => {
     if (!field.dependsOn) return true;
     const { field: dependField, value: dependValue } = field.dependsOn;
     const actualValue = currentValues[dependField as keyof ProductDraftValues];
@@ -133,7 +195,7 @@ export default function ProductForm({
   };
 
   const doesSectionHaveError = (sectionKey: string) => {
-    const sectionFields = PRODUCT_SCHEMA.sections.find((s) => s.key === sectionKey)?.fields || [];
+    const sectionFields = activeSchema.sections.find((s) => s.key === sectionKey)?.fields || [];
     return sectionFields.some((fKey) => !!errors[fKey]);
   };
 
@@ -146,14 +208,34 @@ export default function ProductForm({
 
   const handleChange = (key: string, val: any) => {
     setValues((prev) => {
-      const next = { ...prev, [key]: val };
-
       if (key === "collectionCategory") {
-        const subcategories = SUBCATEGORIES_MAP[val] || [];
-        next.category = subcategories[0] || "";
+        const nextCategory = val as ProductCollectionCategory;
+        const nextDefaults = getCategoryDefaults(nextCategory);
+        const nextSubCategory = SUBCATEGORIES_MAP[nextCategory]?.[0] || prev.category;
+
+        return {
+          ...prev,
+          ...nextDefaults,
+          collectionCategory: nextCategory,
+          category: nextSubCategory,
+          name: prev.name,
+          priceUSD: prev.priceUSD,
+          priceMWK: prev.priceMWK,
+          image: prev.image,
+          images: prev.images,
+          description: prev.description,
+          status: prev.status,
+          stock: prev.stock,
+          deliveryMethod: prev.deliveryMethod,
+          deliveryNote: prev.deliveryNote,
+          details: prev.details,
+        };
       }
 
-      return next;
+      return {
+        ...prev,
+        [key]: val,
+      };
     });
 
     if (errors[key]) {
@@ -192,12 +274,12 @@ export default function ProductForm({
   const handlePublish = async () => {
     const validationErrors: Record<string, string> = {};
 
-    PRODUCT_SCHEMA.fields.forEach((field) => {
+    activeSchema.fields.forEach((field) => {
       if (!isFieldActive(field, values)) return;
       if (field.key === "image" || field.key === "images") return;
 
       const val = values[field.key as keyof ProductDraftValues];
-      if (field.required && (val === null || val === undefined || val === "")) {
+      if (field.required && (val === null || val === undefined || val === "" || (Array.isArray(val) && val.length === 0))) {
         validationErrors[field.key] = `${field.label} is required.`;
       }
     });
@@ -210,14 +292,12 @@ export default function ProductForm({
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
 
-      const newOpenState = { ...openSections };
-      PRODUCT_SCHEMA.sections.forEach((section) => {
+      const nextOpenState: Record<string, boolean> = {};
+      activeSchema.sections.forEach((section, index) => {
         const hasSectionError = section.fields.some((fKey) => !!validationErrors[fKey]);
-        if (hasSectionError) {
-          newOpenState[section.key] = true;
-        }
+        nextOpenState[section.key] = index === 0 || hasSectionError;
       });
-      setOpenSections(newOpenState);
+      setOpenSections(nextOpenState);
 
       const firstErrorKey = Object.keys(validationErrors)[0];
       setTimeout(() => {
@@ -239,7 +319,7 @@ export default function ProductForm({
 
       for (let i = 0; i < mediaFiles.length; i++) {
         const file = mediaFiles[i];
-        setUploadProgressMsg(`Uploading image ${i + 1} of ${mediaFiles.length} to Cloudinary...`);
+        setUploadProgressMsg(`Uploading image ${i + 1} of ${mediaFiles.length}...`);
         const secureUrl = await uploadToCloudinary(file);
         uploadedUrls.push(secureUrl);
       }
@@ -253,7 +333,7 @@ export default function ProductForm({
         images: finalGallery.slice(1),
       };
 
-      setUploadProgressMsg("Finalizing and saving product to Firestore...");
+      setUploadProgressMsg("Saving product to Firestore...");
       await onSubmit(finalValues);
       setIsUploading(false);
     } catch (err: any) {
@@ -281,9 +361,7 @@ export default function ProductForm({
             <Undo className="w-5 h-5" />
           </button>
           <div>
-            <span className="text-[10px] font-mono tracking-[0.3em] text-gold uppercase font-bold">
-              KNQR Curator
-            </span>
+            <span className="text-[10px] font-mono tracking-[0.3em] text-gold uppercase font-bold">KNQR Curator</span>
             <h1 className="text-xl font-serif text-chocolate tracking-wide">
               {mode === "create" ? "Add New Product" : `Edit ${values.name || "Product"}`}
             </h1>
@@ -316,11 +394,9 @@ export default function ProductForm({
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className={`space-y-6 lg:col-span-7 ${previewTab === "preview" ? "hidden lg:block" : "block"}`}>
-          {PRODUCT_SCHEMA.sections.map((section) => {
+          {activeSchema.sections.map((section) => {
             const hasError = doesSectionHaveError(section.key);
-            const activeFields = PRODUCT_SCHEMA.fields.filter(
-              (f) => f.section === section.key && isFieldActive(f, values)
-            );
+            const activeFields = activeSchema.fields.filter((f) => f.section === section.key && isFieldActive(f, values));
 
             if (activeFields.length === 0) return null;
 
@@ -341,32 +417,27 @@ export default function ProductForm({
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <p className="text-sm font-semibold text-slate-900">Current saved images</p>
-                            <p className="mt-1 text-sm text-slate-600">
-                              Remove or set a different cover image before you publish changes.
-                            </p>
+                            <p className="mt-1 text-sm text-slate-600">Set the cover image or remove one before publishing changes.</p>
                           </div>
-                          <p className="text-[11px] text-slate-500 uppercase tracking-wider">
-                            {existingImages.length} saved
-                          </p>
+                          <p className="text-[11px] text-slate-500 uppercase tracking-wider">{existingImages.length} saved</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                           {existingImages.map((url, idx) => {
                             const isPrimary = values.image === url;
                             return (
-                              <div key={`${url}-${idx}`} className={`overflow-hidden rounded-xl border bg-slate-50 ${isPrimary ? "border-gold ring-1 ring-gold/20" : "border-slate-200"}`}>
+                              <div
+                                key={`${url}-${idx}`}
+                                className={`overflow-hidden rounded-xl border bg-slate-50 ${isPrimary ? "border-gold ring-1 ring-gold/20" : "border-slate-200"}`}
+                              >
                                 <div className="aspect-square w-full bg-slate-100">
                                   <img src={url} alt={`Current product image ${idx + 1}`} className="h-full w-full object-cover" />
                                 </div>
                                 <div className="border-t border-slate-200 px-2 py-2 space-y-2">
                                   <div className="flex items-center justify-between gap-2">
-                                    <p className="text-[11px] font-medium text-slate-600 truncate">
-                                      {isPrimary ? "Primary image" : `Saved image ${idx + 1}`}
-                                    </p>
+                                    <p className="text-[11px] font-medium text-slate-600 truncate">{isPrimary ? "Primary image" : `Saved image ${idx + 1}`}</p>
                                     {isPrimary && (
-                                      <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold">
-                                        Cover
-                                      </span>
+                                      <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold">Cover</span>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
@@ -397,11 +468,11 @@ export default function ProductForm({
                       files={mediaFiles}
                       onFilesChange={setMediaFiles}
                       maxFiles={10}
+                      title="Product Images"
+                      description="Select premium product visuals from your device. They stay staged until you publish."
                     />
 
-                    {errors.images && (
-                      <p className="text-sm font-medium text-rose-600">{errors.images}</p>
-                    )}
+                    {errors.images && <p className="text-sm font-medium text-rose-600">{errors.images}</p>}
                   </div>
                 ) : (
                   <div className="space-y-5">
@@ -436,13 +507,9 @@ export default function ProductForm({
             <div className="flex items-center justify-between border-b border-cream/10 pb-4">
               <div className="flex items-center space-x-2">
                 <Eye className="w-4 h-4 text-gold" />
-                <span className="text-[10px] font-mono tracking-[0.3em] text-gold uppercase font-bold">
-                  Live Client Card View
-                </span>
+                <span className="text-[10px] font-mono tracking-[0.3em] text-gold uppercase font-bold">Live Client Card View</span>
               </div>
-              <span className="text-[9px] font-mono text-cream/40 uppercase tracking-widest">
-                Real-Time Render
-              </span>
+              <span className="text-[9px] font-mono text-cream/40 uppercase tracking-widest">Real-Time Render</span>
             </div>
 
             <div className="group flex flex-col items-center bg-transparent w-full max-w-sm mx-auto">
@@ -456,7 +523,7 @@ export default function ProductForm({
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-cream/20">
-                    <Eye className="w-8 h-8 mb-2 stroke-1" />
+                    <Sparkles className="w-8 h-8 mb-2 stroke-1" />
                     <span className="text-xs font-mono tracking-wider uppercase">Image Awaiting Designation</span>
                   </div>
                 )}
@@ -482,9 +549,7 @@ export default function ProductForm({
 
               <div className="text-center w-full px-2">
                 <p className="text-[10px] font-mono tracking-widest uppercase text-gold mb-1">{values.category}</p>
-                <h4 className="font-serif text-xl font-normal text-cream tracking-wide leading-tight">
-                  {values.name || "Product Title"}
-                </h4>
+                <h4 className="font-serif text-xl font-normal text-cream tracking-wide leading-tight">{values.name || "Product Title"}</h4>
                 <div className="mt-2.5 flex items-center justify-center space-x-2 font-mono text-sm">
                   <span className="text-gold font-semibold">{displayPriceUSD}</span>
                   <span className="text-cream/40">|</span>
@@ -494,91 +559,16 @@ export default function ProductForm({
             </div>
 
             <div className="border-t border-cream/10 pt-4 space-y-3.5 text-xs">
-              {values.sizes && values.sizes.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-cream/50">Curated Sizes:</span>
-                  <span className="font-mono text-cream font-medium">{values.sizes.join(", ")}</span>
+              {previewRows.map((row) => (
+                <div key={row.label} className="flex justify-between gap-4">
+                  <span className="text-cream/50">{row.label}:</span>
+                  <span className="font-mono text-cream font-medium text-right">{row.value}</span>
                 </div>
-              )}
-              {values.colors && values.colors.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-cream/50">Accent Tones:</span>
-                  <span className="font-mono text-cream font-medium">{values.colors.join(", ")}</span>
-                </div>
-              )}
-
-              {values.collectionCategory === "Apparel" && (
-                <>
-                  {values.fit && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Fit Style:</span>
-                      <span className="font-mono text-cream font-medium">{values.fit}</span>
-                    </div>
-                  )}
-                  {values.material && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Fabric composition:</span>
-                      <span className="font-mono text-cream font-medium">{values.material}</span>
-                    </div>
-                  )}
-                  {values.apparelGender && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Profile:</span>
-                      <span className="font-mono text-cream font-medium">{values.apparelGender}</span>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {values.collectionCategory === "Bags & Accessories" && (
-                <>
-                  {values.bagType && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Accessory class:</span>
-                      <span className="font-mono text-cream font-medium">{values.bagType}</span>
-                    </div>
-                  )}
-                  {values.bagMaterial && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Sourced material:</span>
-                      <span className="font-mono text-cream font-medium">{values.bagMaterial}</span>
-                    </div>
-                  )}
-                  {values.bagCapacity && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Volume capacity:</span>
-                      <span className="font-mono text-cream font-medium">{values.bagCapacity}</span>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {values.collectionCategory === "Fragrances" && (
-                <>
-                  {values.scentFamily && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Scent family:</span>
-                      <span className="font-mono text-cream font-medium">{values.scentFamily}</span>
-                    </div>
-                  )}
-                  {values.concentration && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Strength:</span>
-                      <span className="font-mono text-cream font-medium">{values.concentration}</span>
-                    </div>
-                  )}
-                  {values.longevity && (
-                    <div className="flex justify-between">
-                      <span className="text-cream/50">Longevity:</span>
-                      <span className="font-mono text-cream font-medium">{values.longevity}</span>
-                    </div>
-                  )}
-                </>
-              )}
+              ))}
 
               {values.deliveryNote && (
                 <div className="bg-chocolate/40 p-3 rounded-xl border border-cream/5 mt-2">
-                  <p className="text-[9px] font-mono text-gold uppercase mb-1 tracking-wider">Fulfillment Note</p>
+                  <p className="text-[9px] font-mono text-gold uppercase mb-1 tracking-wider">Fulfilment Note</p>
                   <p className="text-[11px] text-cream/70 leading-relaxed font-sans">{values.deliveryNote}</p>
                 </div>
               )}
@@ -586,7 +576,6 @@ export default function ProductForm({
           </div>
         </div>
 
-        {/* Extra bottom spacing to prevent overlapping with floating buttons and allow comfortable scrolling */}
         <div className="h-32 lg:col-span-12" />
       </div>
 
