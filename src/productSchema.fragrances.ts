@@ -15,8 +15,8 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     ...BASE_PRODUCT_SCHEMA.sections,
     {
       key: "fragrance-variants",
-      title: "Fragrance Variants",
-      description: "Scent profile, bottle size, and performance details.",
+      title: "Fragrance Specifications",
+      description: "Bottle size, scent profile, concentration, and wear performance.",
       fields: ["sizes", "volume", "scentFamily", "fragranceGender", "concentration", "longevity", "notes"],
     },
   ],
@@ -24,10 +24,10 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     ...BASE_PRODUCT_SCHEMA.fields,
     {
       key: "volume",
-      label: "Volume Options",
+      label: "Bottle Volume",
       type: "select",
       section: "fragrance-variants",
-      options: ["50ml", "100ml", "150ml", "Sample Vial (2ml)"],
+      options: ["30ml", "50ml", "100ml", "150ml", "Travel Size (2ml)"],
       dependsOn: {
         field: "collectionCategory",
         value: "Fragrances",
@@ -35,10 +35,10 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     },
     {
       key: "scentFamily",
-      label: "Olfactive Scent Sensation Family",
+      label: "Scent Family",
       type: "select",
       section: "fragrance-variants",
-      options: ["Woody & Earthy", "Oriental & Amber", "Fresh & Citrusy", "Warm & Spicy", "Floral & Aromatic"],
+      options: ["Fresh", "Woody", "Amber", "Floral", "Spicy"],
       dependsOn: {
         field: "collectionCategory",
         value: "Fragrances",
@@ -46,10 +46,10 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     },
     {
       key: "fragranceGender",
-      label: "Target Profile Scent",
+      label: "Wear Profile",
       type: "radio",
       section: "fragrance-variants",
-      options: ["Unisex / Fluid", "Pour Homme (Masculine)", "Pour Femme (Feminine)"],
+      options: ["Unisex", "Men", "Women"],
       dependsOn: {
         field: "collectionCategory",
         value: "Fragrances",
@@ -57,10 +57,10 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     },
     {
       key: "concentration",
-      label: "Fragrance Strength Profile",
+      label: "Concentration",
       type: "select",
       section: "fragrance-variants",
-      options: ["Extrait de Parfum (Highest)", "Eau de Parfum (EDP)", "Eau de Toilette (EDT)", "Eau de Cologne"],
+      options: ["Extrait de Parfum", "Eau de Parfum", "Eau de Toilette", "Eau de Cologne"],
       dependsOn: {
         field: "collectionCategory",
         value: "Fragrances",
@@ -68,10 +68,10 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     },
     {
       key: "longevity",
-      label: "Average Scent Projection Longevity",
+      label: "Longevity",
       type: "select",
       section: "fragrance-variants",
-      options: ["Light (2-4 Hours)", "Moderate (4-6 Hours)", "Long-Lasting (6-8 Hours)", "Eternal (8-12+ Hours)"],
+      options: ["Light (2-4 Hours)", "Moderate (4-6 Hours)", "Long-Lasting (6-8 Hours)", "Extended (8+ Hours)"],
       dependsOn: {
         field: "collectionCategory",
         value: "Fragrances",
@@ -79,10 +79,10 @@ export const FRAGRANCES_SCHEMA: ProductSchema = {
     },
     {
       key: "notes",
-      label: "Olfactive Fragrance Notes",
+      label: "Fragrance Notes",
       type: "multiselect",
       section: "fragrance-variants",
-      options: ["Bergamot", "Sandalwood", "Amber Noir", "Malawian Vetiver", "Sweet Vanilla", "Oud Wood", "Black Pepper", "Cedarwood", "Patchouli", "Neroli", "Cardamom"],
+      options: ["Bergamot", "Sandalwood", "Amber", "Vetiver", "Vanilla", "Oud", "Black Pepper", "Cedarwood", "Patchouli", "Neroli", "Cardamom"],
       dependsOn: {
         field: "collectionCategory",
         value: "Fragrances",
@@ -96,11 +96,11 @@ export function createEmptyFragrancesProductDraft(): ProductDraftValues {
     ...createEmptyBaseProductDraft(),
     collectionCategory: "Fragrances",
     category: "Perfumes",
-    sizes: ["50ml", "100ml"],
+    sizes: ["30ml", "100ml"],
     volume: "100ml",
-    scentFamily: "Woody & Earthy",
-    fragranceGender: "Unisex / Fluid",
-    concentration: "Eau de Parfum (EDP)",
+    scentFamily: "Woody",
+    fragranceGender: "Unisex",
+    concentration: "Eau de Parfum",
     longevity: "Long-Lasting (6-8 Hours)",
     notes: [],
   };
