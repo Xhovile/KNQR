@@ -1,20 +1,52 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# KNQR Online
 
-# Run and deploy your AI Studio app
+KNQR Online is the digital boutique for the KNQR Lifestyle Brand, featuring premium Malawian fashion, curated fragrances, and accessories.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/41a85d60-4c43-4c9d-a21c-798d67f4ef9f
+- Browse featured KNQR products and collections
+- View product details, pricing, and availability
+- Upload and manage product images for store updates
+- Contact the KNQR team for orders, support, and collaboration
+- Secure authentication with email, Google, and Apple sign-in
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- Firebase / Firestore
+- Express server for API routes
 
+## Local Development
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Prerequisites
+
+- Node.js
+- A Firebase/Gemini setup if you are using the admin and AI features
+
+### Install
+
+```bash
+npm install
+```
+
+### Environment Variables
+
+Create a `.env.local` file and add the required keys, including:
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+If you are using Firebase-backed features, configure the Firebase credentials used by the app as well.
+
+### Run the App
+
+```bash
+npm run dev
+```
+
+## Notes
+
+This project is built for the KNQR brand and is not a generic AI Studio starter app.
