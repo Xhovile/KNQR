@@ -107,32 +107,32 @@ export const BASE_PRODUCT_SCHEMA: ProductSchema = {
   sections: [
     {
       key: "basic",
-      title: "Basic Info",
-      description: "Define the visual identity, title, story, and status of the product.",
+      title: "Core Details",
+      description: "Define the product identity, category, and public-facing status.",
       fields: ["name", "collectionCategory", "category", "description", "status"],
     },
     {
       key: "pricing",
       title: "Pricing",
-      description: "Set the cost and track available warehouse quantity.",
+      description: "Set the retail value and available stock quantity.",
       fields: ["priceUSD", "priceMWK", "stock"],
     },
     {
       key: "media",
       title: "Media",
-      description: "Select product images from the device. Files stay staged locally until Publish.",
+      description: "Select product visuals from the device. Images are staged before publishing.",
       fields: ["image", "images"],
     },
     {
       key: "delivery",
       title: "Delivery",
-      description: "Configure shipment modes and regional handoff instructions.",
+      description: "Configure fulfillment method and any delivery notes.",
       fields: ["deliveryMethod", "deliveryNote"],
     },
     {
       key: "extras",
-      title: "Details",
-      description: "Add key sourcing, craft, and highlight tags for the buyer.",
+      title: "Product Specifications",
+      description: "Select polished product attributes that describe the piece accurately.",
       fields: ["details"],
     },
   ],
@@ -179,11 +179,11 @@ export const BASE_PRODUCT_SCHEMA: ProductSchema = {
     },
     {
       key: "description",
-      label: "Description",
+      label: "Product Description",
       type: "textarea",
       required: true,
       section: "basic",
-      placeholder: "Describe the product clearly",
+      placeholder: "Write a concise, premium description of the product",
     },
     {
       key: "status",
@@ -245,17 +245,30 @@ export const BASE_PRODUCT_SCHEMA: ProductSchema = {
     },
     {
       key: "deliveryNote",
-      label: "Delivery Guidelines / Notes",
+      label: "Delivery Notes",
       type: "textarea",
       section: "delivery",
-      placeholder: "Provide special local handoff or delivery notes here...",
+      placeholder: "Add any handoff, shipping, or delivery guidance here",
     },
     {
       key: "details",
-      label: "Highlighted Selling Points",
+      label: "Product Specifications",
       type: "multiselect",
       section: "extras",
-      options: ["Premium finish", "Limited edition", "Handmade", "Locally sourced", "Ethically Crafted", "Waterproof Materials"],
+      options: [
+        "Premium build",
+        "Refined finish",
+        "Structured silhouette",
+        "Clean construction",
+        "Limited release",
+        "Signature detailing",
+        "Lightweight feel",
+        "Comfort-first design",
+        "Everyday versatility",
+        "Statement piece",
+        "Luxury look",
+        "Durable build",
+      ],
     },
   ],
 };
@@ -324,6 +337,6 @@ export function createEmptyProductDraft(): ProductDraftValues {
     fragranceGender: "Unisex / Fluid",
     concentration: "Eau de Parfum (EDP)",
     longevity: "Long-Lasting (6-8 Hours)",
-    notes: []
+    notes: [],
   };
 }
