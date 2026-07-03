@@ -65,12 +65,10 @@ export function useAppNavigation({ productsList }: UseAppNavigationArgs) {
 
       if (state) {
         const foundProduct = PRODUCTS.find((p) => p.id === state.selectedProductId) || null;
-        const actualProduct =
-          productsList.find((p) => p.id === state.selectedProductId) || foundProduct;
+        const actualProduct = productsList.find((p) => p.id === state.selectedProductId) || foundProduct;
 
         const foundEditing = PRODUCTS.find((p) => p.id === state.editingProductId) || null;
-        const actualEditing =
-          productsList.find((p) => p.id === state.editingProductId) || foundEditing;
+        const actualEditing = productsList.find((p) => p.id === state.editingProductId) || foundEditing;
 
         const shouldSkipEditor = (window as any).hasPublishedProduct;
 

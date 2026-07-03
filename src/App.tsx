@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { ArrowUp, ShoppingCart, X } from "lucide-react";
 
-import Cart from "./components/Cart";
+import CartPage from "./CartPage";
 import Skeleton from "./components/Skeleton";
 import AdminGuardModal from "./components/AdminGuardModal";
 import CatalogView from "./components/CatalogView";
@@ -28,11 +28,7 @@ export default function App() {
   >(null);
   const [authInitialIsSignUp, setAuthInitialIsSignUp] = useState(false);
 
-  const {
-    user,
-    setUser,
-    handleSignOut: signOutFromAuth,
-  } = useAuthSession();
+  const { user, handleSignOut: signOutFromAuth } = useAuthSession();
 
   const {
     productsList,
@@ -55,7 +51,6 @@ export default function App() {
 
   const {
     activeTab,
-    setActiveTab,
     selectedProduct,
     setSelectedProduct,
     isCreatingProduct,
@@ -69,6 +64,7 @@ export default function App() {
   } = useAppNavigation({ productsList });
 
   const isAdmin = user && user.email === "xhovilepublications@gmail.com";
+  const isCartPage = activeTab === "cart";
 
   const handleSignOut = async () => {
     await signOutFromAuth(() => transitionTo("home"));
@@ -179,13 +175,29 @@ export default function App() {
   return (
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
-        {isCreatingProduct ? (
+        {isCartPage ? (
+          <CartPage
+            isOpen={true}
+            onClose={() => transitionTo(activeTab === "cart" ? "home" : activeTab, null, false, null)}
+            cartItems={cart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            priceCurrency={priceCurrency}
+            user={user}
+          />
+        ) : isCreatingProduct ? (
           <React.Suspense fallback={<Skeleton type="home" />}>
             <AddProduct key="add-product-screen" onCancel={handleGoBack} onSubmit={handleCreateProductSubmit} />
           </React.Suspense>
         ) : editingProduct ? (
           <React.Suspense fallback={<Skeleton type="home" />}>
-            <EditProduct key="edit-product-screen" product={editingProduct} onCancel={handleGoBack} onSubmit={handleEditProductSubmit} />
+            <EditProduct
+              key="edit-product-screen"
+              product={editingProduct}
+              onCancel={handleGoBack}
+              onSubmit={handleEditProductSubmit}
+            />
           </React.Suspense>
         ) : selectedProduct ? (
           <React.Suspense fallback={<Skeleton type="detail" />}>
@@ -254,42 +266,33 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div className="fixed right-5 bottom-5 z-[60] flex flex-col gap-3">
-        <button
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="Back to top"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/15 bg-chocolate-dark text-cream shadow-2xl transition hover:-translate-y-0.5 hover:bg-chocolate-light"
-          title="Back to top"
-        >
-          <ArrowUp className="h-5 w-5" />
-        </button>
+      {!isCartPage && (
+        <div className="fixed right-5 bottom-5 z-[60] flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Back to top"
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/15 bg-chocolate-dark text-cream shadow-2xl transition hover:-translate-y-0.5 hover:bg-chocolate-light"
+            title="Back to top"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setIsCartOpen((prev) => !prev)}
-          aria-label="Open cart"
-          className="relative flex h-12 w-12 items-center justify-center rounded-full border border-gold/20 bg-gold text-chocolate shadow-2xl transition hover:-translate-y-0.5 hover:bg-gold-light"
-          title={isCartOpen ? "Close cart" : "Open cart"}
-        >
-          {isCartOpen ? <X className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
-          {cart.length > 0 && !isCartOpen && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-md">
-              {cart.length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {isCartOpen && (
-        <Cart
-          cart={cart}
-          onClose={() => setIsCartOpen(false)}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearCart={handleClearCart}
-          priceCurrency={priceCurrency}
-        />
+          <button
+            type="button"
+            onClick={() => transitionTo("cart", null, false, null)}
+            aria-label="Open cart"
+            className="relative flex h-12 w-12 items-center justify-center rounded-full border border-gold/20 bg-gold text-chocolate shadow-2xl transition hover:-translate-y-0.5 hover:bg-gold-light"
+            title="Open cart"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cart.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-md">
+                {cart.length}
+              </span>
+            )}
+          </button>
+        </div>
       )}
 
       <AdminGuardModal open={showAdminGuardModal} onClose={() => setShowAdminGuardModal(false)} />
