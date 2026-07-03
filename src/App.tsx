@@ -44,7 +44,6 @@ import {
 export default function App() {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -88,17 +87,23 @@ export default function App() {
       setIsLoadingProducts(true);
 
       try {
-        // Load products and hero images in parallel
-        const [fetchedProducts, fetchedHeroes] = await Promise.all([
+        const [productsResult, heroesResult] = await Promise.allSettled([
           fetchProducts(),
           fetchHeroImages()
         ]);
-        setProductsList(fetchedProducts);
-        setHeroImages(fetchedHeroes);
-        setProductsError(null);
-      } catch (err: any) {
-        console.error("Firestore loading failed:", err?.message || String(err));
-        setProductsError(err?.message || "An error occurred while loading catalog.");
+
+        if (productsResult.status === "fulfilled") {
+          setProductsList(productsResult.value);
+        } else {
+          console.error("Firestore products load failed:", productsResult.reason);
+          setProductsList([]);
+        }
+
+        if (heroesResult.status === "fulfilled") {
+          setHeroImages(heroesResult.value);
+        } else {
+          console.error("Firestore hero images load failed:", heroesResult.reason);
+        }
       } finally {
         setIsLoadingProducts(false);
       }
@@ -569,26 +574,6 @@ export default function App() {
                 >
                   <Skeleton type={activeTab === "home" ? "home" : selectedProduct ? "detail" : "grid"} />
                 </motion.div>
-              ) : productsError ? (
-                <motion.div
-                  key="error-state"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex-grow flex flex-col items-center justify-center py-20 px-6 text-center bg-light-brown text-chocolate"
-                >
-                  <p className="text-sm font-mono tracking-widest uppercase text-rose-600 mb-2">Connection Interrupted</p>
-                  <h3 className="font-serif text-2xl mb-4">Could Not Synchronize Catalog</h3>
-                  <p className="max-w-md text-sm text-chocolate/70 leading-relaxed mb-6">
-                    We encountered an issue retrieving the latest bespoke pieces from the database: {productsError}
-                  </p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="px-6 py-3 bg-chocolate text-cream font-mono text-xs uppercase tracking-wider hover:bg-gold hover:text-chocolate rounded-xl transition-all font-bold cursor-pointer"
-                  >
-                    Reconnect Database
-                  </button>
-                </motion.div>
               ) : activeTab === "shop" ? (
                 <motion.div
                   key="shop-view"
@@ -759,17 +744,20 @@ export default function App() {
                       </div>
                     </div>
                   ) : (
-                    <AuthForm 
-                      initialIsSignUp={authInitialIsSignUp}
-                      onSuccess={(u) => {
-                        setUser(u);
-                        transitionTo("home");
-                      }} 
-                    />
+                    <AuthForm initialIsSignUp={authInitialIsSignUp} onSuccess={(currentUser) => setUser(currentUser)} />
                   )}
                 </motion.div>
               ) : activeTab === "contact" ? (
-                null
+                <motion.div
+                  key="contact-view"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex-grow bg-light-brown text-chocolate"
+                >
+                  <ContactPage />
+                </motion.div>
               ) : (
                 <motion.div
                   key="home-view"
@@ -777,161 +765,59 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.25 }}
-                  className="flex flex-col"
+                  className="flex flex-col flex-grow bg-light-brown text-chocolate"
                 >
-                  {/* 3. Hero Section */}
-                  <Hero 
-                    onShopClick={() => transitionTo("shop", null, false, null)} 
-                    heroImage={heroImages.home}
-                    onUpdateHeroImage={(url) => handleUpdateHeroImage("home", url)}
-                    isAdmin={isAdmin}
-                  />
-
-                  {/* 4. Featured Collections Shelf */}
-                  <React.Suspense fallback={
-                    <div className="py-12 flex items-center justify-center text-xs font-mono tracking-widest text-chocolate/40 bg-light-brown">
-                      Loading Curated Collections...
-                    </div>
-                  }>
-                    <Collection
-                      products={productsList}
-                      onSelectCollection={(collectionCategory) => {
-                        const lower = collectionCategory.toLowerCase();
-                        let tab: ActiveTab = "apparel";
-                        if (lower.includes("bags") || lower.includes("accessories")) {
-                          tab = "bags-accessories";
-                        } else if (lower.includes("fragrance")) {
-                          tab = "fragrances";
-                        }
-                        transitionTo(tab, null, false, null);
-                      }}
-                      onAddToCart={(prod) => handleAddToCart(prod, 1, prod.sizes?.[0], prod.colors?.[0])}
-                      priceCurrency={priceCurrency}
-                    />
+                  <Hero />
+                  <React.Suspense fallback={<Skeleton type="grid" />}>
+                    <Collection products={productsList} />
                   </React.Suspense>
-
-                  {/* 5. Promotional Banner Overlay */}
-                  <React.Suspense fallback={null}>
-                    <Promo onShopClick={() => transitionTo("shop", null, false, null)} />
+                  <React.Suspense fallback={<Skeleton type="home" />}>
+                    <Promo />
                   </React.Suspense>
+                  <Footer />
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Persistent Contact Page view to prevent Google Maps iframe and asset reloading lag */}
-            <div className={!isLoadingProducts && !productsError && activeTab === "contact" ? "flex flex-col flex-grow bg-light-brown" : "hidden"}>
-              <React.Suspense fallback={<Skeleton type="home" />}>
-                <ContactPage />
-              </React.Suspense>
-            </div>
-
-            {/* 6. Centered Chocolate Footer */}
-            <Footer />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Quick Access Floating Cart Button */}
-      {!isCreatingProduct && !editingProduct && (
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-6 right-6 z-40 p-4 bg-[#0b1b33] text-cream hover:bg-[#122c54] hover:text-gold border border-gold/30 rounded-full shadow-2xl transition-all hover:scale-105 flex items-center justify-center cursor-pointer group"
-          id="floating-cart-trigger"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          {cart.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-[10px] text-chocolate font-bold rounded-full flex items-center justify-center border border-chocolate animate-bounce">
-              {cart.reduce((acc, item) => acc + item.quantity, 0)}
-            </span>
-          )}
-        </button>
+      {/* Cart Drawer */}
+      {isCartOpen && (
+        <Cart
+          cart={cart}
+          onClose={() => setIsCartOpen(false)}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onClearCart={handleClearCart}
+          priceCurrency={priceCurrency}
+        />
       )}
 
-      {/* Floating Scroll to Top */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 left-6 z-40 p-3 bg-chocolate-light text-cream/70 hover:text-cream rounded-full border border-cream/10 transition-colors shadow-lg cursor-pointer"
-          id="scroll-to-top-btn"
-        >
-          <ArrowUp className="w-4 h-4" />
-        </button>
-      )}
-
-      {/* Cart Drawer Modal */}
-      <Cart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cart}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-        onClearCart={handleClearCart}
-        priceCurrency={priceCurrency}
-        user={user}
-      />
-
-      {/* Admin Guard Dialog Modal */}
-      <AnimatePresence>
-        {showAdminGuardModal && (
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-chocolate-dark/80 backdrop-blur-sm p-4" id="admin-guard-modal-backdrop">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-xs w-full bg-[#18191b] border border-cream/15 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-cream"
-              id="admin-guard-modal-content"
-            >
-              {/* Premium Geometric Accent */}
-              <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
-              
-              <div className="w-12 h-12 rounded-full border border-gold/20 bg-gold/5 flex items-center justify-center mx-auto mb-4">
-                <ShieldAlert className="w-6 h-6 text-gold" />
+      {/* Admin Guard Modal */}
+      {showAdminGuardModal && (
+        <div className="fixed inset-0 bg-black/70 z-[120] flex items-center justify-center p-4">
+          <div className="bg-light-brown text-chocolate rounded-2xl shadow-2xl max-w-md w-full p-6 border border-chocolate/10">
+            <div className="flex items-start gap-3 mb-4">
+              <ShieldAlert className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-serif text-xl mb-1">Admin Access Required</h3>
+                <p className="text-sm text-chocolate/70 leading-relaxed">
+                  This action is reserved for the administrator account.
+                </p>
               </div>
-              
-              <h3 className="font-serif text-lg tracking-widest text-gold uppercase mb-1" id="admin-guard-title">
-                Admin Access
-              </h3>
-              <p className="font-mono text-[8px] tracking-[0.2em] text-cream/40 uppercase mb-3">
-                Authorized Personnel Only
-              </p>
-              
-              <p className="text-xs text-cream/70 leading-relaxed mb-6 font-sans">
-                {adminGuardAction === "add" 
-                  ? "Adding new products is restricted to Authorized Brand Administrators."
-                  : adminGuardAction === "restock"
-                  ? "Restocking product inventory is restricted to Authorized Brand Administrators."
-                  : adminGuardAction === "record_sale"
-                  ? "Recording custom sales is restricted to Authorized Brand Administrators."
-                  : "Modifying catalog products is restricted to Authorized Brand Administrators."}
-                {" "}Please sign in with an administrator account.
-              </p>
-
-              <div className="flex gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowAdminGuardModal(false)}
-                  className="flex-1 py-2 border border-cream/10 hover:border-cream/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-cream/60 hover:text-cream transition-all cursor-pointer"
-                  id="admin-guard-cancel-btn"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAdminGuardModal(false);
-                    transitionTo("auth");
-                  }}
-                  className="flex-1 py-2 bg-gold text-chocolate font-bold hover:bg-cream rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer"
-                  id="admin-guard-signin-btn"
-                >
-                  Sign In
-                </button>
-              </div>
-            </motion.div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-xl border border-chocolate/15 text-sm font-mono hover:bg-chocolate/5"
+                onClick={() => setShowAdminGuardModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
-
 }
