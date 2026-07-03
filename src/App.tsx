@@ -84,6 +84,8 @@ export default function App() {
     }
   };
 
+  const handleUpdateHomeHero = useCallback((url: string) => handleUpdateHeroImage("home", url), []);
+
   const handleToggleWishlist = useCallback(() => {
     // kept locally in App for now if you want to move it to a hook in a third pass
   }, []);
@@ -257,6 +259,7 @@ export default function App() {
             onAddToCartFromPages={handleAddToCartFromPages}
             onToggleWishlist={handleToggleWishlist}
             onGoBack={handleGoBack}
+            onUpdateHomeHero={handleUpdateHomeHero}
             onUpdateApparelHero={handleUpdateApparelHero}
             onUpdateBagsHero={handleUpdateBagsHero}
             onUpdateFragrancesHero={handleUpdateFragrancesHero}
