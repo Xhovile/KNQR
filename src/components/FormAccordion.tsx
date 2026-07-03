@@ -23,11 +23,11 @@ export default function FormAccordion({
   children,
 }: FormAccordionProps) {
   return (
-    <div 
-      className={`border rounded-2xl overflow-hidden transition-all duration-350 ${
-        isOpen 
-          ? "bg-chocolate-dark/95 border-cream/20 shadow-2xl" 
-          : "bg-chocolate-dark/45 border-cream/10 hover:border-cream/20"
+    <div
+      className={`border rounded-2xl transition-all duration-350 ${
+        isOpen
+          ? "bg-chocolate-dark/95 border-cream/20 shadow-2xl overflow-visible"
+          : "bg-chocolate-dark/45 border-cream/10 hover:border-cream/20 overflow-hidden"
       }`}
       id={`accordion-section-${sectionKey}`}
     >
@@ -38,10 +38,10 @@ export default function FormAccordion({
         className="w-full text-left px-6 py-5 flex items-center justify-between cursor-pointer focus:outline-none group select-none"
       >
         <div className="flex-1">
-          <ProductSectionHeader 
-            sectionKey={sectionKey} 
-            title={title} 
-            description={description} 
+          <ProductSectionHeader
+            sectionKey={sectionKey}
+            title={title}
+            description={description}
           />
         </div>
 
@@ -71,7 +71,7 @@ export default function FormAccordion({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12, ease: "easeOut" }}
           >
-            <div className="px-6 pb-6 pt-2 border-t border-cream/5 space-y-6">
+            <div className="px-6 pb-6 pt-2 border-t border-cream/5 space-y-6 overflow-visible">
               {children}
             </div>
           </motion.div>
