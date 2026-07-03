@@ -9,14 +9,14 @@ import {
 export const BAGS_SCHEMA: ProductSchema = {
   key: "product-bags",
   title: "Bags & Accessories Schema",
-  description: "Schema for backpacks, sling bags, gym bags, hustle bags, toilet bags, and other accessories.",
+  description: "Schema for backpacks, sling bags, gym bags, hustle bags, toilet bags, and premium accessories.",
   requiredKeys: [...BASE_PRODUCT_SCHEMA.requiredKeys, "bagType", "bagMaterial", "strapType", "bagCapacity", "useCase"],
   sections: [
     ...BASE_PRODUCT_SCHEMA.sections,
     {
       key: "bag-variants",
-      title: "Bags & Accessories Variants",
-      description: "Accessory-specific construction, carrying style, and usage details.",
+      title: "Accessory Specifications",
+      description: "Accessory construction, carry style, capacity, and usage details.",
       fields: ["colors", "bagType", "bagMaterial", "strapType", "bagCapacity", "useCase"],
     },
   ],
@@ -24,10 +24,10 @@ export const BAGS_SCHEMA: ProductSchema = {
     ...BASE_PRODUCT_SCHEMA.fields,
     {
       key: "bagType",
-      label: "Accessory / Bag Category",
+      label: "Accessory Type",
       type: "select",
       section: "bag-variants",
-      options: ["Backpack", "Sling Bag", "Gym Bag", "Hustle Bag", "Toilet Bag", "Hand-carried Case", "Jewelry / Accent"],
+      options: ["Backpack", "Sling Bag", "Gym Bag", "Hustle Bag", "Toilet Bag", "Hand-carry Case", "Accent Accessory"],
       dependsOn: {
         field: "collectionCategory",
         value: "Bags & Accessories",
@@ -35,16 +35,10 @@ export const BAGS_SCHEMA: ProductSchema = {
     },
     {
       key: "bagMaterial",
-      label: "Accessory Material Sourcing",
+      label: "Material Finish",
       type: "select",
       section: "bag-variants",
-      options: [
-        "Full-Grain Genuine Leather",
-        "Ultra-durable Canvas",
-        "Water-resistant Ballistic Nylon",
-        "24K Gold Plated Brass",
-        "Sterling Silver Coated",
-      ],
+      options: ["Full-Grain Leather", "Durable Canvas", "Water-resistant Nylon", "Textured Finish", "Metal Accent Finish"],
       dependsOn: {
         field: "collectionCategory",
         value: "Bags & Accessories",
@@ -52,16 +46,10 @@ export const BAGS_SCHEMA: ProductSchema = {
     },
     {
       key: "strapType",
-      label: "Strap Style",
+      label: "Carry Style",
       type: "select",
       section: "bag-variants",
-      options: [
-        "Adjustable Padded Shoulder Straps",
-        "Removable Chain Strap",
-        "Dual Reinforced Carry Handles",
-        "Elastic Hook Strap",
-        "None",
-      ],
+      options: ["Adjustable Shoulder Straps", "Removable Strap", "Dual Carry Handles", "Hook Strap", "No Strap"],
       dependsOn: {
         field: "collectionCategory",
         value: "Bags & Accessories",
@@ -69,10 +57,10 @@ export const BAGS_SCHEMA: ProductSchema = {
     },
     {
       key: "bagCapacity",
-      label: "Volume Capacity",
+      label: "Capacity Profile",
       type: "select",
       section: "bag-variants",
-      options: ["Under 5L (Compact)", "5L - 15L (Medium)", "15L - 30L (Daily)", "Over 30L (Travel)", "One Size (Accessory)"],
+      options: ["Compact", "Medium", "Daily", "Travel", "One Size"],
       dependsOn: {
         field: "collectionCategory",
         value: "Bags & Accessories",
@@ -80,10 +68,10 @@ export const BAGS_SCHEMA: ProductSchema = {
     },
     {
       key: "useCase",
-      label: "Primary Intended Use",
+      label: "Primary Use",
       type: "select",
       section: "bag-variants",
-      options: ["Daily Commute & Office", "Gym & Active Sports", "Weekend Travel & Outing", "Formal & Evening Accents"],
+      options: ["Daily Commute", "Gym & Sport", "Weekend Travel", "Formal Use"],
       dependsOn: {
         field: "collectionCategory",
         value: "Bags & Accessories",
@@ -98,10 +86,10 @@ export function createEmptyBagsProductDraft(): ProductDraftValues {
     collectionCategory: "Bags & Accessories",
     category: "Backpacks",
     bagType: "Backpack",
-    bagMaterial: "Full-Grain Genuine Leather",
-    strapType: "Adjustable Padded Shoulder Straps",
-    bagCapacity: "15L - 30L (Daily)",
-    useCase: "Daily Commute & Office",
+    bagMaterial: "Full-Grain Leather",
+    strapType: "Adjustable Shoulder Straps",
+    bagCapacity: "Daily",
+    useCase: "Daily Commute",
   };
 }
 
