@@ -92,6 +92,60 @@ export default function CatalogView({
     }
   };
 
+  const renderHome = () => (
+    <motion.div
+      key="home-view"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ duration: 0.25 }}
+      className="flex flex-col flex-grow bg-light-brown text-chocolate"
+    >
+      <Hero
+        onShopClick={() => setActiveTab("shop")}
+        heroImage={heroImages.home}
+        onUpdateHeroImage={onUpdateHomeHero}
+        isAdmin={isAdmin}
+      />
+
+      {isLoadingProducts ? (
+        <>
+          <div className="px-4 sm:px-6 lg:px-8 pt-6">
+            <Skeleton type="grid" />
+          </div>
+          <div className="px-4 sm:px-6 lg:px-8 pt-6">
+            <Skeleton type="home" />
+          </div>
+        </>
+      ) : (
+        <>
+          <Collection
+            products={productsList}
+            onSelectCollection={handleSelectCollection}
+            onAddToCart={() => {}}
+            priceCurrency={priceCurrency}
+          />
+          <Promo />
+        </>
+      )}
+
+      <Footer />
+    </motion.div>
+  );
+
+  const renderTabSkeleton = (type: "grid" | "detail" | "home" = "grid") => (
+    <motion.div
+      key={`${activeTab}-loading`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="flex-grow bg-light-brown"
+    >
+      <Skeleton type={type} />
+    </motion.div>
+  );
+
   return (
     <motion.div
       key="main-catalog"
@@ -126,79 +180,89 @@ export default function CatalogView({
       ) : null}
 
       <AnimatePresence mode="wait">
-        {isLoadingProducts ? (
-          <motion.div
-            key="loading-skeleton"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-grow bg-light-brown"
-          >
-            <Skeleton type={activeTab === "home" ? "home" : selectedProduct ? "detail" : "grid"} />
-          </motion.div>
+        {selectedProduct ? (
+          <React.Suspense fallback={renderTabSkeleton("detail")}> 
+            <></>
+          </React.Suspense>
         ) : activeTab === "shop" ? (
           <motion.div key="shop-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5">
-            <React.Suspense fallback={<Skeleton type="grid" />}>
-              <Shop
-                products={productsList}
-                onViewDetails={onViewDetails}
-                onAddToCart={onAddToCartFromShop}
-                onToggleWishlist={onToggleWishlist}
-                wishlist={wishlist}
-                priceCurrency={priceCurrency}
-              />
-            </React.Suspense>
+            {isLoadingProducts ? (
+              renderTabSkeleton("grid")
+            ) : (
+              <React.Suspense fallback={<Skeleton type="grid" />}>
+                <Shop
+                  products={productsList}
+                  onViewDetails={onViewDetails}
+                  onAddToCart={onAddToCartFromShop}
+                  onToggleWishlist={onToggleWishlist}
+                  wishlist={wishlist}
+                  priceCurrency={priceCurrency}
+                />
+              </React.Suspense>
+            )}
           </motion.div>
         ) : activeTab === "apparel" ? (
           <motion.div key="apparel-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5">
-            <React.Suspense fallback={<Skeleton type="grid" />}>
-              <ApparelPage
-                products={productsList}
-                onViewDetails={onViewDetails}
-                onAddToCart={onAddToCartFromPages}
-                onToggleWishlist={onToggleWishlist}
-                wishlist={wishlist}
-                priceCurrency={priceCurrency}
-                onBackToHome={onGoBack}
-                heroImage={heroImages.apparel}
-                onUpdateHeroImage={onUpdateApparelHero}
-                isAdmin={isAdmin}
-              />
-            </React.Suspense>
+            {isLoadingProducts ? (
+              renderTabSkeleton("grid")
+            ) : (
+              <React.Suspense fallback={<Skeleton type="grid" />}>
+                <ApparelPage
+                  products={productsList}
+                  onViewDetails={onViewDetails}
+                  onAddToCart={onAddToCartFromPages}
+                  onToggleWishlist={onToggleWishlist}
+                  wishlist={wishlist}
+                  priceCurrency={priceCurrency}
+                  onBackToHome={onGoBack}
+                  heroImage={heroImages.apparel}
+                  onUpdateHeroImage={onUpdateApparelHero}
+                  isAdmin={isAdmin}
+                />
+              </React.Suspense>
+            )}
           </motion.div>
         ) : activeTab === "bags-accessories" ? (
           <motion.div key="bags-accessories-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5">
-            <React.Suspense fallback={<Skeleton type="grid" />}>
-              <BagsAndAccessoriesPage
-                products={productsList}
-                onViewDetails={onViewDetails}
-                onAddToCart={onAddToCartFromPages}
-                onToggleWishlist={onToggleWishlist}
-                wishlist={wishlist}
-                priceCurrency={priceCurrency}
-                onBackToHome={onGoBack}
-                heroImage={heroImages.bagsAccessories}
-                onUpdateHeroImage={onUpdateBagsHero}
-                isAdmin={isAdmin}
-              />
-            </React.Suspense>
+            {isLoadingProducts ? (
+              renderTabSkeleton("grid")
+            ) : (
+              <React.Suspense fallback={<Skeleton type="grid" />}>
+                <BagsAndAccessoriesPage
+                  products={productsList}
+                  onViewDetails={onViewDetails}
+                  onAddToCart={onAddToCartFromPages}
+                  onToggleWishlist={onToggleWishlist}
+                  wishlist={wishlist}
+                  priceCurrency={priceCurrency}
+                  onBackToHome={onGoBack}
+                  heroImage={heroImages.bagsAccessories}
+                  onUpdateHeroImage={onUpdateBagsHero}
+                  isAdmin={isAdmin}
+                />
+              </React.Suspense>
+            )}
           </motion.div>
         ) : activeTab === "fragrances" ? (
           <motion.div key="fragrances-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5">
-            <React.Suspense fallback={<Skeleton type="grid" />}>
-              <FragrancesPage
-                products={productsList}
-                onViewDetails={onViewDetails}
-                onAddToCart={onAddToCartFromPages}
-                onToggleWishlist={onToggleWishlist}
-                wishlist={wishlist}
-                priceCurrency={priceCurrency}
-                onBackToHome={onGoBack}
-                heroImage={heroImages.fragrances}
-                onUpdateHeroImage={onUpdateFragrancesHero}
-                isAdmin={isAdmin}
-              />
-            </React.Suspense>
+            {isLoadingProducts ? (
+              renderTabSkeleton("grid")
+            ) : (
+              <React.Suspense fallback={<Skeleton type="grid" />}>
+                <FragrancesPage
+                  products={productsList}
+                  onViewDetails={onViewDetails}
+                  onAddToCart={onAddToCartFromPages}
+                  onToggleWishlist={onToggleWishlist}
+                  wishlist={wishlist}
+                  priceCurrency={priceCurrency}
+                  onBackToHome={onGoBack}
+                  heroImage={heroImages.fragrances}
+                  onUpdateHeroImage={onUpdateFragrancesHero}
+                  isAdmin={isAdmin}
+                />
+              </React.Suspense>
+            )}
           </motion.div>
         ) : activeTab === "auth" ? (
           <motion.div key="auth-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex-grow flex flex-col items-center justify-center py-12 px-4 bg-light-brown text-chocolate">
@@ -218,26 +282,7 @@ export default function CatalogView({
             <ContactPage />
           </motion.div>
         ) : (
-          <motion.div key="home-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex flex-col flex-grow bg-light-brown text-chocolate">
-            <Hero
-              onShopClick={() => setActiveTab("shop")}
-              heroImage={heroImages.home}
-              onUpdateHeroImage={onUpdateHomeHero}
-              isAdmin={isAdmin}
-            />
-            <React.Suspense fallback={<Skeleton type="grid" />}>
-              <Collection
-                products={productsList}
-                onSelectCollection={handleSelectCollection}
-                onAddToCart={() => {}}
-                priceCurrency={priceCurrency}
-              />
-            </React.Suspense>
-            <React.Suspense fallback={<Skeleton type="home" />}>
-              <Promo />
-            </React.Suspense>
-            <Footer />
-          </motion.div>
+          renderHome()
         )}
       </AnimatePresence>
     </motion.div>
