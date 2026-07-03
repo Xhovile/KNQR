@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -10,6 +11,12 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per window
+  });
+
+  app.use(limiter);
   app.use(express.json());
 
   // Mindset Affirmation AI API endpoint
