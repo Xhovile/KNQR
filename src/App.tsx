@@ -38,13 +38,12 @@ import {
   fetchHeroImages,
   updateHeroImageInDb,
   DEFAULT_HEROES,
-  HeroImages,
-  getCachedProducts
+  HeroImages
 } from "./services/productService";
 
 export default function App() {
-  const [productsList, setProductsList] = useState<Product[]>(() => getCachedProducts());
-  const [isLoadingProducts, setIsLoadingProducts] = useState(() => getCachedProducts().length === 0);
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -86,10 +85,7 @@ export default function App() {
   // Load products and hero images from Firestore on boot
   useEffect(() => {
     async function initApp() {
-      const cached = getCachedProducts();
-      if (cached.length === 0) {
-        setIsLoadingProducts(true);
-      }
+      setIsLoadingProducts(true);
 
       try {
         // Load products and hero images in parallel
@@ -101,11 +97,8 @@ export default function App() {
         setHeroImages(fetchedHeroes);
         setProductsError(null);
       } catch (err: any) {
-        console.warn("Firestore background loading failed:", err?.message || String(err));
-        // Only set error state if we have absolutely no products to display
-        if (productsList.length === 0 && cached.length === 0) {
-          setProductsError(err?.message || "An error occurred while loading catalog.");
-        }
+        console.error("Firestore loading failed:", err?.message || String(err));
+        setProductsError(err?.message || "An error occurred while loading catalog.");
       } finally {
         setIsLoadingProducts(false);
       }

@@ -177,23 +177,7 @@ function cleanUndefined(obj: any): any {
 
 const PRODUCTS_COLLECTION = "products";
 
-/**
- * Reads products from localStorage first, falling back to initial PRODUCTS data.
- */
-export function getCachedProducts(): Product[] {
-  try {
-    const local = localStorage.getItem("knqr_products");
-    if (local) {
-      const parsed = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.error("Error reading cached products:", e);
-  }
-  return PRODUCTS;
-}
+export const STRICT_REMOTE_CATALOG = true;
 
 /**
  * Fetches all products from Firestore.
@@ -204,7 +188,7 @@ export async function fetchProducts(): Promise<Product[]> {
   try {
     const productsCol = collection(db, PRODUCTS_COLLECTION);
     const q = query(productsCol);
-    const querySnapshot = await withTimeout(getDocs(q), 3000);
+    const querySnapshot = await withTimeout(getDocs(q), 8000);
     
     let products = querySnapshot.docs.map(doc => doc.data() as Product);
     
@@ -224,24 +208,14 @@ export async function fetchProducts(): Promise<Product[]> {
     if (products.length === 0) {
       console.log("No products found in Firestore. Seeding default products...");
       await seedInitialProducts();
-      products = [...PRODUCTS];
+      // Fetch again to ensure we get the stored Firestore documents
+      const snapshot = await withTimeout(getDocs(q), 8000);
+      products = snapshot.docs.map(doc => doc.data() as Product);
     }
     
-    // Sync to localStorage
-    localStorage.setItem("knqr_products", JSON.stringify(products));
     return products;
   } catch (error: any) {
-    console.warn("Error fetching products from Firestore (falling back to localStorage/defaults):", error?.message || String(error));
-    const local = localStorage.getItem("knqr_products");
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      } catch {}
-    }
-    return PRODUCTS;
+    handleFirestoreError(error, OperationType.LIST, path);
   }
 }
 
@@ -249,17 +223,14 @@ export async function fetchProducts(): Promise<Product[]> {
  * Seeds initial products into Firestore.
  */
 async function seedInitialProducts(): Promise<void> {
-  try {
-    for (const product of PRODUCTS) {
-      const cleaned = cleanUndefined(product);
-      try {
-        await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 3000);
-      } catch (error: any) {
-        console.warn(`Failed to seed product ${product.id} to Firestore:`, error?.message || String(error));
-      }
+  for (const product of PRODUCTS) {
+    const cleaned = cleanUndefined(product);
+    try {
+      await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 5000);
+    } catch (error: any) {
+      console.warn(`Failed to seed product ${product.id} to Firestore:`, error?.message || String(error));
+      throw error;
     }
-  } catch (error: any) {
-    console.error("Failed to seed initial products:", error?.message || String(error));
   }
 }
 
@@ -270,21 +241,10 @@ export async function createProduct(product: Product): Promise<void> {
   const path = `${PRODUCTS_COLLECTION}/${product.id}`;
   const cleaned = cleanUndefined(product);
 
-  // Sync to localStorage first
-  let products: Product[] = [];
-  const local = localStorage.getItem("knqr_products");
-  if (local) {
-    try { products = JSON.parse(local); } catch {}
-  }
-  if (!Array.isArray(products)) products = [];
-  products = products.filter(p => p.id !== product.id);
-  products.push(product);
-  localStorage.setItem("knqr_products", JSON.stringify(products));
-
   try {
-    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 4000);
+    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 8000);
   } catch (error: any) {
-    console.warn("Firestore product creation failed/timed out, saved locally:", error?.message || String(error));
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
 
@@ -295,20 +255,10 @@ export async function updateProduct(product: Product): Promise<void> {
   const path = `${PRODUCTS_COLLECTION}/${product.id}`;
   const cleaned = cleanUndefined(product);
 
-  // Sync to localStorage first
-  let products: Product[] = [];
-  const local = localStorage.getItem("knqr_products");
-  if (local) {
-    try { products = JSON.parse(local); } catch {}
-  }
-  if (!Array.isArray(products)) products = [];
-  products = products.map(p => p.id === product.id ? product : p);
-  localStorage.setItem("knqr_products", JSON.stringify(products));
-
   try {
-    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 4000);
+    await withTimeout(setDoc(doc(db, PRODUCTS_COLLECTION, product.id), cleaned), 8000);
   } catch (error: any) {
-    console.warn("Firestore product update failed/timed out, saved locally:", error?.message || String(error));
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
 
@@ -318,19 +268,9 @@ export async function updateProduct(product: Product): Promise<void> {
 export async function deleteProduct(productId: string): Promise<void> {
   const path = `${PRODUCTS_COLLECTION}/${productId}`;
 
-  // Sync to localStorage first
-  let products: Product[] = [];
-  const local = localStorage.getItem("knqr_products");
-  if (local) {
-    try { products = JSON.parse(local); } catch {}
-  }
-  if (!Array.isArray(products)) products = [];
-  products = products.filter(p => p.id !== productId);
-  localStorage.setItem("knqr_products", JSON.stringify(products));
-
   try {
-    await withTimeout(deleteDoc(doc(db, PRODUCTS_COLLECTION, productId)), 4000);
+    await withTimeout(deleteDoc(doc(db, PRODUCTS_COLLECTION, productId)), 8000);
   } catch (error: any) {
-    console.warn("Firestore product deletion failed/timed out, deleted locally:", error?.message || String(error));
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

@@ -24,11 +24,15 @@ const hasCustomDb = !!(firebaseConfig.firestoreDatabaseId &&
 
 // Configure Firestore cache settings for robust offline caching
 let db;
+const isIframe = typeof window !== "undefined" && window.self !== window.top;
+
 try {
   const dbSettings = {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    }),
+    localCache: isIframe 
+      ? memoryLocalCache()
+      : persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
   };
   db = hasCustomDb
     ? initializeFirestore(app, dbSettings, firebaseConfig.firestoreDatabaseId)
