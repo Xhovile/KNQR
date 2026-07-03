@@ -43,6 +43,7 @@ interface CatalogViewProps {
   onAddToCartFromPages: (product: Product, size: string, color: { name: string; value: string }) => void;
   onToggleWishlist: (productId: string) => void;
   onGoBack: () => void;
+  onUpdateHomeHero: (url: string) => Promise<void>;
   onUpdateApparelHero: (url: string) => Promise<void>;
   onUpdateBagsHero: (url: string) => Promise<void>;
   onUpdateFragrancesHero: (url: string) => Promise<void>;
@@ -72,11 +73,25 @@ export default function CatalogView({
   onAddToCartFromPages,
   onToggleWishlist,
   onGoBack,
+  onUpdateHomeHero,
   onUpdateApparelHero,
   onUpdateBagsHero,
   onUpdateFragrancesHero,
   onExploreShopFromAuth,
 }: CatalogViewProps) {
+  const handleSelectCollection = (collectionCategory: string) => {
+    const normalized = (collectionCategory || "").toLowerCase();
+    if (normalized.includes("apparel")) {
+      setActiveTab("apparel");
+    } else if (normalized.includes("bag")) {
+      setActiveTab("bags-accessories");
+    } else if (normalized.includes("frag")) {
+      setActiveTab("fragrances");
+    } else {
+      setActiveTab("shop");
+    }
+  };
+
   return (
     <motion.div
       key="main-catalog"
@@ -204,9 +219,19 @@ export default function CatalogView({
           </motion.div>
         ) : (
           <motion.div key="home-view" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="flex flex-col flex-grow bg-light-brown text-chocolate">
-            <Hero />
+            <Hero
+              onShopClick={() => setActiveTab("shop")}
+              heroImage={heroImages.home}
+              onUpdateHeroImage={onUpdateHomeHero}
+              isAdmin={isAdmin}
+            />
             <React.Suspense fallback={<Skeleton type="grid" />}>
-              <Collection products={productsList} />
+              <Collection
+                products={productsList}
+                onSelectCollection={handleSelectCollection}
+                onAddToCart={() => {}}
+                priceCurrency={priceCurrency}
+              />
             </React.Suspense>
             <React.Suspense fallback={<Skeleton type="home" />}>
               <Promo />
