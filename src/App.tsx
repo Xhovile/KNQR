@@ -86,12 +86,8 @@ export default function App() {
   };
 
   const handleUpdateHomeHero = useCallback((url: string) => handleUpdateHeroImage("home", url), []);
-
-  const handleToggleWishlist = useCallback(() => {
-    // kept locally in App for now if you want to move it to a hook in a third pass
-  }, []);
-
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const handleToggleWishlist = useCallback(() => {}, []);
+  const [wishlist] = useState<string[]>([]);
 
   const handleViewDetails = useCallback(
     (product: Product) => {
@@ -131,10 +127,7 @@ export default function App() {
       setProductsList((prev) => [newProduct, ...prev]);
       (window as any).hasPublishedProduct = true;
       setIsCreatingProduct(false);
-      window.history.replaceState(
-        { activeTab, selectedProductId: null, isCreatingProduct: false, editingProductId: null },
-        ""
-      );
+      window.history.replaceState({ activeTab, selectedProductId: null, isCreatingProduct: false, editingProductId: null }, "");
     } catch (err: any) {
       console.error("Failed to create product in Firestore:", err?.message || String(err));
       alert("Failed to save product to database. Please try again.");
@@ -158,10 +151,7 @@ export default function App() {
       if (selectedProduct && selectedProduct.id === editingProduct.id) setSelectedProduct(updatedProduct);
       (window as any).hasPublishedProduct = true;
       setEditingProduct(null);
-      window.history.replaceState(
-        { activeTab, selectedProductId: updatedProduct.id, isCreatingProduct: false, editingProductId: null },
-        ""
-      );
+      window.history.replaceState({ activeTab, selectedProductId: updatedProduct.id, isCreatingProduct: false, editingProductId: null }, "");
     } catch (err: any) {
       console.error("Failed to update product in Firestore:", err?.message || String(err));
       alert("Failed to save product modifications. Please try again.");
@@ -195,12 +185,7 @@ export default function App() {
           </React.Suspense>
         ) : editingProduct ? (
           <React.Suspense fallback={<Skeleton type="home" />}>
-            <EditProduct
-              key="edit-product-screen"
-              product={editingProduct}
-              onCancel={handleGoBack}
-              onSubmit={handleEditProductSubmit}
-            />
+            <EditProduct key="edit-product-screen" product={editingProduct} onCancel={handleGoBack} onSubmit={handleEditProductSubmit} />
           </React.Suspense>
         ) : selectedProduct ? (
           <React.Suspense fallback={<Skeleton type="detail" />}>
