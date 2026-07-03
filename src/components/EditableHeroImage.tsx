@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Image as ImageIcon, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Loader2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
@@ -30,12 +30,17 @@ export default function EditableHeroImage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const openEditor = () => {
+    if (!isAdmin) return;
+    setShowEditButton(true);
+  };
+
   const startLongPress = () => {
     if (!isAdmin) return;
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = setTimeout(() => {
       setShowEditButton(true);
-    }, 600); // 600ms long press threshold
+    }, 450);
   };
 
   const cancelLongPress = () => {
@@ -84,7 +89,6 @@ export default function EditableHeroImage({
 
     try {
       const secureUrl = await uploadToCloudinary(rawFile);
-
       setUploadPhase("firestore");
 
       await Promise.race([
@@ -130,6 +134,8 @@ export default function EditableHeroImage({
         onMouseLeave={cancelLongPress}
         onTouchStart={startLongPress}
         onTouchEnd={cancelLongPress}
+        onTouchCancel={cancelLongPress}
+        onClick={openEditor}
         onContextMenu={(e) => e.preventDefault()}
       >
         {src ? (
@@ -150,14 +156,25 @@ export default function EditableHeroImage({
           </div>
         )}
 
-        {/* Floating subtle helper hint for better user discoverability */}
         {isAdmin && (
-          <div className="absolute top-3 right-3 bg-chocolate/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-mono uppercase tracking-widest text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-            Hold to Edit
-          </div>
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowEditButton(true);
+              }}
+              className="absolute top-3 right-3 z-20 inline-flex items-center gap-2 rounded-full bg-chocolate/70 backdrop-blur-md px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-cream border border-cream/10 shadow-lg"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit Hero
+            </button>
+            <div className="absolute top-3 left-3 bg-chocolate/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-mono uppercase tracking-widest text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+              Tap or hold to edit
+            </div>
+          </>
         )}
 
-        {/* Hidden file input */}
         <input
           type="file"
           ref={fileInputRef}
@@ -166,7 +183,6 @@ export default function EditableHeroImage({
           className="hidden"
         />
 
-        {/* Edit button pop-up overlay */}
         <AnimatePresence>
           {showEditButton && (
             <motion.div 
@@ -198,17 +214,13 @@ export default function EditableHeroImage({
           )}
         </AnimatePresence>
 
-        {/* Luxury dark gradient overlay to give a premium feel */}
         <div className="absolute inset-0 bg-gradient-to-t from-chocolate via-chocolate/5 to-transparent opacity-45 pointer-events-none" />
-
-        {/* Ambient Corner Accents */}
         <div className="absolute top-4 left-4 w-6 h-6 border-t border-l border-gold/40 rounded-tl-sm pointer-events-none" />
         <div className="absolute top-4 right-4 w-6 h-6 border-t border-r border-gold/40 rounded-tr-sm pointer-events-none" />
         <div className="absolute bottom-4 left-4 w-6 h-6 border-b border-l border-gold/40 rounded-bl-sm pointer-events-none" />
         <div className="absolute bottom-4 right-4 w-6 h-6 border-b border-r border-gold/40 rounded-br-sm pointer-events-none" />
       </motion.div>
 
-      {/* Confirmation Modal Overlay Portaled to document.body */}
       {typeof window !== "undefined" && createPortal(
         <AnimatePresence>
           {showConfirmDialog && tempImage && (
