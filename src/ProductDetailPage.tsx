@@ -10,9 +10,14 @@ interface ProductDetailPageProps {
   priceCurrency: "USD" | "MWK";
 }
 
-const fmtList = (value?: string[]) => (value && value.length ? value.join(", ") : "—");
+const fmtList = (value?: string[]) => (value && value.length ? value.join(", ") : "");
 const fmtMWK = (value?: number | null) => `MK ${(value || 0).toLocaleString()}`;
 const fmtUSD = (value?: number | null) => `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function pushIf(rows: Array<[string, string]>, label: string, value?: string | null) {
+  const trimmed = (value || "").trim();
+  if (trimmed) rows.push([label, trimmed]);
+}
 
 function specRows(product: Product): Array<[string, string]> {
   const rows: Array<[string, string]> = [
@@ -20,35 +25,35 @@ function specRows(product: Product): Array<[string, string]> {
     ["Category", product.category || "—"],
     ["Status", product.status || "—"],
     ["Stock", `${product.stock ?? 0}`],
-    ["Delivery", product.delivery?.available ? fmtList(product.delivery.methods) : "Pickup only"],
+    ["Delivery", product.delivery?.available ? (product.delivery.methods?.length ? product.delivery.methods.join(", ") : "Pickup") : "Pickup only"],
   ];
 
   if (product.collectionCategory === "Apparel") {
-    rows.push(
-      ["Fit Profile", product.fit || "—"],
-      ["Fabric Composition", product.material || "—"],
-      ["Wear Profile", product.apparelGender || "—"],
-      ["Sleeve Profile", product.sleeveType || "—"],
-      ["Accent Colors", fmtList(product.colors)]
-    );
+    pushIf(rows, "Fit Profile", product.fit);
+    pushIf(rows, "Fabric Composition", product.material);
+    pushIf(rows, "Wear Profile", product.apparelGender);
+    pushIf(rows, "Sleeve Profile", product.sleeveType);
+    if (product.colors?.length) rows.push(["Accent Colors", product.colors.join(", ")]);
   } else if (product.collectionCategory === "Bags & Accessories") {
-    rows.push(
-      ["Accessory Type", product.bagType || "—"],
-      ["Material Finish", product.bagMaterial || "—"],
-      ["Carry Style", product.strapType || "—"],
-      ["Capacity Profile", product.bagCapacity || "—"],
-      ["Primary Use", product.useCase || "—"],
-      ["Accent Colors", fmtList(product.colors)]
-    );
+    pushIf(rows, "Accessory Type", product.bagType);
+    pushIf(rows, "Material Finish", product.bagMaterial);
+    pushIf(rows, "Carry Style", product.strapType);
+    pushIf(rows, "Capacity Profile", product.bagCapacity);
+    pushIf(rows, "Primary Use", product.useCase);
+    if (product.colors?.length) rows.push(["Accent Colors", product.colors.join(", ")]);
+  } else if (product.collectionCategory === "Accessories") {
+    pushIf(rows, "Accessory Type", product.accessoryType);
+    pushIf(rows, "Material Finish", product.accessoryMaterial);
+    pushIf(rows, "Style Profile", product.accessoryStyle);
+    pushIf(rows, "Primary Use", product.accessoryUseCase);
+    if (product.colors?.length) rows.push(["Accent Colors", product.colors.join(", ")]);
   } else if (product.collectionCategory === "Fragrances") {
-    rows.push(
-      ["Bottle Volume", product.volume || "—"],
-      ["Scent Family", product.scentFamily || "—"],
-      ["Wear Profile", product.fragranceGender || "—"],
-      ["Concentration", product.concentration || "—"],
-      ["Longevity", product.longevity || "—"],
-      ["Notes", fmtList(product.notes)]
-    );
+    pushIf(rows, "Bottle Volume", product.volume);
+    pushIf(rows, "Scent Family", product.scentFamily);
+    pushIf(rows, "Wear Profile", product.fragranceGender);
+    pushIf(rows, "Concentration", product.concentration);
+    pushIf(rows, "Longevity", product.longevity);
+    if (product.notes?.length) rows.push(["Notes", product.notes.join(", ")]);
   }
 
   return rows;
@@ -81,7 +86,7 @@ export default function ProductDetailPage({ product, onBack, onAddToCart, priceC
   const primary = priceCurrency === "USD" ? fmtUSD(product.priceUSD) : fmtMWK(product.priceMWK);
   const secondary = priceCurrency === "USD" ? fmtMWK(product.priceMWK) : fmtUSD(product.priceUSD);
   const variantChips = product.collectionCategory === "Fragrances" ? (product.volume ? [product.volume] : []) : (product.sizes || []);
-  const deliveryText = product.delivery?.available ? fmtList(product.delivery.methods) : "Pickup only";
+  const deliveryText = product.delivery?.available ? (product.delivery.methods?.length ? product.delivery.methods.join(" • ") : "Pickup") : "Pickup only";
   const deliveryNote = product.delivery?.note || "";
 
   const add = () => {
@@ -195,7 +200,9 @@ export default function ProductDetailPage({ product, onBack, onAddToCart, priceC
               <div className="text-[10px] font-mono uppercase tracking-widest text-gold">Selected Highlights</div>
               <div className="flex flex-wrap gap-2">
                 {product.details.map((d) => (
-                  <span key={d} className="rounded-full border border-chocolate/10 bg-white px-3 py-1 text-[11px] text-chocolate/70">{d}</span>
+                  <span key={d} className="rounded-full border border-chocolate/10 bg-white px-3 py-1 text-[11px] text-chocolate/70">
+                    {d}
+                  </span>
                 ))}
               </div>
             </div>
@@ -215,15 +222,9 @@ export default function ProductDetailPage({ product, onBack, onAddToCart, priceC
               {added ? <><Check className="h-4 w-4" />Added to Cart</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
             </button>
 
-            <a
-              href={`https://wa.me/265883184144?text=${encodeURIComponent(
-                `Hello, I am interested in: ${product.name} (${primary}). Size: ${size || "Any"}, Color: ${color || "Any"}.`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-chocolate/20 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-chocolate transition hover:border-gold hover:bg-chocolate/5 hover:text-gold"
-            >
-              <MessageCircle className="h-4 w-4 text-emerald-600" />Chat on WhatsApp
+            <a href={`https://wa.me/265883184144?text=${encodeURIComponent(`Hello, I am interested in: ${product.name} (${primary}). Size: ${size || "Any"}, Color: ${color || "Any"}.`)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-3 rounded-xl border border-chocolate/20 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-chocolate transition hover:border-gold hover:bg-chocolate/5 hover:text-gold">
+              <MessageCircle className="h-4 w-4 text-emerald-600" />
+              Chat on WhatsApp
             </a>
           </div>
         </div>
