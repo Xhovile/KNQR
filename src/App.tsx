@@ -20,12 +20,12 @@ import { useProductsBootstrap } from "./hooks/useProductsBootstrap";
 import { useCartState } from "./hooks/useCartState";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 
+const HERO_CACHE_KEY = "knqr.hero-images.cache.v1";
+
 export default function App() {
   const [priceCurrency] = useState<"USD" | "MWK">("MWK");
   const [showAdminGuardModal, setShowAdminGuardModal] = useState(false);
-  const [adminGuardAction, setAdminGuardAction] = useState<
-    "add" | "edit" | "hero" | "restock" | "record_sale" | null
-  >(null);
+  const [adminGuardAction, setAdminGuardAction] = useState<"add" | "edit" | "hero" | "restock" | "record_sale" | null>(null);
   const [authInitialIsSignUp, setAuthInitialIsSignUp] = useState(false);
 
   const { user, handleSignOut: signOutFromAuth } = useAuthSession();
@@ -71,8 +71,14 @@ export default function App() {
 
   const handleUpdateHeroImage = async (page: keyof HeroImages, url: string) => {
     try {
+      const next = { ...heroImages, [page]: url };
+      setHeroImages(next);
+      try {
+        window.localStorage.setItem(HERO_CACHE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore cache write failures
+      }
       await updateHeroImageInDb(page, url);
-      setHeroImages((prev) => ({ ...prev, [page]: url }));
     } catch (err: any) {
       console.error(`Failed to update hero image for page ${page}:`, err?.message || String(err));
       alert("Failed to save customizable hero image. Please try again.");
@@ -175,28 +181,14 @@ export default function App() {
     <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
       <AnimatePresence mode="wait">
         {isCartPage ? (
-          <CartPage
-            isOpen={true}
-            onClose={() => transitionTo("home", null, false, null)}
-            cartItems={cart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            onClearCart={handleClearCart}
-            priceCurrency={priceCurrency}
-            user={user}
-          />
+          <CartPage isOpen={true} onClose={() => transitionTo("home", null, false, null)} cartItems={cart} onUpdateQuantity={handleUpdateQuantity} onRemoveItem={handleRemoveItem} onClearCart={handleClearCart} priceCurrency={priceCurrency} user={user} />
         ) : isCreatingProduct ? (
           <React.Suspense fallback={<Skeleton type="home" />}>
             <AddProduct key="add-product-screen" onCancel={handleGoBack} onSubmit={handleCreateProductSubmit} />
           </React.Suspense>
         ) : editingProduct ? (
           <React.Suspense fallback={<Skeleton type="home" />}>
-            <EditProduct
-              key="edit-product-screen"
-              product={editingProduct}
-              onCancel={handleGoBack}
-              onSubmit={handleEditProductSubmit}
-            />
+            <EditProduct key="edit-product-screen" product={editingProduct} onCancel={handleGoBack} onSubmit={handleEditProductSubmit} />
           </React.Suspense>
         ) : selectedProduct ? (
           <React.Suspense fallback={<Skeleton type="detail" />}>
@@ -260,41 +252,16 @@ export default function App() {
             onUpdateApparelHero={handleUpdateApparelHero}
             onUpdateBagsHero={handleUpdateBagsHero}
             onUpdateFragrancesHero={handleUpdateFragrancesHero}
-            onExploreShopFromAuth={() => transitionTo("shop")}
+            onExploreShopFromAuth={() => transitionTo("shop", null, false, null)}
           />
         )}
       </AnimatePresence>
 
-      {!isCartPage && (
-        <div className="fixed right-5 bottom-5 z-[60] flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            aria-label="Back to top"
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/15 bg-chocolate-dark text-cream shadow-2xl transition hover:-translate-y-0.5 hover:bg-chocolate-light"
-            title="Back to top"
-          >
-            <ArrowUp className="h-5 w-5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => transitionTo("cart", null, false, null)}
-            aria-label="Open cart"
-            className="relative flex h-12 w-12 items-center justify-center rounded-full border border-gold/20 bg-gold text-chocolate shadow-2xl transition hover:-translate-y-0.5 hover:bg-gold-light"
-            title="Open cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cart.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-md">
-                {cart.length}
-              </span>
-            )}
-          </button>
-        </div>
-      )}
-
-      <AdminGuardModal open={showAdminGuardModal} onClose={() => setShowAdminGuardModal(false)} />
+      <AnimatePresence>
+        {showAdminGuardModal && adminGuardAction && (
+          <AdminGuardModal actionType={adminGuardAction} onClose={() => { setShowAdminGuardModal(false); setAdminGuardAction(null); }} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
