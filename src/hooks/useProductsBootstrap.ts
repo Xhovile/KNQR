@@ -8,11 +8,30 @@ import {
 } from "../services/productService";
 
 const CATALOG_LOAD_NOTICE = "Catalog is taking longer than usual. Please wait a moment and refresh if needed.";
+const HERO_CACHE_KEY = "knqr.hero-images.cache.v1";
+
+function readHeroCache(): HeroImages {
+  if (typeof window === "undefined") return DEFAULT_HEROES;
+
+  try {
+    const raw = window.localStorage.getItem(HERO_CACHE_KEY);
+    if (!raw) return DEFAULT_HEROES;
+    const parsed = JSON.parse(raw) as Partial<HeroImages>;
+    return {
+      home: parsed.home || "",
+      apparel: parsed.apparel || "",
+      bagsAccessories: parsed.bagsAccessories || "",
+      fragrances: parsed.fragrances || "",
+    };
+  } catch {
+    return DEFAULT_HEROES;
+  }
+}
 
 export function useProductsBootstrap() {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [heroImages, setHeroImages] = useState<HeroImages>(DEFAULT_HEROES);
+  const [heroImages, setHeroImages] = useState<HeroImages>(() => readHeroCache());
   const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,7 +58,13 @@ export function useProductsBootstrap() {
     async function loadHeroesInBackground() {
       try {
         const heroes = await fetchHeroImages();
-        if (!cancelled) setHeroImages(heroes);
+        if (cancelled) return;
+        setHeroImages(heroes);
+        try {
+          window.localStorage.setItem(HERO_CACHE_KEY, JSON.stringify(heroes));
+        } catch {
+          // Ignore cache write failures.
+        }
       } catch (error) {
         if (!cancelled) {
           console.error("Firestore hero images load failed:", error);
