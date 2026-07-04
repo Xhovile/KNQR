@@ -34,6 +34,12 @@ export interface Product {
   bagCapacity?: string;
   useCase?: string;
 
+  // Accessories-specific fields
+  accessoryType?: string;
+  accessoryMaterial?: string;
+  accessoryStyle?: string;
+  accessoryUseCase?: string;
+
   // Fragrance-specific fields
   volume?: string;
   scentFamily?: string;
