@@ -44,10 +44,10 @@ export interface HeroImages {
 }
 
 export const DEFAULT_HEROES: HeroImages = {
-  home: "",
-  apparel: "",
-  bagsAccessories: "",
-  fragrances: "",
+  home: "https://drive.google.com/uc?export=view&id=1UluIQDNA47b1oSC8n3m_d_iuRhu4RuMR",
+  apparel: "https://drive.google.com/uc?export=view&id=1507QE-ZTRNP0FG3oHFVX6opxTB8-jEJH",
+  bagsAccessories: "https://drive.google.com/uc?export=view&id=1E9pRCUSiCQ0TYRg3MzZiYSgOLo5Hm9yN",
+  fragrances: "https://drive.google.com/uc?export=view&id=1cO-MSxPquInux8k_FgaW5XlEGwMokuHU",
 };
 
 const PRODUCTS_COLLECTION = "products";
@@ -102,7 +102,7 @@ export async function fetchHeroImages(): Promise<HeroImages> {
     return DEFAULT_HEROES;
   } catch (error: any) {
     console.warn("Error fetching hero images from Firestore:", error?.message || String(error));
-    handleFirestoreError(error, OperationType.GET, path);
+    return DEFAULT_HEROES;
   }
 }
 
@@ -147,7 +147,7 @@ export async function fetchProducts(): Promise<Product[]> {
 
     if (products.length === 0) {
       await seedInitialProducts();
-      const seededSnapshot = await withTimeout(getDocs(productsCol), 8000);
+      const seededSnapshot = await getDocs(productsCol);
       products = seededSnapshot.docs.map((d) => d.data() as Product);
     }
 
