@@ -1,44 +1,13 @@
 import { useEffect, useState } from "react";
 import { Product } from "../types";
-import {
-  DEFAULT_HEROES,
-  HeroImages,
-  fetchHeroImages,
-  fetchProducts,
-} from "../services/productService";
+import { DEFAULT_HEROES, HeroImages, fetchProducts } from "../services/productService";
 
 const CATALOG_LOAD_NOTICE = "Catalog is taking longer than usual. Please wait a moment and refresh if needed.";
-const HERO_CACHE_KEY = "knqr.hero-images.cache.v1";
-
-const FALLBACK_HEROES: HeroImages = {
-  home: "https://res.cloudinary.com/db3xx6mn4/image/upload/v1783150324/KNQR/blnvexz24ykugvi9aqcw.jpg",
-  apparel: "https://res.cloudinary.com/db3xx6mn4/image/upload/v1783150362/KNQR/w4gox8ti7d7doihzscxx.jpg",
-  bagsAccessories: "https://res.cloudinary.com/db3xx6mn4/image/upload/v1783150449/KNQR/imzz3w9swonkzsz3q961.jpg",
-  fragrances: "https://res.cloudinary.com/db3xx6mn4/image/upload/v1783150504/KNQR/sfbulqgzrk23odttwjvn.jpg",
-};
-
-function readHeroCache(): HeroImages {
-  if (typeof window === "undefined") return FALLBACK_HEROES;
-
-  try {
-    const raw = window.localStorage.getItem(HERO_CACHE_KEY);
-    if (!raw) return FALLBACK_HEROES;
-    const parsed = JSON.parse(raw) as Partial<HeroImages>;
-    return {
-      home: parsed.home || FALLBACK_HEROES.home,
-      apparel: parsed.apparel || FALLBACK_HEROES.apparel,
-      bagsAccessories: parsed.bagsAccessories || FALLBACK_HEROES.bagsAccessories,
-      fragrances: parsed.fragrances || FALLBACK_HEROES.fragrances,
-    };
-  } catch {
-    return FALLBACK_HEROES;
-  }
-}
 
 export function useProductsBootstrap() {
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [heroImages, setHeroImages] = useState<HeroImages>(() => readHeroCache());
+  const [heroImages, setHeroImages] = useState<HeroImages>(DEFAULT_HEROES);
   const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,31 +31,7 @@ export function useProductsBootstrap() {
       }
     }
 
-    async function loadHeroesInBackground() {
-      try {
-        const heroes = await fetchHeroImages();
-        if (cancelled) return;
-        setHeroImages({
-          home: heroes.home || FALLBACK_HEROES.home,
-          apparel: heroes.apparel || FALLBACK_HEROES.apparel,
-          bagsAccessories: heroes.bagsAccessories || FALLBACK_HEROES.bagsAccessories,
-          fragrances: heroes.fragrances || FALLBACK_HEROES.fragrances,
-        });
-        try {
-          window.localStorage.setItem(HERO_CACHE_KEY, JSON.stringify(heroes));
-        } catch {
-          // Ignore cache write failures.
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Firestore hero images load failed:", error);
-          setHeroImages(FALLBACK_HEROES);
-        }
-      }
-    }
-
     loadProducts();
-    loadHeroesInBackground();
 
     return () => {
       cancelled = true;
