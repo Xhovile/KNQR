@@ -1,4 +1,5 @@
 import React from "react";
+import { ArrowRight, LogOut, ShoppingBag, BadgeCheck, Mail, UserCircle2 } from "lucide-react";
 
 interface ProfilePanelProps {
   user: any;
@@ -12,65 +13,108 @@ export default function ProfilePanel({
   onExploreShop,
   onSignOut,
 }: ProfilePanelProps) {
+  const displayName = user.displayName || "Elite Member";
+  const initial = (displayName[0] || user.email?.[0] || "U").toUpperCase();
+
   return (
-    <div className="max-w-2xl w-full mx-auto space-y-8 my-8 flex flex-col items-center" id="profile-and-orders-container">
-      <div className="bg-chocolate-dark text-cream p-8 sm:p-12 rounded-2xl shadow-2xl border border-cream/10 w-full luxury-glow" id="knqr-profile-card">
-        <div className="flex flex-col items-center text-center">
-          {user.photoURL ? (
-            <img
-              src={user.photoURL}
-              alt={user.displayName || "User Avatar"}
-              className="w-24 h-24 rounded-full border-2 border-gold mb-6 object-cover shadow-lg"
-              referrerPolicy="no-referrer"
-              id="profile-avatar-img"
-            />
-          ) : (
-            <div
-              className="w-24 h-24 rounded-full border-2 border-gold bg-chocolate flex items-center justify-center text-gold text-3xl font-serif mb-6 shadow-lg"
-              id="profile-avatar-fallback"
-            >
-              {user.displayName ? user.displayName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : "U"}
+    <div className="max-w-3xl w-full mx-auto my-8" id="profile-and-orders-container">
+      <div className="overflow-hidden rounded-[28px] border border-cream/10 bg-chocolate-dark text-cream shadow-2xl luxury-glow" id="knqr-profile-card">
+        <div className="h-2 w-full bg-gradient-to-r from-gold/40 via-gold to-gold/40" />
+
+        <div className="p-6 sm:p-8 lg:p-10 space-y-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={displayName}
+                  className="h-20 w-20 rounded-full border-2 border-gold object-cover shadow-lg"
+                  referrerPolicy="no-referrer"
+                  id="profile-avatar-img"
+                />
+              ) : (
+                <div
+                  className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-gold bg-chocolate text-2xl font-serif text-gold shadow-lg"
+                  id="profile-avatar-fallback"
+                >
+                  {initial}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.25em] text-gold">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  Bespoke VIP Patron
+                </span>
+                <div>
+                  <h2 className="font-serif text-3xl text-cream leading-tight" id="profile-display-name">
+                    {displayName}
+                  </h2>
+                  <p className="mt-1 text-xs font-mono uppercase tracking-[0.25em] text-gold/75" id="profile-id-text">
+                    KNQR Club ID: #{String(user.uid || "").substring(0, 8).toUpperCase()}
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
 
-          <span className="px-3 py-1 bg-gold/10 text-gold text-[10px] tracking-[0.2em] font-mono uppercase rounded-full mb-3 border border-gold/20" id="profile-badge">
-            Bespoke VIP Patron
-          </span>
-
-          <h2 className="font-serif text-3xl text-cream mb-1" id="profile-display-name">
-            {user.displayName || "Elite Member"}
-          </h2>
-          <p className="font-mono text-xs text-gold tracking-widest uppercase mb-8" id="profile-id-text">
-            KNQR Club ID: #{user.uid.substring(0, 8).toUpperCase()}
-          </p>
-
-          <div className="w-full space-y-4 border-t border-cream/5 pt-6 text-left max-w-sm" id="profile-details-table">
-            <div className="flex justify-between items-center text-xs font-mono py-1.5 border-b border-cream/5" id="profile-email-row">
-              <span className="text-cream/40 uppercase tracking-wider">Email Address</span>
-              <span className="text-cream font-medium select-all">{user.email || "N/A"}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs font-mono py-1.5 border-b border-cream/5" id="profile-status-row">
-              <span className="text-cream/40 uppercase tracking-wider">Status</span>
-              <span className="text-emerald-400 font-medium flex items-center space-x-1">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse mr-1" />
-                <span>Active Session</span>
-              </span>
+            <div className="grid grid-cols-2 gap-3 sm:min-w-[260px]" id="profile-summary-chips">
+              <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-3">
+                <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Email</p>
+                <div className="mt-2 flex items-center gap-2 text-sm text-cream/90">
+                  <Mail className="h-4 w-4 text-gold" />
+                  <span className="truncate">{user.email || "N/A"}</span>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-3">
+                <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Status</p>
+                <div className="mt-2 flex items-center gap-2 text-sm text-emerald-300">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+                  <span>Active Session</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-10 w-full max-w-sm" id="profile-actions">
+          <div className="grid gap-3 sm:grid-cols-3" id="profile-stat-strip">
+            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-4">
+              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Identity</p>
+              <div className="mt-2 flex items-center gap-2 text-sm text-cream/90">
+                <UserCircle2 className="h-4 w-4 text-gold" />
+                <span>{displayName}</span>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-4">
+              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Membership</p>
+              <div className="mt-2 flex items-center gap-2 text-sm text-cream/90">
+                <BadgeCheck className="h-4 w-4 text-gold" />
+                <span>Patron Access</span>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-4">
+              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Session</p>
+              <div className="mt-2 flex items-center gap-2 text-sm text-emerald-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span>Live</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row" id="profile-actions">
             <button
               onClick={onExploreShop}
-              className="flex-1 px-6 py-3 bg-gold text-chocolate hover:bg-cream hover:text-chocolate font-mono text-xs uppercase tracking-wider rounded-xl transition-all font-bold cursor-pointer"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3.5 font-mono text-xs font-bold uppercase tracking-[0.25em] text-chocolate transition hover:bg-cream"
               id="profile-shop-btn"
             >
+              <ShoppingBag className="h-4 w-4" />
               Explore Collections
+              <ArrowRight className="h-4 w-4" />
             </button>
             <button
               onClick={onSignOut}
-              className="flex-1 px-6 py-3 border border-cream/10 hover:border-rose-500/30 hover:bg-rose-500/5 hover:text-rose-400 font-mono text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-cream/10 px-5 py-3.5 font-mono text-xs uppercase tracking-[0.25em] text-cream/75 transition hover:border-rose-400/30 hover:bg-rose-500/5 hover:text-rose-300"
               id="profile-signout-btn"
             >
+              <LogOut className="h-4 w-4" />
               Sign Out
             </button>
           </div>
