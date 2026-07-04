@@ -8,7 +8,7 @@ import AdminGuardModal from "./components/AdminGuardModal";
 import CatalogView from "./components/CatalogView";
 
 import { Product } from "./types";
-import { HeroImages } from "./services/productService";
+import { HeroImages, updateHeroImageInDb } from "./services/productService";
 import { ProductDraftValues } from "./productSchema";
 import ProductDetailPage from "./ProductDetailPage";
 import AddProduct from "./AddProduct";
@@ -19,6 +19,8 @@ import { useAuthSession } from "./hooks/useAuthSession";
 import { useProductsBootstrap } from "./hooks/useProductsBootstrap";
 import { useCartState } from "./hooks/useCartState";
 import { useAppNavigation } from "./hooks/useAppNavigation";
+
+const HERO_CACHE_KEY = "knqr.hero-images.cache.v1";
 
 export default function App() {
   const [priceCurrency] = useState<"USD" | "MWK">("MWK");
@@ -68,9 +70,20 @@ export default function App() {
   };
 
   const handleUpdateHeroImage = async (page: keyof HeroImages, url: string) => {
-    const next = { ...heroImages, [page]: url };
-    setHeroImages(next);
-    return Promise.resolve();
+    try {
+      const next = { ...heroImages, [page]: url };
+      setHeroImages(next);
+      try {
+        window.localStorage.setItem(HERO_CACHE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore cache write failures
+      }
+      await updateHeroImageInDb(page, url);
+    } catch (err: any) {
+      console.error(`Failed to update hero image for page ${page}:`, err?.message || String(err));
+      alert("Failed to save customizable hero image. Please try again.");
+      throw new Error(err?.message || String(err));
+    }
   };
 
   const handleUpdateHomeHero = useCallback((url: string) => handleUpdateHeroImage("home", url), []);
@@ -251,4 +264,4 @@ export default function App() {
       </AnimatePresence>
     </div>
   );
-}
+ }
