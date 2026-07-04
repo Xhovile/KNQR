@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowRight, LogOut, ShoppingBag, BadgeCheck, Mail, UserCircle2 } from "lucide-react";
+import { ArrowRight, LogOut, ShoppingBag } from "lucide-react";
 
 interface ProfilePanelProps {
   user: any;
@@ -42,59 +42,21 @@ export default function ProfilePanel({
               )}
 
               <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.25em] text-gold">
-                  <BadgeCheck className="h-3.5 w-3.5" />
-                  Bespoke VIP Patron
-                </span>
                 <div>
                   <h2 className="font-serif text-3xl text-cream leading-tight" id="profile-display-name">
                     {displayName}
                   </h2>
                   <p className="mt-1 text-xs font-mono uppercase tracking-[0.25em] text-gold/75" id="profile-id-text">
-                    KNQR Club ID: #{String(user.uid || "").substring(0, 8).toUpperCase()}
+                    KNQR USER ID: #{String(user.uid || "").substring(0, 8).toUpperCase()}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:min-w-[260px]" id="profile-summary-chips">
-              <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-3">
-                <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Email</p>
-                <div className="mt-2 flex items-center gap-2 text-sm text-cream/90">
-                  <Mail className="h-4 w-4 text-gold" />
-                  <span className="truncate">{user.email || "N/A"}</span>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-3">
-                <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Status</p>
-                <div className="mt-2 flex items-center gap-2 text-sm text-emerald-300">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
-                  <span>Active Session</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3" id="profile-stat-strip">
-            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-4">
-              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Identity</p>
+            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-3 sm:min-w-[260px]" id="profile-summary-email">
+              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Email</p>
               <div className="mt-2 flex items-center gap-2 text-sm text-cream/90">
-                <UserCircle2 className="h-4 w-4 text-gold" />
-                <span>{displayName}</span>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-4">
-              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Membership</p>
-              <div className="mt-2 flex items-center gap-2 text-sm text-cream/90">
-                <BadgeCheck className="h-4 w-4 text-gold" />
-                <span>Patron Access</span>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-cream/10 bg-white/5 px-4 py-4">
-              <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-cream/45">Session</p>
-              <div className="mt-2 flex items-center gap-2 text-sm text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                <span>Live</span>
+                <span className="truncate">{user.email || "N/A"}</span>
               </div>
             </div>
           </div>
