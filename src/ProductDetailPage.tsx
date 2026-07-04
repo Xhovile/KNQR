@@ -1,5 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BadgePercent, Check, MessageCircle, Minus, MoreHorizontal, PackagePlus, Pencil, Plus, Share2, ShoppingBag, ShoppingCart, Sparkles, X } from "lucide-react";
+import {
+  ArrowLeft,
+  BadgePercent,
+  Check,
+  MessageCircle,
+  Minus,
+  MoreHorizontal,
+  PackagePlus,
+  Pencil,
+  Plus,
+  Share2,
+  ShoppingBag,
+  ShoppingCart,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product } from "./types";
 
@@ -63,6 +78,10 @@ function specRows(product: Product): Array<[string, string]> {
   return rows;
 }
 
+function getVariantChips(product: Product): string[] {
+  return product.collectionCategory === "Fragrances" ? (product.volume ? [product.volume] : []) : (product.sizes || []);
+}
+
 export default function ProductDetailPage({
   product,
   onBack,
@@ -106,7 +125,7 @@ export default function ProductDetailPage({
 
   const primary = priceCurrency === "USD" ? fmtUSD(product.priceUSD) : fmtMWK(product.priceMWK);
   const secondary = priceCurrency === "USD" ? fmtMWK(product.priceMWK) : fmtUSD(product.priceUSD);
-  const variantChips = product.collectionCategory === "Fragrances" ? (product.volume ? [product.volume] : []) : (product.sizes || []);
+  const variantChips = getVariantChips(product);
   const deliveryText = product.delivery?.available ? (product.delivery.methods?.length ? product.delivery.methods.join(" • ") : "Pickup") : "Pickup only";
   const deliveryNote = product.delivery?.note || "";
 
@@ -116,12 +135,38 @@ export default function ProductDetailPage({
     setTimeout(() => setAdded(false), 1600);
   };
 
+  const shareProduct = async () => {
+    const url = window.location.href;
+    const text = `${product.name} — ${primary}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product.name, text, url });
+        setToast("Shared successfully");
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setToast("Link copied to clipboard");
+      } else {
+        setToast(url);
+      }
+    } catch {
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(url);
+          setToast("Link copied to clipboard");
+          return;
+        } catch {
+          // ignore
+        }
+      }
+      setToast(url);
+    } finally {
+      setTimeout(() => setToast(null), 2200);
+    }
+  };
+
   const runRestock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAdmin) {
-      onTriggerAdminGuard?.("restock");
-      return;
-    }
+    if (!isAdmin) return onTriggerAdminGuard?.("restock");
     if (!onUpdateProduct) return;
     if (restockAmount <= 0) {
       setModalError("Enter a valid quantity.");
@@ -150,10 +195,7 @@ export default function ProductDetailPage({
 
   const runSale = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAdmin) {
-      onTriggerAdminGuard?.("record_sale");
-      return;
-    }
+    if (!isAdmin) return onTriggerAdminGuard?.("record_sale");
     if (!onUpdateProduct) return;
     if (saleAmount <= 0) {
       setModalError("Enter a valid quantity.");
@@ -217,7 +259,7 @@ export default function ProductDetailPage({
                     { label: "Edit", icon: Pencil, run: () => onEditProduct?.(product) },
                     { label: "Restock", icon: PackagePlus, run: () => { setModalError(null); setRestockAmount(10); setShowRestockModal(true); } },
                     { label: "Record Sale", icon: BadgePercent, run: () => { setModalError(null); setSaleAmount(1); setShowRecordSaleModal(true); } },
-                    { label: "Share", icon: Share2, run: () => setToast("Share option opened") },
+                    { label: "Share", icon: Share2, run: shareProduct },
                     { label: "Add to Cart", icon: ShoppingCart, run: add },
                   ].map((item) => (
                     <button
