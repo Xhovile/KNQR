@@ -49,7 +49,6 @@ function specRows(product: Product): Array<{ label: string; value: string }> {
       { label: "Fabric Composition", value: product.material || "—" },
       { label: "Wear Profile", value: product.apparelGender || "—" },
       { label: "Sleeve Profile", value: product.sleeveType || "—" },
-      { label: "Available Sizes", value: formatList(product.sizes) },
       { label: "Accent Colors", value: formatList(product.colors) },
     ];
   }
@@ -79,6 +78,23 @@ function specRows(product: Product): Array<{ label: string; value: string }> {
   }
 
   return baseRows;
+}
+
+function getPrimaryVariantLabel(product: Product): string {
+  if (product.collectionCategory === "Fragrances") {
+    return product.volume || "";
+  }
+  if (product.sizes && product.sizes.length > 0) {
+    return product.sizes[0];
+  }
+  return "";
+}
+
+function getVariantChips(product: Product): string[] {
+  if (product.collectionCategory === "Fragrances") {
+    return product.volume ? [product.volume] : [];
+  }
+  return product.sizes || [];
 }
 
 export default function ProductDetailPage({
@@ -247,6 +263,9 @@ export default function ProductDetailPage({
     }
   };
 
+  const variantChips = getVariantChips(product);
+  const primaryVariantLabel = getPrimaryVariantLabel(product);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -378,6 +397,39 @@ export default function ProductDetailPage({
             </div>
           </div>
 
+          {variantChips.length > 0 && (
+            <div className="space-y-3 -mt-2" id="detail-variant-chips">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-[10px] font-mono tracking-widest text-gold uppercase select-none">
+                  {product.collectionCategory === "Fragrances" ? "Available Volumes" : "Available Sizes"}
+                </span>
+                {selectedSize && product.collectionCategory !== "Fragrances" && (
+                  <span className="text-[10px] font-sans text-chocolate/40 uppercase">Selected: {selectedSize}</span>
+                )}
+                {product.collectionCategory === "Fragrances" && primaryVariantLabel && (
+                  <span className="text-[10px] font-sans text-chocolate/40 uppercase">{primaryVariantLabel}</span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {variantChips.map((variant) => (
+                  <button
+                    key={variant}
+                    type="button"
+                    onClick={() => setSelectedSize(variant)}
+                    className={`px-4 py-2 rounded-lg border text-xs font-mono tracking-wider uppercase transition-all cursor-pointer ${
+                      selectedSize === variant
+                        ? "bg-chocolate text-cream border-chocolate"
+                        : "bg-white/60 border-chocolate/15 text-chocolate/70 hover:border-chocolate/35 hover:text-chocolate"
+                    }`}
+                    id={`detail-variant-chip-${variant.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {variant}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-chocolate/10 bg-white p-5 flex flex-col justify-between shadow-sm relative overflow-hidden" id="detail-stock-card">
               <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-xl pointer-events-none" />
@@ -428,15 +480,18 @@ export default function ProductDetailPage({
               <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-xl pointer-events-none" />
               <div>
                 <span className="text-[10px] uppercase tracking-[0.3em] text-gold font-mono font-bold">Delivery & Fulfilment</span>
-                <p className="mt-3 text-sm text-chocolate/80 leading-relaxed font-sans font-light">{product.delivery.available ? product.delivery.methods.join(" • ") : "Pickup only"}</p>
+                <p className="mt-3 text-sm text-chocolate/80 leading-relaxed font-sans font-light">
+                  {product.delivery.available ? product.delivery.methods.join(" • ") : "Pickup only"}
+                </p>
               </div>
+              {product.delivery.note ? (
+                <p className="mt-4 pt-3 border-t border-chocolate/5 text-sm text-chocolate/75 leading-relaxed font-sans">
+                  {product.delivery.note}
+                </p>
+              ) : null}
               <div className="mt-4 pt-3 border-t border-chocolate/5 text-[10px] font-mono text-chocolate/50 uppercase tracking-widest">EST. DELIVERY: 1-3 DAYS</div>
             </div>
           </div>
-
-          {product.delivery.note ? (
-            <div className="rounded-2xl border border-chocolate/10 bg-white/30 p-4 text-sm text-chocolate/75 leading-relaxed">{product.delivery.note}</div>
-          ) : null}
 
           <div className="space-y-2">
             <h4 className="text-[10px] font-mono tracking-widest text-chocolate/40 uppercase">Product Description</h4>
@@ -499,18 +554,30 @@ export default function ProductDetailPage({
             <button
               onClick={handleAddToCart}
               disabled={addedMessage}
-              className={`w-full py-4 rounded-xl font-sans text-xs tracking-[0.3em] uppercase transition-all duration-300 flex items-center justify-center space-x-3 cursor-pointer shadow-xl font-semibold ${addedMessage ? "bg-green-600 text-white" : "bg-chocolate text-cream hover:bg-gold hover:text-chocolate hover:scale-[1.01]"}`}
+              className={`w-full py-4 rounded-xl font-sans text-xs tracking-[0.3em] uppercase transition-all duration-300 flex items-center justify-center space-x-3 cursor-pointer shadow-xl font-semibold ${
+                addedMessage
+                  ? "bg-green-600 text-white"
+                  : "bg-chocolate text-cream hover:bg-gold hover:text-chocolate hover:scale-[1.01]"
+              }`}
               id="detail-add-to-cart-cta"
             >
               {addedMessage ? (
-                <><Check className="w-4 h-4" /><span>Added to Cart</span></>
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Added to Cart</span>
+                </>
               ) : (
-                <><ShoppingCart className="w-4 h-4" /><span>Add to Cart</span></>
+                <>
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Add to Cart</span>
+                </>
               )}
             </button>
 
             <a
-              href={`https://wa.me/265883184144?text=${encodeURIComponent(`Hello, I am interested in: ${product.name} (${displayPrice}). Size: ${selectedSize || "Any"}, Color: ${selectedColor || "Any"}.`)}`}
+              href={`https://wa.me/265883184144?text=${encodeURIComponent(
+                `Hello, I am interested in: ${product.name} (${displayPrice}). Size: ${selectedSize || "Any"}, Color: ${selectedColor || "Any"}.`
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-4 rounded-xl border border-chocolate/20 text-chocolate hover:border-gold hover:text-gold hover:bg-chocolate/5 transition-all duration-300 flex items-center justify-center space-x-3 cursor-pointer text-xs tracking-[0.3em] uppercase font-semibold"
@@ -541,26 +608,75 @@ export default function ProductDetailPage({
       <AnimatePresence>
         {showRestockModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-chocolate-dark/80 backdrop-blur-sm p-4" id="restock-modal-backdrop">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate" id="restock-modal-content">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate"
+              id="restock-modal-content"
+            >
               <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
+
               <div className="w-12 h-12 rounded-full border border-chocolate/10 bg-chocolate/5 flex items-center justify-center mx-auto mb-4">
                 <PackagePlus className="w-6 h-6 text-gold" />
               </div>
-              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="restock-title">Restock Inventory</h3>
+
+              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="restock-title">
+                Restock Inventory
+              </h3>
               <p className="font-mono text-[8px] tracking-[0.2em] text-chocolate/40 uppercase mb-4">{product.name}</p>
+
               <form onSubmit={handleRestockSubmit} className="space-y-4">
-                {modalError && <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">{modalError}</div>}
+                {modalError && (
+                  <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">
+                    {modalError}
+                  </div>
+                )}
+
                 <div className="space-y-1 text-left">
                   <label className="text-[9px] font-mono uppercase tracking-widest text-chocolate/50">Restock Quantity</label>
                   <div className="flex items-center space-x-3 border border-chocolate/15 rounded-lg p-1 bg-light-brown/20">
-                    <button type="button" onClick={() => setRestockAmount(Math.max(1, restockAmount - 1))} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Minus className="w-3.5 h-3.5" /></button>
-                    <input type="number" required min="1" value={restockAmount} onChange={(e) => setRestockAmount(Math.max(1, parseInt(e.target.value) || 0))} className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                    <button type="button" onClick={() => setRestockAmount(restockAmount + 1)} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Plus className="w-3.5 h-3.5" /></button>
+                    <button
+                      type="button"
+                      onClick={() => setRestockAmount(Math.max(1, restockAmount - 1))}
+                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={restockAmount}
+                      onChange={(e) => setRestockAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                      className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRestockAmount(restockAmount + 1)}
+                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
+
                 <div className="flex gap-2.5 pt-4">
-                  <button type="button" disabled={isUpdating} onClick={() => setShowRestockModal(false)} className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer">Cancel</button>
-                  <button type="submit" disabled={isUpdating} className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50">{isUpdating ? "Saving..." : "Confirm"}</button>
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={() => setShowRestockModal(false)}
+                    className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isUpdating ? "Saving..." : "Confirm"}
+                  </button>
                 </div>
               </form>
             </motion.div>
@@ -571,26 +687,75 @@ export default function ProductDetailPage({
       <AnimatePresence>
         {showRecordSaleModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-chocolate-dark/80 backdrop-blur-sm p-4" id="record-sale-modal-backdrop">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate" id="record-sale-modal-content">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate"
+              id="record-sale-modal-content"
+            >
               <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
+
               <div className="w-12 h-12 rounded-full border border-gold/20 bg-gold/5 flex items-center justify-center mx-auto mb-4">
                 <BadgePercent className="w-6 h-6 text-gold" />
               </div>
-              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="sale-title">Record Sale</h3>
+
+              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="sale-title">
+                Record Sale
+              </h3>
               <p className="font-mono text-[8px] tracking-[0.2em] text-chocolate/40 uppercase mb-4">{product.name}</p>
+
               <form onSubmit={handleRecordSaleSubmit} className="space-y-4">
-                {modalError && <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">{modalError}</div>}
+                {modalError && (
+                  <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">
+                    {modalError}
+                  </div>
+                )}
+
                 <div className="space-y-1 text-left">
                   <label className="text-[9px] font-mono uppercase tracking-widest text-chocolate/50">Sale Quantity</label>
                   <div className="flex items-center space-x-3 border border-chocolate/15 rounded-lg p-1 bg-light-brown/20">
-                    <button type="button" onClick={() => setSaleAmount(Math.max(1, saleAmount - 1))} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Minus className="w-3.5 h-3.5" /></button>
-                    <input type="number" required min="1" value={saleAmount} onChange={(e) => setSaleAmount(Math.max(1, parseInt(e.target.value) || 0))} className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                    <button type="button" onClick={() => setSaleAmount(saleAmount + 1)} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Plus className="w-3.5 h-3.5" /></button>
+                    <button
+                      type="button"
+                      onClick={() => setSaleAmount(Math.max(1, saleAmount - 1))}
+                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={saleAmount}
+                      onChange={(e) => setSaleAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                      className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSaleAmount(saleAmount + 1)}
+                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
+
                 <div className="flex gap-2.5 pt-4">
-                  <button type="button" disabled={isUpdating} onClick={() => setShowRecordSaleModal(false)} className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer">Cancel</button>
-                  <button type="submit" disabled={isUpdating} className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50">{isUpdating ? "Saving..." : "Confirm"}</button>
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={() => setShowRecordSaleModal(false)}
+                    className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isUpdating ? "Saving..." : "Confirm"}
+                  </button>
                 </div>
               </form>
             </motion.div>
