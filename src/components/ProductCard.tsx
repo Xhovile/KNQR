@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, ShoppingBag, Heart, Check, Sparkles } from "lucide-react";
+import { Eye, ShoppingBag, Heart, Sparkles } from "lucide-react";
 import { Product } from "../types";
 import { motion } from "motion/react";
 
@@ -19,7 +19,6 @@ function ProductCard({
   onToggleWishlist,
   isWishlisted
 }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -31,16 +30,13 @@ function ProductCard({
   const isDraft = product.status === "draft";
   const isComingSoon = product.stock === 999; // Special coding for Coming Soon mock state
 
-  // Image swap on hover supporting single/multiple images
   const primaryImage = product.image || (product.images?.[0]) || "";
-  const secondaryImage = product.images?.[1] || primaryImage;
 
   const handleAddToCartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isSoldOut || isComingSoon) return;
 
     setIsAdding(true);
-    // Grab first available size, or default to standard fallback size
     const sizesList = product.sizes && product.sizes.length > 0 ? product.sizes : ["One Size"];
     const size = sizesList[0] || "One Size";
     
@@ -62,8 +58,6 @@ function ProductCard({
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.25, ease: "easeInOut" }}
       onClick={() => onViewDetails(product)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="cursor-pointer group flex flex-col justify-between h-[225px] sm:h-[315px] bg-white/70 p-3 rounded-2xl border border-chocolate/10 hover:border-chocolate transition-all duration-300 shadow-2xs hover:shadow-lg relative"
       id={`product-card-${product.id}`}
     >
@@ -93,10 +87,10 @@ function ProductCard({
           ) : null}
         </div>
 
-        {/* Alternate Image Swap on Hover with Smooth Scale Zoom */}
+        {/* Stable image, no swap */}
         {primaryImage ? (
           <img
-            src={isHovered ? secondaryImage : primaryImage}
+            src={primaryImage}
             alt={product.name}
             referrerPolicy="no-referrer"
             loading="lazy"
@@ -116,7 +110,6 @@ function ProductCard({
 
         {/* Quick View and Action Utility Overlay */}
         <div className="absolute inset-0 bg-chocolate/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-          {/* Quick View Trigger */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -129,7 +122,6 @@ function ProductCard({
             <Eye className="w-3.5 h-3.5" />
           </button>
 
-          {/* Wishlist Toggle Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
