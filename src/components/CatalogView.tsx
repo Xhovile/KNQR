@@ -167,12 +167,10 @@ export default function CatalogView({
       />
 
       {productsError && !isLoadingProducts ? (
-        <div className="mx-4 mt-4 rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-red-900 shadow-sm">
-          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-red-700 mb-2">Firestore bootstrap error</p>
-          <p className="text-sm font-semibold mb-2">The app hit this exact error while loading products:</p>
-          <pre className="whitespace-pre-wrap break-words rounded-xl bg-white/80 p-3 text-[11px] leading-relaxed text-red-950 border border-red-100 overflow-auto max-h-56">
-            {productsError}
-          </pre>
+        <div className="mx-4 mt-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-amber-950 shadow-sm">
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-amber-700 mb-2">Catalog notice</p>
+          <p className="text-sm font-medium leading-relaxed">{productsError}</p>
+          <p className="mt-2 text-[11px] text-amber-900/70">The page will keep showing the rest of the site while the catalog settles.</p>
         </div>
       ) : null}
 
