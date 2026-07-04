@@ -12,7 +12,7 @@ export function buildProductFromDraft(values: ProductDraftValues, base?: Product
   const computedUSD = deriveUsdFromMwk(values.priceMWK ?? undefined);
   const fallbackUSD = values.priceUSD || 0;
 
-  const common = {
+  const common: any = {
     name: values.name,
     priceUSD: computedUSD || fallbackUSD,
     priceMWK: values.priceMWK || 0,
@@ -40,6 +40,10 @@ export function buildProductFromDraft(values: ProductDraftValues, base?: Product
     strapType: values.strapType,
     bagCapacity: values.bagCapacity,
     useCase: values.useCase,
+    accessoryType: (values as any).accessoryType,
+    accessoryMaterial: (values as any).accessoryMaterial,
+    accessoryStyle: (values as any).accessoryStyle,
+    accessoryUseCase: (values as any).accessoryUseCase,
     volume: values.volume,
     scentFamily: values.scentFamily,
     fragranceGender: values.fragranceGender,
