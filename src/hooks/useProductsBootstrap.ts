@@ -7,15 +7,7 @@ import {
   fetchProducts,
 } from "../services/productService";
 
-function formatBootstrapError(reason: unknown): string {
-  if (reason instanceof Error) return reason.message;
-  if (typeof reason === "string") return reason;
-  try {
-    return JSON.stringify(reason, null, 2);
-  } catch {
-    return String(reason);
-  }
-}
+const CATALOG_LOAD_NOTICE = "Catalog is taking longer than usual. Please wait a moment and refresh if needed.";
 
 export function useProductsBootstrap() {
   const [productsList, setProductsList] = useState<Product[]>([]);
@@ -37,16 +29,15 @@ export function useProductsBootstrap() {
         if (productsResult.status === "fulfilled") {
           setProductsList(productsResult.value);
         } else {
-          const message = formatBootstrapError(productsResult.reason);
-          console.error("Firestore products load failed:", message);
+          console.error("Firestore products load failed:", productsResult.reason);
           setProductsList([]);
-          setProductsError(message);
+          setProductsError(CATALOG_LOAD_NOTICE);
         }
 
         if (heroesResult.status === "fulfilled") {
           setHeroImages(heroesResult.value);
         } else {
-          console.error("Firestore hero images load failed:", formatBootstrapError(heroesResult.reason));
+          console.error("Firestore hero images load failed:", heroesResult.reason);
         }
       } finally {
         setIsLoadingProducts(false);
