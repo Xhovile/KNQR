@@ -16,35 +16,43 @@ export function useProductsBootstrap() {
   const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function initApp() {
+    let cancelled = false;
+
+    async function loadProducts() {
       setIsLoadingProducts(true);
       setProductsError(null);
 
       try {
-        const [productsResult, heroesResult] = await Promise.allSettled([
-          fetchProducts(),
-          fetchHeroImages(),
-        ]);
-
-        if (productsResult.status === "fulfilled") {
-          setProductsList(productsResult.value);
-        } else {
-          console.error("Firestore products load failed:", productsResult.reason);
-          setProductsList([]);
-          setProductsError(CATALOG_LOAD_NOTICE);
-        }
-
-        if (heroesResult.status === "fulfilled") {
-          setHeroImages(heroesResult.value);
-        } else {
-          console.error("Firestore hero images load failed:", heroesResult.reason);
-        }
+        const products = await fetchProducts();
+        if (cancelled) return;
+        setProductsList(products);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Firestore products load failed:", error);
+        setProductsList([]);
+        setProductsError(CATALOG_LOAD_NOTICE);
       } finally {
-        setIsLoadingProducts(false);
+        if (!cancelled) setIsLoadingProducts(false);
       }
     }
 
-    initApp();
+    async function loadHeroesInBackground() {
+      try {
+        const heroes = await fetchHeroImages();
+        if (!cancelled) setHeroImages(heroes);
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Firestore hero images load failed:", error);
+        }
+      }
+    }
+
+    loadProducts();
+    loadHeroesInBackground();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {
