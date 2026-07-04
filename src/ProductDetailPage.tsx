@@ -33,6 +33,14 @@ function formatList(values?: string[]) {
   return values && values.length > 0 ? values.join(", ") : "—";
 }
 
+function formatMWK(value?: number | null) {
+  return `MK ${(value || 0).toLocaleString()}`;
+}
+
+function formatUSD(value?: number | null) {
+  return `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 function specRows(product: Product): Array<{ label: string; value: string }> {
   const baseRows = [
     { label: "Collection", value: product.collectionCategory || "—" },
@@ -139,8 +147,8 @@ export default function ProductDetailPage({
     return list;
   }, [product.image, product.images]);
 
-  const displayPrice = priceCurrency === "USD" ? `$${product.priceUSD}` : `MK ${product.priceMWK.toLocaleString()}`;
-  const otherPrice = priceCurrency === "USD" ? `MK ${product.priceMWK.toLocaleString()}` : `$${product.priceUSD}`;
+  const displayPrice = priceCurrency === "USD" ? formatUSD(product.priceUSD) : formatMWK(product.priceMWK);
+  const secondaryPrice = priceCurrency === "USD" ? formatMWK(product.priceMWK) : formatUSD(product.priceUSD);
 
   const statusLabel =
     product.status === "active" ? "Available" : product.status === "sold_out" ? "Sold out" : product.status === "draft" ? "Draft" : "Archived";
@@ -388,9 +396,9 @@ export default function ProductDetailPage({
             <h1 className="font-serif text-3xl md:text-4xl text-chocolate font-semibold tracking-wide leading-tight" id="detail-product-name">
               {product.name}
             </h1>
-            <div className="flex items-center flex-wrap gap-3 pt-1" id="detail-price-wrapper">
-              <span className="font-mono text-xl md:text-2xl text-gold font-semibold tracking-wider">{displayPrice}</span>
-              <span className="text-sm text-chocolate/40 line-through">({otherPrice})</span>
+            <div className="flex flex-wrap items-center gap-3 pt-1" id="detail-price-wrapper">
+              <span className="font-mono text-2xl md:text-3xl text-chocolate font-semibold tracking-wider">{displayPrice}</span>
+              <span className="font-mono text-base md:text-lg text-gold font-semibold tracking-wider">{secondaryPrice}</span>
               <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-[0.25em] uppercase ${product.status === "active" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>
                 {statusLabel}
               </span>
@@ -554,11 +562,7 @@ export default function ProductDetailPage({
             <button
               onClick={handleAddToCart}
               disabled={addedMessage}
-              className={`w-full py-4 rounded-xl font-sans text-xs tracking-[0.3em] uppercase transition-all duration-300 flex items-center justify-center space-x-3 cursor-pointer shadow-xl font-semibold ${
-                addedMessage
-                  ? "bg-green-600 text-white"
-                  : "bg-chocolate text-cream hover:bg-gold hover:text-chocolate hover:scale-[1.01]"
-              }`}
+              className={`w-full py-4 rounded-xl font-sans text-xs tracking-[0.3em] uppercase transition-all duration-300 flex items-center justify-center space-x-3 cursor-pointer shadow-xl font-semibold ${addedMessage ? "bg-green-600 text-white" : "bg-chocolate text-cream hover:bg-gold hover:text-chocolate hover:scale-[1.01]"}`}
               id="detail-add-to-cart-cta"
             >
               {addedMessage ? (
@@ -608,75 +612,26 @@ export default function ProductDetailPage({
       <AnimatePresence>
         {showRestockModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-chocolate-dark/80 backdrop-blur-sm p-4" id="restock-modal-backdrop">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate"
-              id="restock-modal-content"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate" id="restock-modal-content">
               <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
-
               <div className="w-12 h-12 rounded-full border border-chocolate/10 bg-chocolate/5 flex items-center justify-center mx-auto mb-4">
                 <PackagePlus className="w-6 h-6 text-gold" />
               </div>
-
-              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="restock-title">
-                Restock Inventory
-              </h3>
+              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="restock-title">Restock Inventory</h3>
               <p className="font-mono text-[8px] tracking-[0.2em] text-chocolate/40 uppercase mb-4">{product.name}</p>
-
               <form onSubmit={handleRestockSubmit} className="space-y-4">
-                {modalError && (
-                  <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">
-                    {modalError}
-                  </div>
-                )}
-
+                {modalError && <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">{modalError}</div>}
                 <div className="space-y-1 text-left">
                   <label className="text-[9px] font-mono uppercase tracking-widest text-chocolate/50">Restock Quantity</label>
                   <div className="flex items-center space-x-3 border border-chocolate/15 rounded-lg p-1 bg-light-brown/20">
-                    <button
-                      type="button"
-                      onClick={() => setRestockAmount(Math.max(1, restockAmount - 1))}
-                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={restockAmount}
-                      onChange={(e) => setRestockAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setRestockAmount(restockAmount + 1)}
-                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    <button type="button" onClick={() => setRestockAmount(Math.max(1, restockAmount - 1))} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Minus className="w-3.5 h-3.5" /></button>
+                    <input type="number" required min="1" value={restockAmount} onChange={(e) => setRestockAmount(Math.max(1, parseInt(e.target.value) || 0))} className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    <button type="button" onClick={() => setRestockAmount(restockAmount + 1)} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Plus className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
-
                 <div className="flex gap-2.5 pt-4">
-                  <button
-                    type="button"
-                    disabled={isUpdating}
-                    onClick={() => setShowRestockModal(false)}
-                    className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdating}
-                    className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {isUpdating ? "Saving..." : "Confirm"}
-                  </button>
+                  <button type="button" disabled={isUpdating} onClick={() => setShowRestockModal(false)} className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer">Cancel</button>
+                  <button type="submit" disabled={isUpdating} className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50">{isUpdating ? "Saving..." : "Confirm"}</button>
                 </div>
               </form>
             </motion.div>
@@ -687,75 +642,26 @@ export default function ProductDetailPage({
       <AnimatePresence>
         {showRecordSaleModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-chocolate-dark/80 backdrop-blur-sm p-4" id="record-sale-modal-backdrop">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate"
-              id="record-sale-modal-content"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-xs w-full bg-white border border-chocolate/10 rounded-xl p-6 text-center shadow-2xl relative overflow-hidden text-chocolate" id="record-sale-modal-content">
               <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-gold/50 via-gold to-gold/50" />
-
               <div className="w-12 h-12 rounded-full border border-gold/20 bg-gold/5 flex items-center justify-center mx-auto mb-4">
                 <BadgePercent className="w-6 h-6 text-gold" />
               </div>
-
-              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="sale-title">
-                Record Sale
-              </h3>
+              <h3 className="font-serif text-lg tracking-widest text-chocolate uppercase mb-1" id="sale-title">Record Sale</h3>
               <p className="font-mono text-[8px] tracking-[0.2em] text-chocolate/40 uppercase mb-4">{product.name}</p>
-
               <form onSubmit={handleRecordSaleSubmit} className="space-y-4">
-                {modalError && (
-                  <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">
-                    {modalError}
-                  </div>
-                )}
-
+                {modalError && <div className="text-rose-500 text-xs font-mono py-1 px-2.5 bg-rose-50 rounded-lg border border-rose-100">{modalError}</div>}
                 <div className="space-y-1 text-left">
                   <label className="text-[9px] font-mono uppercase tracking-widest text-chocolate/50">Sale Quantity</label>
                   <div className="flex items-center space-x-3 border border-chocolate/15 rounded-lg p-1 bg-light-brown/20">
-                    <button
-                      type="button"
-                      onClick={() => setSaleAmount(Math.max(1, saleAmount - 1))}
-                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={saleAmount}
-                      onChange={(e) => setSaleAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setSaleAmount(saleAmount + 1)}
-                      className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    <button type="button" onClick={() => setSaleAmount(Math.max(1, saleAmount - 1))} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Minus className="w-3.5 h-3.5" /></button>
+                    <input type="number" required min="1" value={saleAmount} onChange={(e) => setSaleAmount(Math.max(1, parseInt(e.target.value) || 0))} className="flex-1 text-center bg-transparent border-0 outline-none font-mono text-sm font-semibold text-chocolate [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    <button type="button" onClick={() => setSaleAmount(saleAmount + 1)} className="p-1.5 text-chocolate/70 hover:text-chocolate hover:bg-chocolate/5 rounded-md cursor-pointer"><Plus className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
-
                 <div className="flex gap-2.5 pt-4">
-                  <button
-                    type="button"
-                    disabled={isUpdating}
-                    onClick={() => setShowRecordSaleModal(false)}
-                    className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdating}
-                    className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {isUpdating ? "Saving..." : "Confirm"}
-                  </button>
+                  <button type="button" disabled={isUpdating} onClick={() => setShowRecordSaleModal(false)} className="flex-1 py-2 border border-chocolate/10 hover:border-chocolate/30 rounded-lg text-[10px] font-mono tracking-wider uppercase text-chocolate/60 hover:text-chocolate transition-all cursor-pointer">Cancel</button>
+                  <button type="submit" disabled={isUpdating} className="flex-1 py-2 bg-chocolate text-cream font-bold hover:bg-gold hover:text-chocolate rounded-lg text-[10px] font-mono tracking-wider uppercase transition-all cursor-pointer disabled:opacity-50">{isUpdating ? "Saving..." : "Confirm"}</button>
                 </div>
               </form>
             </motion.div>
