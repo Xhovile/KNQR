@@ -93,39 +93,20 @@ export default function CatalogView({
   };
 
   const tabMotionClass = "flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5";
+  const needsBottomSpacer = !selectedProduct && (activeTab === "shop" || activeTab === "apparel" || activeTab === "bags-accessories" || activeTab === "fragrances");
 
   const renderHome = () => (
-    <motion.div
-      key="home-view"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.12, ease: "easeOut" }}
-      className="flex flex-col flex-grow bg-light-brown text-chocolate"
-    >
-      <Hero
-        onShopClick={() => setActiveTab("shop")}
-        heroImage={heroImages.home}
-        onUpdateHeroImage={onUpdateHomeHero}
-        isAdmin={isAdmin}
-      />
+    <motion.div key="home-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12, ease: "easeOut" }} className="flex flex-col flex-grow bg-light-brown text-chocolate">
+      <Hero onShopClick={() => setActiveTab("shop")} heroImage={heroImages.home} onUpdateHeroImage={onUpdateHomeHero} isAdmin={isAdmin} />
 
       {isLoadingProducts ? (
         <>
-          <div className="px-4 sm:px-6 lg:px-8 pt-6">
-            <Skeleton type="grid" />
-          </div>
-          <div className="px-4 sm:px-6 lg:px-8 pt-6">
-            <Skeleton type="home" />
-          </div>
+          <div className="px-4 sm:px-6 lg:px-8 pt-6"><Skeleton type="grid" /></div>
+          <div className="px-4 sm:px-6 lg:px-8 pt-6"><Skeleton type="home" /></div>
         </>
       ) : (
         <>
-          <Collection
-            products={productsList}
-            onSelectCollection={handleSelectCollection}
-            onAddToCart={() => {}}
-            priceCurrency={priceCurrency}
-          />
+          <Collection products={productsList} onSelectCollection={handleSelectCollection} onAddToCart={() => {}} priceCurrency={priceCurrency} />
           <Promo />
         </>
       )}
@@ -135,52 +116,27 @@ export default function CatalogView({
   );
 
   const renderTab = (node: React.ReactNode, key: string) => (
-    <motion.div
-      key={key}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.12, ease: "easeOut" }}
-      className={tabMotionClass}
-    >
+    <motion.div key={key} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12, ease: "easeOut" }} className={tabMotionClass}>
       {node}
     </motion.div>
   );
 
   return (
-    <motion.div
-      key="main-catalog"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.12, ease: "easeOut" }}
-      className="flex flex-col min-h-screen"
-    >
+    <motion.div key="main-catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12, ease: "easeOut" }} className="flex flex-col min-h-screen">
       <Header onClick={onHome} />
 
-      <Navigation
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onNavigate={onNavigate}
-        onCreateProduct={onCreateProduct}
-        user={user}
-        onSignOut={onSignOut}
-        onAuthAction={onAuthAction}
-      />
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} onNavigate={onNavigate} onCreateProduct={onCreateProduct} user={user} onSignOut={onSignOut} onAuthAction={onAuthAction} />
 
       {productsError && !isLoadingProducts ? (
         <div className="mx-4 mt-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-amber-950 shadow-sm">
-          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-amber-700 mb-2">Catalog notice</p>
+          <p className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-amber-700">Catalog notice</p>
           <p className="text-sm font-medium leading-relaxed">{productsError}</p>
           <p className="mt-2 text-[11px] text-amber-900/70">The page will keep showing the rest of the site while the catalog settles.</p>
         </div>
       ) : null}
 
       {selectedProduct
-        ? renderTab(
-            <React.Suspense fallback={<Skeleton type="detail" />}>
-              <></>
-            </React.Suspense>,
-            "detail-view"
-          )
+        ? renderTab(<React.Suspense fallback={<Skeleton type="detail" />}><></></React.Suspense>, "detail-view")
         : activeTab === "shop"
           ? renderTab(
               isLoadingProducts ? (
@@ -282,6 +238,8 @@ export default function CatalogView({
                   : activeTab === "contact"
                     ? renderTab(<ContactPage />, "contact-view")
                     : renderHome()}
+
+      {needsBottomSpacer ? <div className="h-32 lg:h-44" /> : null}
     </motion.div>
   );
 }
