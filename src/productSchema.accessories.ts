@@ -72,13 +72,13 @@ export const ACCESSORIES_SCHEMA: ProductSchema = {
 export function createEmptyAccessoriesProductDraft(): ProductDraftValues {
   return {
     ...createEmptyBaseProductDraft(),
-    collectionCategory: "Accessories",
+    collectionCategory: "Accessories" as any,
     category: "Belts",
     accessoryType: "Belt",
     accessoryMaterial: "Leather",
     accessoryStyle: "Classic",
     accessoryUseCase: "Daily Wear",
-  };
+  } as ProductDraftValues;
 }
 
 export function getAccessoriesSchemaField(key: string): ProductSchemaField | undefined {
