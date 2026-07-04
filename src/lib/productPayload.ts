@@ -1,10 +1,20 @@
 import { Product } from "../types";
 import { ProductDraftValues } from "../productSchema";
 
+const MWK_PER_USD = 2000;
+
+function deriveUsdFromMwk(priceMWK: number | null | undefined): number {
+  if (!priceMWK || Number.isNaN(priceMWK)) return 0;
+  return Math.round((priceMWK / MWK_PER_USD) * 100) / 100;
+}
+
 export function buildProductFromDraft(values: ProductDraftValues, base?: Product): Product {
+  const computedUSD = deriveUsdFromMwk(values.priceMWK ?? undefined);
+  const fallbackUSD = values.priceUSD || 0;
+
   const common = {
     name: values.name,
-    priceUSD: values.priceUSD || 0,
+    priceUSD: computedUSD || fallbackUSD,
     priceMWK: values.priceMWK || 0,
     image: values.image || "",
     images: values.images || [],
