@@ -310,6 +310,7 @@ export default function App() {
             onUpdateBagsHero={handleUpdateBagsHero}
             onUpdateFragrancesHero={handleUpdateFragrancesHero}
             onExploreShopFromAuth={() => transitionTo("shop", null, false, null)}
+            onGoToPrivacy={() => transitionTo("privacy-security", null, false, null)}
           />
         )}
       </AnimatePresence>
