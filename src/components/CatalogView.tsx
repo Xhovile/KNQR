@@ -13,6 +13,7 @@ import ApparelPage from "../ApparelPage";
 import BagsAndAccessoriesPage from "../BagsAndAccessoriesPage";
 import FragrancesPage from "../FragrancesPage";
 import ContactPage from "../ContactPage";
+import PrivacySecurityPage from "../PrivacySecurityPage";
 import SettingsPage from "../SettingsPage";
 import AuthForm from "./AuthForm";
 import OrderHistory from "./OrderHistory";
@@ -49,6 +50,7 @@ interface CatalogViewProps {
   onUpdateBagsHero: (url: string) => Promise<void>;
   onUpdateFragrancesHero: (url: string) => Promise<void>;
   onExploreShopFromAuth: () => void;
+  onGoToPrivacy: () => void;
 }
 
 export default function CatalogView({
@@ -79,6 +81,7 @@ export default function CatalogView({
   onUpdateBagsHero,
   onUpdateFragrancesHero,
   onExploreShopFromAuth,
+  onGoToPrivacy,
 }: CatalogViewProps) {
   const handleSelectCollection = (collectionCategory: string) => {
     const normalized = (collectionCategory || "").toLowerCase();
@@ -231,27 +234,36 @@ export default function CatalogView({
                         userId={user?.uid || null}
                         onBack={onGoBack}
                         onGoToContact={() => setActiveTab("contact")}
+                        onGoToPrivacy={onGoToPrivacy}
                         onSignOut={onSignOut}
                       />,
                       "settings-view"
                     )
-                  : activeTab === "auth"
+                  : activeTab === "privacy-security"
                     ? renderTab(
-                        user ? (
-                          <div className="max-w-2xl w-full mx-auto space-y-8 my-8 flex flex-col items-center" id="profile-and-orders-container">
-                            <ProfilePanel user={user} onExploreShop={onExploreShopFromAuth} onSignOut={onSignOut} priceCurrency={priceCurrency} />
-                            <div className="bg-chocolate-dark text-cream p-6 sm:p-8 rounded-2xl shadow-2xl border border-cream/10 w-full luxury-glow" id="knqr-orders-card">
-                              <OrderHistory user={user} priceCurrency={priceCurrency} onExploreShop={onExploreShopFromAuth} />
-                            </div>
-                          </div>
-                        ) : (
-                          <AuthForm initialIsSignUp={authInitialIsSignUp} onSuccess={() => {}} />
-                        ),
-                        "auth-view"
+                        <PrivacySecurityPage
+                          onBack={() => setActiveTab("settings")}
+                          onGoToContact={() => setActiveTab("contact")}
+                        />,
+                        "privacy-security-view"
                       )
-                    : activeTab === "contact"
-                      ? renderTab(<ContactPage />, "contact-view")
-                      : renderHome()}
+                    : activeTab === "auth"
+                      ? renderTab(
+                          user ? (
+                            <div className="max-w-2xl w-full mx-auto space-y-8 my-8 flex flex-col items-center" id="profile-and-orders-container">
+                              <ProfilePanel user={user} onExploreShop={onExploreShopFromAuth} onSignOut={onSignOut} priceCurrency={priceCurrency} />
+                              <div className="bg-chocolate-dark text-cream p-6 sm:p-8 rounded-2xl shadow-2xl border border-cream/10 w-full luxury-glow" id="knqr-orders-card">
+                                <OrderHistory user={user} priceCurrency={priceCurrency} onExploreShop={onExploreShopFromAuth} />
+                              </div>
+                            </div>
+                          ) : (
+                            <AuthForm initialIsSignUp={authInitialIsSignUp} onSuccess={() => {}} />
+                          ),
+                          "auth-view"
+                        )
+                      : activeTab === "contact"
+                        ? renderTab(<ContactPage />, "contact-view")
+                        : renderHome()}
 
       {showSharedFooter ? <Footer /> : null}
       {needsBottomSpacer ? <div className="h-32 lg:h-44" /> : null}
