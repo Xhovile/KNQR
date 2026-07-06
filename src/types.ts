@@ -75,4 +75,4 @@ export interface Order {
   createdAt: string;
 }
 
-export type ActiveTab = "home" | "shop" | "contact" | "settings" | "apparel" | "bags-accessories" | "fragrances" | "auth";
+export type ActiveTab = "home" | "shop" | "contact" | "settings" | "privacy-security" | "apparel" | "bags-accessories" | "fragrances" | "auth";
