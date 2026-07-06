@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Bell, HelpCircle, Lock, MoonStar, Package, Palette, Save, ShieldCheck, SunMedium, User } from "lucide-react";
+import { ArrowLeft, Bell, HelpCircle, Lock, Package, Palette, Save, ShieldCheck, SunMedium, User } from "lucide-react";
 
 export interface ShippingAddressForm {
   fullName: string;
@@ -89,6 +89,11 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
     setTimeout(() => setSavedToast(null), 2000);
   };
 
+  const jumpTo = (id: string) => {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-light-brown text-chocolate">
       <div className="sticky top-0 z-20 border-b border-chocolate/10 bg-white/40 backdrop-blur-md">
@@ -104,7 +109,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-12">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <div className="space-y-6 min-w-0">
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
+            <div id="settings-account-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
               <div className="flex flex-col gap-4 border-b border-chocolate/10 pb-5 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0">
                   <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-gold">Account</p>
@@ -119,16 +124,16 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <SettingTile icon={User} title="Profile" description="Your name and account identity." />
-                <SettingTile icon={Package} title="Shipping Address" description="Default delivery details for checkout." />
-                <SettingTile icon={Bell} title="Notifications" description="Order updates and account alerts." />
-                <SettingTile icon={ShieldCheck} title="Privacy & Security" description="Account safety and sign-in protection." />
-                <SettingTile icon={Palette} title="Appearance" description="Light, dark, or system display mode." />
-                <SettingTile icon={HelpCircle} title="Help & Support" description="Reach the support page or contact team." />
+                <SettingTile onClick={() => jumpTo("settings-account-card")} icon={User} title="Profile" description="Your name and account identity." />
+                <SettingTile onClick={() => jumpTo("settings-shipping-card")} icon={Package} title="Shipping Address" description="Default delivery details for checkout." />
+                <SettingTile onClick={() => jumpTo("settings-notifications-card")} icon={Bell} title="Notifications" description="Order updates and account alerts." />
+                <SettingTile onClick={() => jumpTo("settings-privacy-card")} icon={ShieldCheck} title="Privacy & Security" description="Account safety and sign-in protection." />
+                <SettingTile onClick={() => jumpTo("settings-appearance-card")} icon={Palette} title="Appearance" description="Light, dark, or system display mode." />
+                <SettingTile onClick={() => jumpTo("settings-support-card")} icon={HelpCircle} title="Help & Support" description="Reach the support page or contact team." />
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
+            <div id="settings-shipping-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <Package className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Shipping Address</h2>
@@ -144,7 +149,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
           </div>
 
           <div className="space-y-6 min-w-0">
-            <div className="rounded-[28px] border border-chocolate/10 bg-chocolate-dark p-5 text-cream shadow-2xl sm:p-6 md:p-8 overflow-hidden">
+            <div id="settings-appearance-card" className="rounded-[28px] border border-chocolate/10 bg-chocolate-dark p-5 text-cream shadow-2xl sm:p-6 md:p-8 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-cream/10 pb-4">
                 <SunMedium className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-gold">Appearance</h2>
@@ -173,7 +178,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
+            <div id="settings-notifications-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <Bell className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Notifications</h2>
@@ -195,7 +200,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </label>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
+            <div id="settings-privacy-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <Lock className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Privacy & Security</h2>
@@ -206,7 +211,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </p>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
+            <div id="settings-support-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <HelpCircle className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Help & Support</h2>
@@ -243,19 +248,25 @@ function SettingTile({
   icon: Icon,
   title,
   description,
+  onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
+  onClick: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4 shadow-sm overflow-hidden">
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4 shadow-sm overflow-hidden text-left transition hover:border-gold hover:shadow-md"
+    >
       <div className="flex items-center gap-2 text-chocolate">
         <Icon className="h-4 w-4 text-gold" />
         <p className="text-sm font-medium">{title}</p>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-chocolate/60">{description}</p>
-    </div>
+    </button>
   );
 }
 
