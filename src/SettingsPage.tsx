@@ -24,6 +24,7 @@ interface SettingsPageProps {
 }
 
 const STORAGE_KEY = "knqr.user.settings.v1";
+const SETTINGS_UPDATED_EVENT = "knqr:settings-updated";
 
 const DEFAULT_SETTINGS: UserSettingsState = {
   shippingAddress: {
@@ -65,6 +66,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      window.dispatchEvent(new Event(SETTINGS_UPDATED_EVENT));
     } catch {
       // ignore storage errors
     }
