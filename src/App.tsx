@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { ArrowUp, ShoppingCart, X } from "lucide-react";
 
@@ -21,12 +21,41 @@ import { useCartState } from "./hooks/useCartState";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 
 const HERO_CACHE_KEY = "knqr.hero-images.cache.v1";
+const SETTINGS_STORAGE_KEY = "knqr.user.settings.v1";
+const SETTINGS_UPDATED_EVENT = "knqr:settings-updated";
+
+type AppearanceMode = "system" | "light" | "dark";
+
+function readAppearanceMode(): AppearanceMode {
+  if (typeof window === "undefined") return "system";
+
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return "system";
+    const parsed = JSON.parse(raw) as { appearance?: AppearanceMode };
+    return parsed.appearance === "light" || parsed.appearance === "dark" ? parsed.appearance : "system";
+  } catch {
+    return "system";
+  }
+}
+
+function resolveAppearance(mode: AppearanceMode): "light" | "dark" {
+  if (mode === "system") {
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: light)").matches) {
+      return "light";
+    }
+    return "dark";
+  }
+
+  return mode;
+}
 
 export default function App() {
   const [priceCurrency] = useState<"USD" | "MWK">("MWK");
   const [showAdminGuardModal, setShowAdminGuardModal] = useState(false);
   const [adminGuardAction, setAdminGuardAction] = useState<"add" | "edit" | "hero" | "restock" | "record_sale" | null>(null);
   const [authInitialIsSignUp, setAuthInitialIsSignUp] = useState(false);
+  const [appearanceMode, setAppearanceMode] = useState<AppearanceMode>(() => readAppearanceMode());
 
   const { user, handleSignOut: signOutFromAuth } = useAuthSession();
 
@@ -62,8 +91,29 @@ export default function App() {
     activeTabRef,
   } = useAppNavigation({ productsList });
 
+  useEffect(() => {
+    const syncAppearance = () => setAppearanceMode(readAppearanceMode());
+    syncAppearance();
+    window.addEventListener(SETTINGS_UPDATED_EVENT, syncAppearance);
+    window.addEventListener("storage", syncAppearance);
+    return () => {
+      window.removeEventListener(SETTINGS_UPDATED_EVENT, syncAppearance);
+      window.removeEventListener("storage", syncAppearance);
+    };
+  }, []);
+
+  useEffect(() => {
+    const resolved = resolveAppearance(appearanceMode);
+    document.documentElement.dataset.appearance = appearanceMode;
+    document.documentElement.dataset.resolvedAppearance = resolved;
+    document.body.dataset.appearance = appearanceMode;
+    document.body.dataset.resolvedAppearance = resolved;
+    document.body.style.colorScheme = resolved;
+  }, [appearanceMode]);
+
   const isAdmin = user && user.email === "xhovilepublications@gmail.com";
   const isCartPage = activeTab === "cart";
+  const resolvedAppearance = resolveAppearance(appearanceMode);
 
   const handleSignOut = async () => {
     await signOutFromAuth(() => transitionTo("home"));
@@ -178,7 +228,14 @@ export default function App() {
   };
 
   return (
-    <div className="bg-chocolate min-h-screen text-cream flex flex-col relative" id="app-root-container">
+    <div
+      className={
+        resolvedAppearance === "light"
+          ? "bg-[#f6efe2] min-h-screen text-chocolate flex flex-col relative"
+          : "bg-chocolate min-h-screen text-cream flex flex-col relative"
+      }
+      id="app-root-container"
+    >
       <AnimatePresence mode="wait">
         {isCartPage ? (
           <CartPage isOpen={true} onClose={() => transitionTo("home", null, false, null)} cartItems={cart} onUpdateQuantity={handleUpdateQuantity} onRemoveItem={handleRemoveItem} onClearCart={handleClearCart} priceCurrency={priceCurrency} user={user} />
@@ -264,4 +321,4 @@ export default function App() {
       </AnimatePresence>
     </div>
   );
- }
+}
