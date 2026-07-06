@@ -15,19 +15,19 @@ export default function FloatingActionStack({ onOpenCart }: FloatingActionStackP
       <button
         type="button"
         onClick={scrollToTop}
-        className="flex h-14 w-14 items-center justify-center rounded-full border border-chocolate/15 bg-chocolate text-cream shadow-2xl transition hover:bg-gold hover:text-chocolate"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-chocolate/15 bg-chocolate/80 text-cream shadow-xl backdrop-blur-sm transition hover:bg-gold/90 hover:text-chocolate"
         aria-label="Back to top"
       >
-        <ArrowUp className="h-5 w-5" />
+        <ArrowUp className="h-4 w-4" />
       </button>
 
       <button
         type="button"
         onClick={onOpenCart}
-        className="flex h-14 w-14 items-center justify-center rounded-full border border-gold/50 bg-gold text-chocolate shadow-2xl transition hover:bg-cream"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-gold/40 bg-gold/80 text-chocolate shadow-xl backdrop-blur-sm transition hover:bg-cream/95"
         aria-label="Open cart"
       >
-        <ShoppingCart className="h-5 w-5" />
+        <ShoppingCart className="h-4 w-4" />
       </button>
     </div>
   );
