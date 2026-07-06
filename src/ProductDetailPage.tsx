@@ -17,11 +17,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product } from "./types";
+import FloatingActionStack from "./components/FloatingActionStack";
 
 interface ProductDetailPageProps {
   product: Product;
   onBack: () => void;
   onAddToCart: (product: Product, quantity: number, size?: string, color?: string) => void;
+  onOpenCart: () => void;
   priceCurrency: "USD" | "MWK";
   onEditProduct?: (product: Product) => void;
   isAdmin?: boolean;
@@ -86,6 +88,7 @@ export default function ProductDetailPage({
   product,
   onBack,
   onAddToCart,
+  onOpenCart,
   priceCurrency,
   onEditProduct,
   isAdmin,
@@ -421,6 +424,8 @@ export default function ProductDetailPage({
           </div>
         </div>
       </div>
+
+      <FloatingActionStack onOpenCart={onOpenCart} />
 
       <AnimatePresence>
         {toast ? (
