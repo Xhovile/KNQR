@@ -50,6 +50,12 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
       setDropdownOpen(false);
       return;
     }
+    if (actionName === "Settings") {
+      setActiveTab("settings");
+      onNavigate("settings");
+      setDropdownOpen(false);
+      return;
+    }
     if (actionName === "Sign Up") {
       if (onAuthAction) {
         onAuthAction(true);
@@ -104,7 +110,6 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
             );
           })}
 
-          {/* Menu Dropdown Section to the right of Contact */}
           <div className="relative flex items-center">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -112,23 +117,14 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
               aria-label="Toggle navigation menu"
               id="menu-trigger-button"
             >
-              {dropdownOpen ? (
-                <X className="w-5 h-5 text-gold" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {dropdownOpen ? <X className="w-5 h-5 text-gold" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            {/* Dropdown Card panel */}
             <AnimatePresence>
               {dropdownOpen && (
                 <>
-                  {/* Backdrop click away listener */}
-                  <div 
-                    className="fixed inset-0 z-40 bg-black/5" 
-                    onClick={() => setDropdownOpen(false)}
-                  />
-                  
+                  <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setDropdownOpen(false)} />
+
                   <motion.div
                     initial={{ opacity: 0, y: 15, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -138,7 +134,7 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
                     id="menu-dropdown-panel"
                   >
                     <div className="absolute top-0 right-4 -mt-1.5 w-3 h-3 bg-chocolate-dark border-t border-l border-cream/10 rotate-45" />
-                    
+
                     {menuItems.map((item) => (
                       <button
                         key={item.label}
@@ -158,7 +154,6 @@ export default function Navigation({ activeTab, setActiveTab, onNavigate, onCrea
         </div>
       </nav>
 
-      {/* Floating Tactical Alert Notification */}
       <AnimatePresence>
         {activeNotification && (
           <motion.div
