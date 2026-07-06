@@ -13,6 +13,7 @@ import ApparelPage from "../ApparelPage";
 import BagsAndAccessoriesPage from "../BagsAndAccessoriesPage";
 import FragrancesPage from "../FragrancesPage";
 import ContactPage from "../ContactPage";
+import SettingsPage from "../SettingsPage";
 import AuthForm from "./AuthForm";
 import OrderHistory from "./OrderHistory";
 import ProfilePanel from "./ProfilePanel";
@@ -222,23 +223,35 @@ export default function CatalogView({
                     ),
                     "fragrances-view"
                   )
-                : activeTab === "auth"
+                : activeTab === "settings"
                   ? renderTab(
-                      user ? (
-                        <div className="max-w-2xl w-full mx-auto space-y-8 my-8 flex flex-col items-center" id="profile-and-orders-container">
-                          <ProfilePanel user={user} onExploreShop={onExploreShopFromAuth} onSignOut={onSignOut} priceCurrency={priceCurrency} />
-                          <div className="bg-chocolate-dark text-cream p-6 sm:p-8 rounded-2xl shadow-2xl border border-cream/10 w-full luxury-glow" id="knqr-orders-card">
-                            <OrderHistory user={user} priceCurrency={priceCurrency} onExploreShop={onExploreShopFromAuth} />
-                          </div>
-                        </div>
-                      ) : (
-                        <AuthForm initialIsSignUp={authInitialIsSignUp} onSuccess={() => {}} />
-                      ),
-                      "auth-view"
+                      <SettingsPage
+                        displayName={user?.displayName || user?.email?.split("@")[0] || "KNQR User"}
+                        email={user?.email || null}
+                        userId={user?.uid || null}
+                        onBack={onGoBack}
+                        onGoToContact={() => setActiveTab("contact")}
+                        onSignOut={onSignOut}
+                      />,
+                      "settings-view"
                     )
-                  : activeTab === "contact"
-                    ? renderTab(<ContactPage />, "contact-view")
-                    : renderHome()}
+                  : activeTab === "auth"
+                    ? renderTab(
+                        user ? (
+                          <div className="max-w-2xl w-full mx-auto space-y-8 my-8 flex flex-col items-center" id="profile-and-orders-container">
+                            <ProfilePanel user={user} onExploreShop={onExploreShopFromAuth} onSignOut={onSignOut} priceCurrency={priceCurrency} />
+                            <div className="bg-chocolate-dark text-cream p-6 sm:p-8 rounded-2xl shadow-2xl border border-cream/10 w-full luxury-glow" id="knqr-orders-card">
+                              <OrderHistory user={user} priceCurrency={priceCurrency} onExploreShop={onExploreShopFromAuth} />
+                            </div>
+                          </div>
+                        ) : (
+                          <AuthForm initialIsSignUp={authInitialIsSignUp} onSuccess={() => {}} />
+                        ),
+                        "auth-view"
+                      )
+                    : activeTab === "contact"
+                      ? renderTab(<ContactPage />, "contact-view")
+                      : renderHome()}
 
       {showSharedFooter ? <Footer /> : null}
       {needsBottomSpacer ? <div className="h-32 lg:h-44" /> : null}
