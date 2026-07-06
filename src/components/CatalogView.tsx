@@ -15,6 +15,7 @@ import FragrancesPage from "../FragrancesPage";
 import ContactPage from "../ContactPage";
 import PrivacySecurityPage from "../PrivacySecurityPage";
 import SettingsPage from "../SettingsPage";
+import FloatingActionStack from "./FloatingActionStack";
 import AuthForm from "./AuthForm";
 import OrderHistory from "./OrderHistory";
 import ProfilePanel from "./ProfilePanel";
@@ -51,6 +52,7 @@ interface CatalogViewProps {
   onUpdateFragrancesHero: (url: string) => Promise<void>;
   onExploreShopFromAuth: () => void;
   onGoToPrivacy: () => void;
+  onOpenCart: () => void;
 }
 
 export default function CatalogView({
@@ -82,6 +84,7 @@ export default function CatalogView({
   onUpdateFragrancesHero,
   onExploreShopFromAuth,
   onGoToPrivacy,
+  onOpenCart,
 }: CatalogViewProps) {
   const handleSelectCollection = (collectionCategory: string) => {
     const normalized = (collectionCategory || "").toLowerCase();
@@ -99,6 +102,7 @@ export default function CatalogView({
   const tabMotionClass = "flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5";
   const needsBottomSpacer = !selectedProduct && (activeTab === "shop" || activeTab === "apparel" || activeTab === "bags-accessories" || activeTab === "fragrances");
   const showSharedFooter = activeTab === "shop" || activeTab === "contact";
+  const showFloatingActions = activeTab === "shop" || activeTab === "apparel" || activeTab === "bags-accessories" || activeTab === "fragrances";
 
   const renderHome = () => (
     <motion.div key="home-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12, ease: "easeOut" }} className="flex flex-col flex-grow bg-light-brown text-chocolate">
@@ -265,6 +269,7 @@ export default function CatalogView({
                         ? renderTab(<ContactPage />, "contact-view")
                         : renderHome()}
 
+      {showFloatingActions ? <FloatingActionStack onOpenCart={onOpenCart} /> : null}
       {showSharedFooter ? <Footer /> : null}
       {needsBottomSpacer ? <div className="h-32 lg:h-44" /> : null}
     </motion.div>
