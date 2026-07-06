@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Trash2, ShieldCheck, CreditCard, Landmark, Check, ShoppingCart, Plus, Minus, RefreshCw } from "lucide-react";
 import { CartItem } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -13,6 +13,40 @@ interface CartProps {
   onClearCart: () => void;
   priceCurrency: "USD" | "MWK";
   user?: any;
+}
+
+const SETTINGS_STORAGE_KEY = "knqr.user.settings.v1";
+
+function readShippingDefaults() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as {
+      shippingAddress?: {
+        fullName?: string;
+        phone?: string;
+        city?: string;
+        addressLine?: string;
+      };
+    };
+
+    const shippingAddress = parsed.shippingAddress;
+    if (!shippingAddress) return null;
+
+    return {
+      name: shippingAddress.fullName || "",
+      phone: shippingAddress.phone || "",
+      city: shippingAddress.city || "Blantyre",
+      address: shippingAddress.addressLine || "",
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default function Cart({
@@ -36,6 +70,18 @@ export default function Cart({
     address: "",
     paymentMethod: "mpamba", // 'mpamba' | 'airtel' | 'card'
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const savedShipping = readShippingDefaults();
+    if (savedShipping) {
+      setFormData((prev) => ({
+        ...prev,
+        ...savedShipping,
+      }));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -292,7 +338,6 @@ export default function Cart({
                         Delivery Information
                       </h5>
 
-                      {/* Name */}
                       <div className="space-y-1">
                         <label className="text-[10px] text-cream/60 uppercase tracking-wider block select-none">
                           Your Name
@@ -307,7 +352,6 @@ export default function Cart({
                         />
                       </div>
 
-                      {/* Phone */}
                       <div className="space-y-1">
                         <label className="text-[10px] text-cream/60 uppercase tracking-wider block select-none">
                           Contact Phone Number
@@ -322,7 +366,6 @@ export default function Cart({
                         />
                       </div>
 
-                      {/* Malawian Cities selection */}
                       <div className="space-y-1">
                         <label className="text-[10px] text-cream/60 uppercase tracking-wider block select-none">
                           Delivery City (Malawi)
@@ -339,7 +382,6 @@ export default function Cart({
                         </select>
                       </div>
 
-                      {/* Delivery Address */}
                       <div className="space-y-1">
                         <label className="text-[10px] text-cream/60 uppercase tracking-wider block select-none">
                           Specific Delivery Address / Landmark
@@ -355,14 +397,12 @@ export default function Cart({
                       </div>
                     </div>
 
-                    {/* Local Payment Options */}
                     <div className="space-y-3">
                       <h5 className="text-[10px] font-mono tracking-wider text-gold uppercase select-none">
                         Select Payment Method
                       </h5>
 
                       <div className="grid grid-cols-3 gap-2">
-                        {/* TNM Mpamba */}
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, paymentMethod: "mpamba" })}
@@ -376,7 +416,6 @@ export default function Cart({
                           <span className="text-[10px] font-sans">TNM Mpamba</span>
                         </button>
 
-                        {/* Airtel Money */}
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, paymentMethod: "airtel" })}
@@ -386,11 +425,10 @@ export default function Cart({
                               : "bg-transparent border-cream/10 text-cream/60 hover:border-cream/30"
                           }`}
                         >
-                          <Landmark className="w-4 h-4 text-red-500" />
+                          <CreditCard className="w-4 h-4 text-red-500" />
                           <span className="text-[10px] font-sans">Airtel Money</span>
                         </button>
 
-                        {/* International Cards */}
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, paymentMethod: "card" })}
@@ -400,96 +438,22 @@ export default function Cart({
                               : "bg-transparent border-cream/10 text-cream/60 hover:border-cream/30"
                           }`}
                         >
-                          <CreditCard className="w-4 h-4 text-blue-400" />
-                          <span className="text-[10px] font-sans">Debit / Card</span>
+                          <ShieldCheck className="w-4 h-4 text-blue-500" />
+                          <span className="text-[10px] font-sans">Card</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Error message */}
-                    {orderError && (
-                      <div 
-                        className="p-3.5 rounded-lg border border-red-500/35 bg-red-500/10 text-red-400 text-xs text-left"
-                        id="checkout-order-error"
-                      >
+                    {orderError ? (
+                      <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
                         {orderError}
                       </div>
-                    )}
-
-                    {/* Trust Factor */}
-                    <div className="flex items-center space-x-2 text-[10px] text-cream/40 justify-center select-none pt-2" id="checkout-trust-factor">
-                      <ShieldCheck className="w-3.5 h-3.5 text-gold" />
-                      <span>KNQR Direct Delivery: Handled within 24-48 hours.</span>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={isSubmittingOrder}
-                      className="w-full py-4 bg-cream hover:bg-gold disabled:bg-cream/40 disabled:text-chocolate/60 disabled:cursor-not-allowed text-chocolate font-sans text-xs tracking-[0.3em] uppercase rounded-full transition-all duration-300 shadow-lg font-semibold cursor-pointer flex items-center justify-center space-x-2"
-                      id="submit-checkout-btn"
-                    >
-                      {isSubmittingOrder ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin text-chocolate/75" />
-                          <span>Processing order...</span>
-                        </>
-                      ) : (
-                        <span>Authorize Payment</span>
-                      )}
-                    </button>
+                    ) : null}
                   </form>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-6 select-none">
-                    <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500 flex items-center justify-center text-green-500">
-                      <Check className="w-8 h-8" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <h4 className="font-serif text-2xl text-cream font-normal">Order Received!</h4>
-                      <p className="text-xs text-cream/70 max-w-xs font-sans leading-relaxed">
-                        Zikomo Kwambiri, <span className="text-gold font-medium">{formData.name}</span>! Your KNQR lifestyle shipment is authorized and currently being prepared at our Blantyre outlet.
-                      </p>
-                      <div className="bg-chocolate-light p-3 rounded-lg border border-cream/5 mt-4 text-[10px] text-cream/50 space-y-1">
-                        <p>Delivery Destination: <span className="text-cream">{formData.city}, Malawi</span></p>
-                        <p>Authorized via: <span className="text-gold uppercase font-mono">{formData.paymentMethod} Payment System</span></p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={handleFinishCheckout}
-                      className="px-8 py-3 bg-cream hover:bg-gold text-chocolate text-xs tracking-[0.2em] uppercase rounded-full transition-all duration-300 font-semibold cursor-pointer"
-                      id="finish-checkout-btn"
-                    >
-                      Conquer Your Wardrobe
-                    </button>
-                  </div>
-                )}
+                ) : null}
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Grand Total Calculation Block & Secure Checkout CTA */}
-          {cartItems.length > 0 && (
-            <div className="p-6 border-t border-cream/5 bg-chocolate-light space-y-4">
-              <div className="flex justify-between items-baseline select-none">
-                <span className="text-xs text-cream/60">Subtotal:</span>
-                <span className="font-mono text-xl text-gold font-bold">{displayTotal}</span>
-              </div>
-              <p className="text-[10px] text-cream/40 text-center tracking-wide leading-none select-none">
-                Complimentary delivery across Malawi. Duties & taxes included.
-              </p>
-
-              <button
-                onClick={() => setIsCheckingOut(true)}
-                className="w-full py-4 bg-cream hover:bg-gold text-chocolate font-sans text-xs tracking-[0.3em] uppercase rounded-full transition-all duration-300 shadow-xl flex items-center justify-center space-x-2 cursor-pointer font-semibold"
-                id="cart-checkout-trigger"
-              >
-                <span>Checkout</span>
-                <ShieldCheck className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </motion.div>
       </div>
     </AnimatePresence>
