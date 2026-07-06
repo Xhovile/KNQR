@@ -102,7 +102,7 @@ export default function CatalogView({
   const tabMotionClass = "flex flex-col flex-grow bg-light-brown text-chocolate border-b border-chocolate/5";
   const needsBottomSpacer = !selectedProduct && (activeTab === "shop" || activeTab === "apparel" || activeTab === "bags-accessories" || activeTab === "fragrances");
   const showSharedFooter = activeTab === "shop" || activeTab === "contact";
-  const showFloatingActions = activeTab === "shop" || activeTab === "apparel" || activeTab === "bags-accessories" || activeTab === "fragrances";
+  const showFloatingActions = activeTab !== "auth" && activeTab !== "cart";
 
   const renderHome = () => (
     <motion.div key="home-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12, ease: "easeOut" }} className="flex flex-col flex-grow bg-light-brown text-chocolate">
