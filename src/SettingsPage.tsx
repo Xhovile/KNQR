@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Bell, HelpCircle, Lock, Package, Palette, Save, ShieldCheck, SunMedium, User } from "lucide-react";
+import { ArrowLeft, Bell, HelpCircle, Package, Palette, Save, ShieldCheck, SunMedium, User } from "lucide-react";
 
 export interface ShippingAddressForm {
   fullName: string;
@@ -20,6 +20,7 @@ interface SettingsPageProps {
   userId?: string | null;
   onBack: () => void;
   onGoToContact: () => void;
+  onGoToPrivacy: () => void;
   onSignOut: () => void;
 }
 
@@ -59,7 +60,7 @@ function readSettings(): UserSettingsState {
   }
 }
 
-export default function SettingsPage({ displayName, email, userId, onBack, onGoToContact, onSignOut }: SettingsPageProps) {
+export default function SettingsPage({ displayName, email, userId, onBack, onGoToContact, onGoToPrivacy, onSignOut }: SettingsPageProps) {
   const [settings, setSettings] = useState<UserSettingsState>(() => readSettings());
   const [savedToast, setSavedToast] = useState<string | null>(null);
 
@@ -127,9 +128,9 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
                 <SettingTile onClick={() => jumpTo("settings-account-card")} icon={User} title="Profile" description="Your name and account identity." />
                 <SettingTile onClick={() => jumpTo("settings-shipping-card")} icon={Package} title="Shipping Address" description="Default delivery details for checkout." />
                 <SettingTile onClick={() => jumpTo("settings-notifications-card")} icon={Bell} title="Notifications" description="Order updates and account alerts." />
-                <SettingTile onClick={() => jumpTo("settings-privacy-card")} icon={ShieldCheck} title="Privacy & Security" description="Account safety and sign-in protection." />
                 <SettingTile onClick={() => jumpTo("settings-appearance-card")} icon={Palette} title="Appearance" description="Light, dark, or system display mode." />
-                <SettingTile onClick={() => jumpTo("settings-support-card")} icon={HelpCircle} title="Help & Support" description="Reach the support page or contact team." />
+                <SettingTile onClick={onGoToPrivacy} icon={ShieldCheck} title="Privacy & Security" description="Open account safety controls." />
+                <SettingTile onClick={onGoToContact} icon={HelpCircle} title="Help & Contact" description="Open the contact page for support." />
               </div>
             </div>
 
@@ -198,28 +199,6 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
                   <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${settings.notificationsEnabled ? "left-6" : "left-1"}`} />
                 </button>
               </label>
-            </div>
-
-            <div id="settings-privacy-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
-              <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
-                <Lock className="h-4 w-4 text-gold" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Privacy & Security</h2>
-              </div>
-
-              <p className="text-sm leading-relaxed text-chocolate/70">
-                Account safety controls can be added here later. For now, the essentials are protected by your sign-in session.
-              </p>
-            </div>
-
-            <div id="settings-support-card" className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
-              <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
-                <HelpCircle className="h-4 w-4 text-gold" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Help & Support</h2>
-              </div>
-              <p className="text-sm leading-relaxed text-chocolate/70">Open the contact page for support, questions, or order help.</p>
-              <button onClick={onGoToContact} className="inline-flex items-center gap-2 rounded-xl bg-chocolate px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-cream transition hover:bg-gold hover:text-chocolate">
-                Contact Support
-              </button>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
