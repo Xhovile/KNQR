@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { ArrowUp, ShoppingCart, X } from "lucide-react";
 
 import CartPage from "./CartPage";
 import Skeleton from "./components/Skeleton";
@@ -70,6 +69,7 @@ export default function App() {
 
   const {
     cart,
+    isCartOpen,
     setIsCartOpen,
     handleAddToCart,
     handleUpdateQuantity,
@@ -118,6 +118,9 @@ export default function App() {
   const handleSignOut = async () => {
     await signOutFromAuth(() => transitionTo("home"));
   };
+
+  const handleOpenCart = useCallback(() => setIsCartOpen(true), [setIsCartOpen]);
+  const handleCloseCart = useCallback(() => setIsCartOpen(false), [setIsCartOpen]);
 
   const handleUpdateHeroImage = async (page: keyof HeroImages, url: string) => {
     try {
@@ -237,8 +240,17 @@ export default function App() {
       id="app-root-container"
     >
       <AnimatePresence mode="wait">
-        {isCartPage ? (
-          <CartPage isOpen={true} onClose={() => transitionTo("home", null, false, null)} cartItems={cart} onUpdateQuantity={handleUpdateQuantity} onRemoveItem={handleRemoveItem} onClearCart={handleClearCart} priceCurrency={priceCurrency} user={user} />
+        {isCartOpen || isCartPage ? (
+          <CartPage
+            isOpen={true}
+            onClose={handleCloseCart}
+            cartItems={cart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            priceCurrency={priceCurrency}
+            user={user}
+          />
         ) : isCreatingProduct ? (
           <React.Suspense fallback={<Skeleton type="home" />}>
             <AddProduct key="add-product-screen" onCancel={handleGoBack} onSubmit={handleCreateProductSubmit} />
@@ -254,6 +266,7 @@ export default function App() {
               product={selectedProduct}
               onBack={handleGoBack}
               onAddToCart={handleAddToCart}
+              onOpenCart={handleOpenCart}
               priceCurrency={priceCurrency}
               onEditProduct={(prod) => {
                 if (!isAdmin) {
@@ -311,6 +324,7 @@ export default function App() {
             onUpdateFragrancesHero={handleUpdateFragrancesHero}
             onExploreShopFromAuth={() => transitionTo("shop", null, false, null)}
             onGoToPrivacy={() => transitionTo("privacy-security", null, false, null)}
+            onOpenCart={handleOpenCart}
           />
         )}
       </AnimatePresence>
