@@ -90,9 +90,9 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
   };
 
   return (
-    <div className="min-h-screen bg-light-brown text-chocolate">
+    <div className="min-h-screen overflow-x-hidden bg-light-brown text-chocolate">
       <div className="sticky top-0 z-20 border-b border-chocolate/10 bg-white/40 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <button onClick={onBack} className="flex items-center gap-2 text-xs uppercase tracking-widest text-chocolate/70 hover:text-gold">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -101,20 +101,20 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-8 md:py-12">
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-6 shadow-sm md:p-8">
-              <div className="flex items-start justify-between gap-4 border-b border-chocolate/10 pb-5">
-                <div>
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-12">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+          <div className="space-y-6 min-w-0">
+            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
+              <div className="flex flex-col gap-4 border-b border-chocolate/10 pb-5 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0">
                   <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-gold">Account</p>
-                  <h1 className="mt-2 font-serif text-3xl text-chocolate">{userLabel}</h1>
+                  <h1 className="mt-2 break-words font-serif text-3xl text-chocolate">{userLabel}</h1>
                   <p className="mt-2 text-sm text-chocolate/70">Manage the essentials for your KNQR account.</p>
                 </div>
-                <div className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-3 text-right">
+                <div className="w-full rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-3 text-right md:w-auto md:min-w-[220px]">
                   <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-chocolate/40">KNQR USER ID</p>
-                  <p className="mt-1 font-mono text-xs tracking-[0.2em] text-chocolate/80">{userId ? `#${String(userId).slice(0, 8).toUpperCase()}` : "—"}</p>
-                  <p className="mt-2 text-[11px] text-chocolate/50">{email || "No email"}</p>
+                  <p className="mt-1 break-all font-mono text-xs tracking-[0.2em] text-chocolate/80">{userId ? `#${String(userId).slice(0, 8).toUpperCase()}` : "—"}</p>
+                  <p className="mt-2 break-words text-[11px] text-chocolate/50">{email || "No email"}</p>
                 </div>
               </div>
 
@@ -128,7 +128,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-6 shadow-sm md:p-8">
+            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <Package className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Shipping Address</h2>
@@ -143,8 +143,8 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-[28px] border border-chocolate/10 bg-chocolate-dark p-6 text-cream shadow-2xl">
+          <div className="space-y-6 min-w-0">
+            <div className="rounded-[28px] border border-chocolate/10 bg-chocolate-dark p-5 text-cream shadow-2xl sm:p-6 md:p-8 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-cream/10 pb-4">
                 <SunMedium className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-gold">Appearance</h2>
@@ -173,21 +173,21 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-6 shadow-sm md:p-8">
+            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <Bell className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Notifications</h2>
               </div>
 
               <label className="mt-5 flex items-start justify-between gap-4 rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-chocolate">Order and delivery alerts</p>
                   <p className="mt-1 text-sm text-chocolate/60">Get updates about orders, delivery, and important account notices.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSettings((prev) => ({ ...prev, notificationsEnabled: !prev.notificationsEnabled }))}
-                  className={`relative h-7 w-12 rounded-full transition ${settings.notificationsEnabled ? "bg-gold" : "bg-chocolate/20"}`}
+                  className={`relative h-7 w-12 shrink-0 rounded-full transition ${settings.notificationsEnabled ? "bg-gold" : "bg-chocolate/20"}`}
                   aria-pressed={settings.notificationsEnabled}
                 >
                   <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${settings.notificationsEnabled ? "left-6" : "left-1"}`} />
@@ -195,7 +195,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </label>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-6 shadow-sm md:p-8 space-y-4">
+            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <Lock className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Privacy & Security</h2>
@@ -206,7 +206,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
               </p>
             </div>
 
-            <div className="rounded-[28px] border border-chocolate/10 bg-white p-6 shadow-sm md:p-8 space-y-4">
+            <div className="rounded-[28px] border border-chocolate/10 bg-white p-5 shadow-sm sm:p-6 md:p-8 space-y-4 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-chocolate/10 pb-4">
                 <HelpCircle className="h-4 w-4 text-gold" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-chocolate">Help & Support</h2>
@@ -249,7 +249,7 @@ function SettingTile({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4 shadow-sm">
+    <div className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4 shadow-sm overflow-hidden">
       <div className="flex items-center gap-2 text-chocolate">
         <Icon className="h-4 w-4 text-gold" />
         <p className="text-sm font-medium">{title}</p>
