@@ -44,10 +44,10 @@ export interface HeroImages {
 }
 
 export const DEFAULT_HEROES: HeroImages = {
-  home: "https://drive.google.com/uc?export=view&id=1UluIQDNA47b1oSC8n3m_d_iuRhu4RuMR",
-  apparel: "https://drive.google.com/uc?export=view&id=1507QE-ZTRNP0FG3oHFVX6opxTB8-jEJH",
-  bagsAccessories: "https://drive.google.com/uc?export=view&id=1E9pRCUSiCQ0TYRg3MzZiYSgOLo5Hm9yN",
-  fragrances: "https://drive.google.com/uc?export=view&id=1cO-MSxPquInux8k_FgaW5XlEGwMokuHU",
+  home: "",
+  apparel: "",
+  bagsAccessories: "",
+  fragrances: "",
 };
 
 const PRODUCTS_COLLECTION = "products";
@@ -78,7 +78,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 export async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs = 4000,
-  errorMsg = "Database operation timed out. This is usually caused by an ad-blocker, Brave Shields, or firewall blocking the connection to Google Firestore. Please try disabling your browser shields / ad-blockers or check your connection, then try again."
+  errorMsg = "Database operation timed out. This is usually caused by an ad-blocker, Brave Shields, or firewall blocking the connection to Google Firestore. Please try disabling your browser shields or whitelisting Firebase.",
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -97,12 +97,12 @@ export async function fetchHeroImages(): Promise<HeroImages> {
     const docSnap = await withTimeout(getDoc(docRef), 3000);
     if (docSnap.exists()) {
       const data = docSnap.data();
-      return { ...DEFAULT_HEROES, ...data } as HeroImages;
+      return data as HeroImages;
     }
-    return DEFAULT_HEROES;
+    return {} as HeroImages;
   } catch (error: any) {
     console.warn("Error fetching hero images from Firestore:", error?.message || String(error));
-    return DEFAULT_HEROES;
+    return {} as HeroImages;
   }
 }
 
