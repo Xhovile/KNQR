@@ -6,7 +6,7 @@ import Skeleton from "./components/Skeleton";
 import AdminGuardModal from "./components/AdminGuardModal";
 import CatalogView from "./components/CatalogView";
 
-import { Product } from "./types";
+import { ActiveTab, Product } from "./types";
 import { HeroImages, updateHeroImageInDb } from "./services/productService";
 import { ProductDraftValues } from "./productSchema";
 import ProductDetailPage from "./ProductDetailPage";
@@ -116,7 +116,7 @@ export default function App() {
   const resolvedAppearance = resolveAppearance(appearanceMode);
 
   const handleSignOut = async () => {
-    await signOutFromAuth(() => transitionTo("home"));
+    await signOutFromAuth(() => transitionTo("home", null, false, null));
   };
 
   const handleOpenCart = useCallback(() => setIsCartOpen(true), [setIsCartOpen]);
@@ -148,6 +148,21 @@ export default function App() {
       transitionTo(activeTabRef.current, product, false, null);
     },
     [activeTabRef, transitionTo]
+  );
+
+  const handleViewCollection = useCallback(
+    (collectionCategory: string) => {
+      const normalized = (collectionCategory || "").toLowerCase();
+      const tab: ActiveTab = normalized.includes("bag")
+        ? "bags-accessories"
+        : normalized.includes("fragrance")
+          ? "fragrances"
+          : normalized.includes("apparel")
+            ? "apparel"
+            : "shop";
+      transitionTo(tab, null, false, null);
+    },
+    [transitionTo]
   );
 
   const handleAddToCartFromShop = useCallback(
@@ -264,6 +279,7 @@ export default function App() {
             <ProductDetailPage
               key="product-detail-screen"
               product={selectedProduct}
+              products={productsList}
               onBack={handleGoBack}
               onAddToCart={handleAddToCart}
               onOpenCart={handleOpenCart}
@@ -282,6 +298,8 @@ export default function App() {
                 setAdminGuardAction(action);
                 setShowAdminGuardModal(true);
               }}
+              onViewCollection={handleViewCollection}
+              onViewProduct={handleViewDetails}
             />
           </React.Suspense>
         ) : (
