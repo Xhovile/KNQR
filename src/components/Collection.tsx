@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Product } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -16,49 +16,51 @@ interface CollectionCardProps {
 }
 
 function CollectionCard({ product, allProducts, onSelectCollection }: CollectionCardProps) {
-  // Extract all unique images of products in this collection category
-  const allImages = useMemo(() => {
-    const imagesSet = new Set<string>();
-    
-    // Find all products in this category
+  // Build a stable image set for this collection, starting with the hero image.
+  const collectionImages = useMemo(() => {
     const categoryProducts = allProducts.filter(
       (p) => p.collectionCategory === product.collectionCategory && p.status === "active"
     );
 
-    // Collect images
+    const orderedImages: string[] = [];
+    const seen = new Set<string>();
+
+    const addImage = (img?: string) => {
+      if (!img || seen.has(img)) return;
+      seen.add(img);
+      orderedImages.push(img);
+    };
+
+    // Hero image first.
+    addImage(product.image);
+
+    // Then all other images from products in the same collection.
     categoryProducts.forEach((p) => {
-      if (p.image) imagesSet.add(p.image);
-      if (p.images && p.images.length > 0) {
-        p.images.forEach((img) => {
-          if (img) imagesSet.add(img);
-        });
-      }
+      addImage(p.image);
+      p.images?.forEach((img) => addImage(img));
     });
 
-    // Fallback if none found
-    if (imagesSet.size === 0) {
-      if (product.image) imagesSet.add(product.image);
-      if (product.images) {
-        product.images.forEach((img) => {
-          if (img) imagesSet.add(img);
-        });
-      }
-    }
+    // Fallback to any images on the product itself.
+    product.images?.forEach((img) => addImage(img));
 
-    return Array.from(imagesSet);
+    return orderedImages;
   }, [allProducts, product.collectionCategory, product.image, product.images]);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  useEffect(() => {
-    if (allImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [allImages]);
+  const goToPreviousImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (collectionImages.length <= 1) return;
+    setCurrentImageIndex((prev) => (prev - 1 + collectionImages.length) % collectionImages.length);
+  };
 
-  const activeImage = allImages[currentImageIndex] || product.image;
+  const goToNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (collectionImages.length <= 1) return;
+    setCurrentImageIndex((prev) => (prev + 1) % collectionImages.length);
+  };
+
+  const activeImage = collectionImages[currentImageIndex] || product.image;
 
   return (
     <motion.div
@@ -73,40 +75,53 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
         onClick={() => onSelectCollection(product.collectionCategory)}
         id={`card-image-click-${product.id}`}
       >
-        {/* Parallax crossfade transitions for images */}
+        {/* Static hero image with manual navigation. */}
         <div className="absolute inset-0 w-full h-full">
           <AnimatePresence mode="popLayout">
             <motion.img
               key={activeImage}
               src={activeImage}
-              alt={`${product.name} - slide`}
+              alt={`${product.name} - collection image`}
               className="absolute inset-0 w-full h-full object-cover object-center"
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1.01 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.7, ease: "easeInOut" }}
+              initial={{ opacity: 0, scale: 1.03 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
               referrerPolicy="no-referrer"
               id={`card-img-${product.id}-${currentImageIndex}`}
             />
           </AnimatePresence>
         </div>
 
-        {/* Custom luxury indicator dots at the top center representing active index */}
-        {allImages.length > 1 && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex space-x-1.5 z-20 bg-chocolate/30 px-2.5 py-1 rounded-full backdrop-blur-sm">
-            {allImages.map((_, i) => (
-              <span
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  i === currentImageIndex ? "bg-gold scale-125" : "bg-cream/40"
-                }`}
-              />
-            ))}
-          </div>
+        {collectionImages.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={goToPreviousImage}
+              aria-label="Previous collection image"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-chocolate/45 text-cream backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-chocolate/70"
+            >
+              <span className="text-lg leading-none">‹</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={goToNextImage}
+              aria-label="Next collection image"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-chocolate/45 text-cream backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-chocolate/70"
+            >
+              <span className="text-lg leading-none">›</span>
+            </button>
+          </>
         )}
 
         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center text-[10px] font-bold tracking-[0.25em] uppercase text-cream/90 z-10 bg-chocolate/40 backdrop-blur-sm px-3 py-2 rounded-xl border border-cream/5">
-          <span>{allProducts.filter(p => p.collectionCategory === product.collectionCategory && p.status === "active").reduce((sum, p) => sum + (p.stock || 0), 0)} In Stock</span>
+          <span>
+            {allProducts
+              .filter((p) => p.collectionCategory === product.collectionCategory && p.status === "active")
+              .reduce((sum, p) => sum + (p.stock || 0), 0)}{" "}
+            In Stock
+          </span>
         </div>
 
         <div className="absolute inset-0 bg-chocolate/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3 pointer-events-none group-hover:pointer-events-auto">
@@ -151,10 +166,10 @@ export default function Collection({
     uniqueCategories.sort((a, b) => {
       const indexA = CATEGORY_ORDER.indexOf((a || "").toLowerCase());
       const indexB = CATEGORY_ORDER.indexOf((b || "").toLowerCase());
-      
+
       const posA = indexA === -1 ? 999 : indexA;
       const posB = indexB === -1 ? 999 : indexB;
-      
+
       return posA - posB;
     });
     return uniqueCategories
