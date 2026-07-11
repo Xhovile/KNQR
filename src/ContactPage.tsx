@@ -2,21 +2,12 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Phone,
-  MessageCircle,
   Mail,
   MapPin,
-  Clock,
   Send,
   CheckCircle,
   ChevronDown,
-  Instagram,
-  Facebook,
   ExternalLink,
-  HelpCircle,
-  FileText,
-  Truck,
-  RefreshCw,
-  Maximize2,
   X,
   AlertCircle,
 } from "lucide-react";
@@ -33,11 +24,6 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeSupportModal, setActiveSupportModal] = useState<{
-    title: string;
-    content: React.ReactNode;
-  } | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -58,184 +44,13 @@ export default function ContactPage() {
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitSuccess(true);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
-    }, 1500);
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    }, 1000);
   };
-
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
-
-  const supportTopics = [
-    {
-      id: "track-order",
-      title: "Track Order",
-      icon: FileText,
-      description: "Check the status of your bespoke custom-crafted piece.",
-      content: (
-        <div className="space-y-4">
-          <p className="text-sm text-chocolate/80">
-            Every KNQR order undergoes meticulous quality inspection before departure. To track your dispatch:
-          </p>
-          <div className="bg-chocolate/5 p-4 rounded-xl border border-chocolate/10 space-y-3">
-            <label className="block text-[10px] font-mono tracking-wider uppercase text-chocolate/60">Enter Order Reference ID</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="e.g. KNQR-7826-MW"
-                className="flex-1 bg-white border border-chocolate/20 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-gold"
-              />
-              <button className="bg-chocolate text-cream px-4 py-2 rounded-lg text-xs font-mono uppercase hover:bg-gold hover:text-chocolate transition-colors">
-                Search
-              </button>
-            </div>
-          </div>
-          <p className="text-[11px] text-chocolate/50 italic">
-            * Note: Tracking information typically becomes live 24-48 hours after payment confirmation.
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: "shipping-info",
-      title: "Shipping Information",
-      icon: Truck,
-      description: "Courier, regional, and worldwide premium shipping options.",
-      content: (
-        <div className="space-y-3 text-sm text-chocolate/80">
-          <p>We offer professional shipping solutions curated for safety and prompt delivery:</p>
-          <ul className="space-y-2.5 mt-2">
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-              <span><strong>Blantyre Pickup:</strong> Available free of charge at our flagship KNQR Outlet.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-              <span><strong>Local Courier & Delivery:</strong> Express delivery across Lilongwe, Zomba, Mzuzu, and nationwide regional centers.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-              <span><strong>International Delivery:</strong> DHL express service to premium worldwide destinations. Delivery rates calculated on checkout.</span>
-            </li>
-          </ul>
-        </div>
-      ),
-    },
-    {
-      id: "returns-exchanges",
-      title: "Returns & Exchanges",
-      icon: RefreshCw,
-      description: "Our luxury assurance pledge & worry-free exchange terms.",
-      content: (
-        <div className="space-y-3 text-sm text-chocolate/80">
-          <p>
-            At KNQR, we pride ourselves on absolute luxury. If your curated apparel or accessory does not fit perfectly:
-          </p>
-          <p>
-            We accept size exchanges within <strong>7 days</strong> of delivery, provided the item is in pristine, unworn condition with all original tags and signature packaging intact.
-          </p>
-          <p className="text-xs text-chocolate/60">
-            * Due to hygiene standards, custom bespoke fragrances and intimate apparel are excluded from general return policies unless a material variance is found.
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: "size-guide",
-      title: "Size Guide",
-      icon: Maximize2,
-      description: "Precise dimensions for our curated apparel collections.",
-      content: (
-        <div className="space-y-3">
-          <p className="text-sm text-chocolate/80">
-            Our premium garments are tailored with modern silhouettes. Refer to the table below to select your precise fit:
-          </p>
-          <div className="overflow-x-auto border border-chocolate/10 rounded-xl">
-            <table className="w-full text-left text-xs font-mono">
-              <thead>
-                <tr className="bg-chocolate/5 border-b border-chocolate/10">
-                  <th className="p-2.5 text-chocolate/60 font-semibold uppercase">Size</th>
-                  <th className="p-2.5 text-chocolate/60 font-semibold uppercase">Chest (Inches)</th>
-                  <th className="p-2.5 text-chocolate/60 font-semibold uppercase">Length (Inches)</th>
-                  <th className="p-2.5 text-chocolate/60 font-semibold uppercase">Shoulder (Inches)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-chocolate/5 text-chocolate/80">
-                <tr>
-                  <td className="p-2.5 font-bold text-chocolate">XS</td>
-                  <td className="p-2.5">34 - 36"</td>
-                  <td className="p-2.5">26.5"</td>
-                  <td className="p-2.5">16.5"</td>
-                </tr>
-                <tr className="bg-chocolate/[0.02]">
-                  <td className="p-2.5 font-bold text-chocolate">S</td>
-                  <td className="p-2.5">36 - 38"</td>
-                  <td className="p-2.5">27.5"</td>
-                  <td className="p-2.5">17.5"</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 font-bold text-chocolate">M</td>
-                  <td className="p-2.5">38 - 40"</td>
-                  <td className="p-2.5">28.5"</td>
-                  <td className="p-2.5">18.5"</td>
-                </tr>
-                <tr className="bg-chocolate/[0.02]">
-                  <td className="p-2.5 font-bold text-chocolate">L</td>
-                  <td className="p-2.5">40 - 42"</td>
-                  <td className="p-2.5">29.5"</td>
-                  <td className="p-2.5">19.5"</td>
-                </tr>
-                <tr>
-                  <td className="p-2.5 font-bold text-chocolate">XL</td>
-                  <td className="p-2.5">42 - 44"</td>
-                  <td className="p-2.5">30.5"</td>
-                  <td className="p-2.5">20.5"</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
-  const faqItems = [
-    {
-      question: "How do I place an order?",
-      answer:
-        "Select your desired masterpiece from our collection pages (Apparel, Bags & Accessories, or Fragrances). Choose your custom variants (size, color, volume) and click 'Add to Cart'. You can review your selection in the side drawer cart at any time and click checkout to place your luxury order.",
-    },
-    {
-      question: "Do you offer nationwide delivery?",
-      answer:
-        "Yes, we proudly provide nationwide delivery services. For residents in Blantyre, we offer premium local delivery and free in-store collection at our flagship KNQR Outlet. For customers across Lilongwe, Mzuzu, Zomba, and other regions, we coordinate delivery via reliable courier services.",
-    },
-    {
-      question: "How long does delivery take?",
-      answer:
-        "Pickup at our Blantyre Outlet is ready immediately or next business day. Local premium Blantyre deliveries are completed within 24 hours. Regional shipments across Malawi via courier typically arrive in 1 to 3 business days, while international express shipments via DHL take 5 to 7 days.",
-    },
-    {
-      question: "Can I exchange an item?",
-      answer:
-        "Absolutely. We offer a curated exchange policy for sizes and tags. If you require a different fit, contact us via WhatsApp or Email within 7 days of receiving your item, and our team will coordinate a replacement.",
-    },
-    {
-      question: "How do I become a distributor?",
-      answer:
-        "We are always eager to partner with luxury visionaries. If you are interested in wholesale placement, dealership, or retail integration, please reach out directly to our Business Enquiries department via knqronline@gmail.com with your proposal overview.",
-    },
-  ];
 
   return (
     <div className="w-full bg-light-brown text-chocolate py-12 md:py-16 px-6 md:px-12 flex flex-col font-sans border-b border-chocolate/5" id="knqr-contact-page-root">
-      <div className="max-w-4xl mx-auto text-center mb-16 space-y-4">
+      <div className="max-w-4xl mx-auto text-center mb-12 space-y-4">
         <span className="text-[10px] font-mono tracking-[0.4em] text-gold uppercase font-bold" id="contact-small-sub">
           CONTACT
         </span>
@@ -243,11 +58,11 @@ export default function ContactPage() {
           LET'S CONNECT
         </h2>
         <p className="text-sm md:text-base text-chocolate/80 leading-relaxed max-w-2xl mx-auto font-light">
-          Questions? We're here to help. Whether you have a question about an order, our products, collaborations, or anything else, we'd love to hear from you.
+          Questions? We’re here to help. You can reach us directly, use the form below, or open the store location in Google Maps.
         </p>
       </div>
 
-      <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-white/50 border border-chocolate/10 rounded-2xl p-6 md:p-8 space-y-8 shadow-sm">
             <h3 className="text-lg font-serif text-chocolate tracking-wide border-b border-chocolate/10 pb-3">
@@ -260,9 +75,7 @@ export default function ContactPage() {
                   <Phone className="w-5 h-5" />
                 </div>
                 <div className="space-y-2 flex-grow">
-                  <div>
-                    <p className="text-base font-semibold text-chocolate">+265 883 184 144</p>
-                  </div>
+                  <p className="text-base font-semibold text-chocolate">+265 883 184 144</p>
                   <a href="https://wa.me/265883184144" target="_blank" rel="noreferrer" className="inline-flex items-center space-x-2 bg-chocolate text-cream hover:bg-gold hover:text-chocolate text-xs font-mono tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-sm font-bold cursor-pointer select-none border border-chocolate" id="contact-whatsapp-btn">
                     <span>Chat on WhatsApp</span>
                     <ExternalLink className="w-3 h-3" />
@@ -275,9 +88,7 @@ export default function ContactPage() {
                   <Mail className="w-5 h-5" />
                 </div>
                 <div className="space-y-2 flex-grow">
-                  <div>
-                    <p className="text-base font-semibold text-chocolate">knqronline@gmail.com</p>
-                  </div>
+                  <p className="text-base font-semibold text-chocolate">knqronline@gmail.com</p>
                   <a href="mailto:knqronline@gmail.com" className="inline-flex items-center space-x-2 bg-chocolate text-cream hover:bg-gold hover:text-chocolate text-xs font-mono tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-sm font-bold cursor-pointer select-none border border-chocolate" id="contact-email-btn">
                     <span>Send an Email</span>
                     <Mail className="w-3.5 h-3.5" />
@@ -290,14 +101,12 @@ export default function ContactPage() {
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div className="space-y-2 flex-grow">
-                  <div>
-                    <p className="text-sm font-semibold text-chocolate leading-snug">
-                      KNQR Outlet<br />Blantyre, Malawi
-                    </p>
-                    <p className="text-xs font-mono text-chocolate/50 italic mt-1">Hours: Coming soon</p>
-                  </div>
+                  <p className="text-sm font-semibold text-chocolate leading-snug">
+                    KNQR Outlet<br />Blantyre, Malawi
+                  </p>
+                  <p className="text-xs font-mono text-chocolate/50 italic">Hours: Coming soon</p>
                   <a href="https://maps.google.com/?q=Blantyre,Malawi" target="_blank" rel="noreferrer" className="inline-flex items-center space-x-2 bg-white/80 hover:bg-chocolate hover:text-white text-xs font-mono tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-sm font-bold border border-chocolate/20 cursor-pointer select-none" id="contact-directions-btn">
-                    <span>Get Directions</span>
+                    <span>Open Map</span>
                     <MapPin className="w-3.5 h-3.5 text-gold" />
                   </a>
                 </div>
@@ -305,17 +114,11 @@ export default function ContactPage() {
             </div>
 
             <div className="pt-6 border-t border-chocolate/10 space-y-3">
-              <p className="text-[10px] font-mono tracking-[0.25em] text-chocolate/50 uppercase">🗺️ Locate Blantyre Store</p>
-              <div className="w-full aspect-video rounded-xl overflow-hidden border border-chocolate/10 bg-chocolate/5 shadow-inner relative">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d122604.4069818826!2d34.93510525251642!3d-15.786111162451558!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18db43f4b46231d5%3A0x67db23a496837130!2sBlantyre!5e0!3m2!1sen!2smw!4v1782620000000!5m2!1sen!2smw"
-                  className="absolute inset-0 w-full h-full border-0"
-                  allowFullScreen={false}
-                  loading="lazy"
-                  title="Google Maps Embed Blantyre Malawi"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  id="contact-google-map"
-                />
+              <p className="text-[10px] font-mono tracking-[0.25em] text-chocolate/50 uppercase">🗺️ Store Location</p>
+              <div className="rounded-xl border border-chocolate/10 bg-chocolate/5 p-4">
+                <p className="text-sm text-chocolate/80 leading-relaxed">
+                  The map is opened on demand to keep the page fast. Use the button above if you want directions.
+                </p>
               </div>
             </div>
           </div>
@@ -404,55 +207,8 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto w-full mt-20 border-t border-chocolate/10 pt-16 space-y-8" id="faq-section">
-        <div className="text-center space-y-2">
-          <span className="text-[10px] font-mono tracking-[0.3em] text-gold uppercase font-bold">FREQUENTLY ASKED QUESTIONS</span>
-          <h3 className="text-2xl font-serif text-chocolate tracking-wide">Curated FAQ Answers</h3>
-        </div>
-
-        <div className="space-y-4" id="contact-faq-accordion">
-          {faqItems.map((item, idx) => {
-            const isOpen = openFaq === idx;
-            return (
-              <div key={idx} className="border border-chocolate/10 bg-white/40 rounded-2xl overflow-hidden transition-all shadow-sm hover:border-chocolate/20">
-                <button onClick={() => toggleFaq(idx)} className="w-full flex items-center justify-between p-5 text-left font-sans font-semibold text-chocolate text-xs tracking-wider uppercase focus:outline-none cursor-pointer" id={`faq-accordion-trigger-${idx}`}>
-                  <div className="flex items-center space-x-3">
-                    <HelpCircle className="w-4 h-4 text-gold shrink-0" />
-                    <span>{item.question}</span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-chocolate/55 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: "easeInOut" }}>
-                      <div className="px-5 pb-5 pt-1 text-sm text-chocolate/80 leading-relaxed font-light border-t border-chocolate/5 bg-white/10">{item.answer}</div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       <AnimatePresence>
-        {activeSupportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" id="support-modal-backdrop">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveSupportModal(null)} className="absolute inset-0 bg-chocolate-dark/80 backdrop-blur-md" />
-
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={{ duration: 0.2 }} className="relative max-w-md w-full bg-cream border border-chocolate/10 rounded-2xl p-6 md:p-8 text-chocolate shadow-2xl z-10" id="support-modal-body">
-              <button onClick={() => setActiveSupportModal(null)} className="absolute top-4 right-4 p-1.5 bg-chocolate/5 hover:bg-chocolate/10 rounded-full text-chocolate/70 hover:text-chocolate transition-colors cursor-pointer" title="Close dialog" id="support-modal-close-btn">
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="space-y-4">
-                <h3 className="font-serif text-xl text-chocolate tracking-wide border-b border-chocolate/10 pb-2">{activeSupportModal.title}</h3>
-                <div className="pt-2 font-sans">{activeSupportModal.content}</div>
-              </div>
-            </motion.div>
-          </div>
-        )}
+        {/* No embedded iframe here on purpose — the page stays lightweight. */}
       </AnimatePresence>
     </div>
   );
