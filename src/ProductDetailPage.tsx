@@ -34,7 +34,6 @@ interface ProductDetailPageProps {
   onViewProduct?: (product: Product) => void;
 }
 
-const fmtList = (value?: string[]) => (value && value.length ? value.join(", ") : "");
 const fmtMWK = (value?: number | null) => `MK ${(value || 0).toLocaleString()}`;
 const fmtUSD = (value?: number | null) =>
   `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -148,12 +147,7 @@ export default function ProductDetailPage({
   const relatedProducts = useMemo(() => {
     const collection = (product.collectionCategory || "").toLowerCase();
     return products
-      .filter(
-        (p) =>
-          p.id !== product.id &&
-          (p.collectionCategory || "").toLowerCase() === collection &&
-          p.status === "active"
-      )
+      .filter((p) => p.id !== product.id && (p.collectionCategory || "").toLowerCase() === collection && p.status === "active")
       .slice(0, 4);
   }, [products, product.id, product.collectionCategory]);
 
@@ -166,6 +160,7 @@ export default function ProductDetailPage({
       : "Pickup"
     : "Pickup only";
   const deliveryNote = product.delivery?.note || "";
+  const collectionCategory = product.collectionCategory || product.category || "Collection";
 
   const add = () => {
     onAddToCart(product, qty, size, color);
@@ -266,8 +261,6 @@ export default function ProductDetailPage({
     }
   };
 
-  const collectionCategory = product.collectionCategory || product.category || "Collection";
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} className="min-h-screen bg-light-brown text-chocolate pb-36">
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-chocolate/10 bg-white/40 px-6 py-4 backdrop-blur-md">
@@ -278,20 +271,13 @@ export default function ProductDetailPage({
 
         <div className="flex items-center gap-2">
           {onViewCollection && (
-            <button
-              onClick={() => onViewCollection(product.collectionCategory || product.category || "home")}
-              className="rounded-full border border-chocolate/10 bg-white/60 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-chocolate/70 hover:text-gold"
-            >
+            <button onClick={() => onViewCollection(product.collectionCategory || product.category || "home")} className="rounded-full border border-chocolate/10 bg-white/60 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-chocolate/70 hover:text-gold">
               View Collection
             </button>
           )}
 
           <div className="relative">
-            <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-full p-2 text-chocolate/60 transition hover:bg-chocolate/5 hover:text-gold"
-              aria-label="Details menu"
-            >
+            <button onClick={() => setMenuOpen((v) => !v)} className="rounded-full p-2 text-chocolate/60 transition hover:bg-chocolate/5 hover:text-gold" aria-label="Details menu">
               {menuOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
             </button>
 
@@ -299,12 +285,7 @@ export default function ProductDetailPage({
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    className="absolute right-0 top-full z-50 mt-3 w-52 overflow-hidden rounded-2xl border border-chocolate/10 bg-white shadow-2xl"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }} className="absolute right-0 top-full z-50 mt-3 w-52 overflow-hidden rounded-2xl border border-chocolate/10 bg-white shadow-2xl">
                     {[
                       { label: "Edit", icon: Pencil, run: () => onEditProduct?.(product) },
                       { label: "Restock", icon: PackagePlus, run: () => { setModalError(null); setRestockAmount(10); setShowRestockModal(true); } },
@@ -312,14 +293,7 @@ export default function ProductDetailPage({
                       { label: "Share", icon: Share2, run: shareProduct },
                       { label: "Add to Cart", icon: ShoppingCart, run: add },
                     ].map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={() => {
-                          item.run();
-                          setMenuOpen(false);
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs uppercase tracking-wider text-chocolate/70 transition hover:bg-chocolate/5 hover:text-gold"
-                      >
+                      <button key={item.label} onClick={() => { item.run(); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs uppercase tracking-wider text-chocolate/70 transition hover:bg-chocolate/5 hover:text-gold">
                         <item.icon className="h-4 w-4 text-gold/80" />
                         {item.label}
                       </button>
@@ -348,13 +322,7 @@ export default function ProductDetailPage({
           {images.length > 1 ? (
             <div className="flex gap-3 overflow-x-auto py-2">
               {images.map((src, i) => (
-                <button
-                  key={src + i}
-                  onClick={() => setImageIndex(i)}
-                  className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${
-                    i === imageIndex ? "border-gold" : "border-chocolate/15 opacity-60"
-                  }`}
-                >
+                <button key={src + i} onClick={() => setImageIndex(i)} className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${i === imageIndex ? "border-gold" : "border-chocolate/15 opacity-60"}`}>
                   <img src={src} alt={`${product.name} thumbnail ${i + 1}`} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
@@ -373,6 +341,31 @@ export default function ProductDetailPage({
                 {product.status === "active" ? "Available" : product.status}
               </span>
             </div>
+          </div>
+
+          <div className="space-y-4 border-t border-chocolate/10 pt-6">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gold">Order Quantity</span>
+              <div className="flex items-center space-x-4 rounded-xl border border-chocolate/15 bg-white/40 p-1">
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="rounded-lg p-2 text-chocolate/70 hover:bg-chocolate/5"><Minus className="h-4 w-4" /></button>
+                <span className="px-3 font-mono text-sm font-semibold text-chocolate">{qty}</span>
+                <button onClick={() => setQty(qty + 1)} className="rounded-lg p-2 text-chocolate/70 hover:bg-chocolate/5"><Plus className="h-4 w-4" /></button>
+              </div>
+            </div>
+
+            <button onClick={() => setToast("Payments are coming soon. Please use Add to Cart or WhatsApp checkout.")} className="flex w-full items-center justify-center gap-3 rounded-xl bg-orange-600 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-cream transition hover:bg-orange-500">
+              <ShoppingBag className="h-4 w-4" />
+              Buy Now
+            </button>
+
+            <button onClick={add} disabled={added} className={`flex w-full items-center justify-center gap-3 rounded-xl px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] transition ${added ? "bg-green-600 text-white" : "bg-chocolate text-cream hover:bg-gold hover:text-chocolate"}`}>
+              {added ? <><Check className="h-4 w-4" />Added to Cart</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
+            </button>
+
+            <a href={`https://wa.me/265883184144?text=${encodeURIComponent(`Hello, I am interested in: ${product.name} (${primary}). Size: ${size || "Any"}, Color: ${color || "Any"}.`)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-3 rounded-xl border border-chocolate/20 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-chocolate transition hover:border-gold hover:bg-chocolate/5 hover:text-gold">
+              <MessageCircle className="h-4 w-4 text-emerald-600" />
+              Chat on WhatsApp
+            </a>
           </div>
 
           {variantChips.length > 0 ? (
@@ -440,31 +433,6 @@ export default function ProductDetailPage({
             </div>
           ) : null}
 
-          <div className="space-y-4 border-t border-chocolate/10 pt-6">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gold">Order Quantity</span>
-              <div className="flex items-center space-x-4 rounded-xl border border-chocolate/15 bg-white/40 p-1">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="rounded-lg p-2 text-chocolate/70 hover:bg-chocolate/5"><Minus className="h-4 w-4" /></button>
-                <span className="px-3 font-mono text-sm font-semibold text-chocolate">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="rounded-lg p-2 text-chocolate/70 hover:bg-chocolate/5"><Plus className="h-4 w-4" /></button>
-              </div>
-            </div>
-
-            <button onClick={() => setToast("Payments are coming soon. Please use Add to Cart or WhatsApp checkout.")} className="flex w-full items-center justify-center gap-3 rounded-xl bg-orange-600 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-cream transition hover:bg-orange-500">
-              <ShoppingBag className="h-4 w-4" />
-              Buy Now
-            </button>
-
-            <button onClick={add} disabled={added} className={`flex w-full items-center justify-center gap-3 rounded-xl px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] transition ${added ? "bg-green-600 text-white" : "bg-chocolate text-cream hover:bg-gold hover:text-chocolate"}`}>
-              {added ? <><Check className="h-4 w-4" />Added to Cart</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
-            </button>
-
-            <a href={`https://wa.me/265883184144?text=${encodeURIComponent(`Hello, I am interested in: ${product.name} (${primary}). Size: ${size || "Any"}, Color: ${color || "Any"}.`)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-3 rounded-xl border border-chocolate/20 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-chocolate transition hover:border-gold hover:bg-chocolate/5 hover:text-gold">
-              <MessageCircle className="h-4 w-4 text-emerald-600" />
-              Chat on WhatsApp
-            </a>
-          </div>
-
           {relatedProducts.length > 0 && (
             <div className="space-y-4 border-t border-chocolate/10 pt-6">
               <div className="flex items-center justify-between gap-3">
@@ -473,11 +441,7 @@ export default function ProductDetailPage({
                   <div className="text-sm font-semibold text-chocolate/80">More from this collection</div>
                 </div>
                 {onViewCollection && (
-                  <button
-                    type="button"
-                    onClick={() => onViewCollection(product.collectionCategory || product.category || "home")}
-                    className="rounded-full border border-chocolate/10 bg-white/60 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-chocolate/70 hover:text-gold"
-                  >
+                  <button type="button" onClick={() => onViewCollection(product.collectionCategory || product.category || "home")} className="rounded-full border border-chocolate/10 bg-white/60 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-chocolate/70 hover:text-gold">
                     View Collection
                   </button>
                 )}
