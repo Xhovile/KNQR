@@ -21,6 +21,7 @@ import FloatingActionStack from "./components/FloatingActionStack";
 
 interface ProductDetailPageProps {
   product: Product;
+  products?: Product[];
   onBack: () => void;
   onAddToCart: (product: Product, quantity: number, size?: string, color?: string) => void;
   onOpenCart: () => void;
@@ -29,11 +30,14 @@ interface ProductDetailPageProps {
   isAdmin?: boolean;
   onUpdateProduct?: (updatedProduct: Product) => Promise<void>;
   onTriggerAdminGuard?: (action: "add" | "edit" | "hero" | "restock" | "record_sale") => void;
+  onViewCollection?: (collectionCategory: string) => void;
+  onViewProduct?: (product: Product) => void;
 }
 
 const fmtList = (value?: string[]) => (value && value.length ? value.join(", ") : "");
 const fmtMWK = (value?: number | null) => `MK ${(value || 0).toLocaleString()}`;
-const fmtUSD = (value?: number | null) => `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtUSD = (value?: number | null) =>
+  `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 function pushIf(rows: Array<[string, string]>, label: string, value?: string | null) {
   const trimmed = (value || "").trim();
@@ -46,29 +50,37 @@ function specRows(product: Product): Array<[string, string]> {
     ["Category", product.category || "—"],
     ["Status", product.status || "—"],
     ["Stock", `${product.stock ?? 0}`],
-    ["Delivery", product.delivery?.available ? (product.delivery.methods?.length ? product.delivery.methods.join(", ") : "Pickup") : "Pickup only"],
+    [
+      "Delivery",
+      product.delivery?.available
+        ? product.delivery.methods?.length
+          ? product.delivery.methods.join(", ")
+          : "Pickup"
+        : "Pickup only",
+    ],
   ];
 
-  if (product.collectionCategory === "Apparel") {
+  const collection = (product.collectionCategory || "").toLowerCase();
+  if (collection === "apparel") {
     pushIf(rows, "Fit Profile", product.fit);
     pushIf(rows, "Fabric Composition", product.material);
     pushIf(rows, "Wear Profile", product.apparelGender);
     pushIf(rows, "Sleeve Profile", product.sleeveType);
     if (product.colors?.length) rows.push(["Accent Colors", product.colors.join(", ")]);
-  } else if (product.collectionCategory === "Bags & Accessories") {
+  } else if (collection === "bags & accessories") {
     pushIf(rows, "Accessory Type", product.bagType);
     pushIf(rows, "Material Finish", product.bagMaterial);
     pushIf(rows, "Carry Style", product.strapType);
     pushIf(rows, "Capacity Profile", product.bagCapacity);
     pushIf(rows, "Primary Use", product.useCase);
     if (product.colors?.length) rows.push(["Accent Colors", product.colors.join(", ")]);
-  } else if (product.collectionCategory === "Accessories") {
+  } else if (collection === "accessories") {
     pushIf(rows, "Accessory Type", product.accessoryType);
     pushIf(rows, "Material Finish", product.accessoryMaterial);
     pushIf(rows, "Style Profile", product.accessoryStyle);
     pushIf(rows, "Primary Use", product.accessoryUseCase);
     if (product.colors?.length) rows.push(["Accent Colors", product.colors.join(", ")]);
-  } else if (product.collectionCategory === "Fragrances") {
+  } else if (collection === "fragrances") {
     pushIf(rows, "Bottle Volume", product.volume);
     pushIf(rows, "Scent Family", product.scentFamily);
     pushIf(rows, "Wear Profile", product.fragranceGender);
@@ -81,11 +93,16 @@ function specRows(product: Product): Array<[string, string]> {
 }
 
 function getVariantChips(product: Product): string[] {
-  return product.collectionCategory === "Fragrances" ? (product.volume ? [product.volume] : []) : (product.sizes || []);
+  return (product.collectionCategory || "").toLowerCase() === "fragrances"
+    ? product.volume
+      ? [product.volume]
+      : []
+    : product.sizes || [];
 }
 
 export default function ProductDetailPage({
   product,
+  products = [],
   onBack,
   onAddToCart,
   onOpenCart,
@@ -94,6 +111,8 @@ export default function ProductDetailPage({
   isAdmin,
   onUpdateProduct,
   onTriggerAdminGuard,
+  onViewCollection,
+  onViewProduct,
 }: ProductDetailPageProps) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -114,7 +133,7 @@ export default function ProductDetailPage({
     setImageIndex(0);
     setSize(product.sizes?.[0] || "");
     setColor(product.colors?.[0] || "");
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, [product.id]);
 
   const images = useMemo(() => {
@@ -126,10 +145,26 @@ export default function ProductDetailPage({
     return out;
   }, [product]);
 
+  const relatedProducts = useMemo(() => {
+    const collection = (product.collectionCategory || "").toLowerCase();
+    return products
+      .filter(
+        (p) =>
+          p.id !== product.id &&
+          (p.collectionCategory || "").toLowerCase() === collection &&
+          p.status === "active"
+      )
+      .slice(0, 4);
+  }, [products, product.id, product.collectionCategory]);
+
   const primary = priceCurrency === "USD" ? fmtUSD(product.priceUSD) : fmtMWK(product.priceMWK);
   const secondary = priceCurrency === "USD" ? fmtMWK(product.priceMWK) : fmtUSD(product.priceUSD);
   const variantChips = getVariantChips(product);
-  const deliveryText = product.delivery?.available ? (product.delivery.methods?.length ? product.delivery.methods.join(" • ") : "Pickup") : "Pickup only";
+  const deliveryText = product.delivery?.available
+    ? product.delivery.methods?.length
+      ? product.delivery.methods.join(" • ")
+      : "Pickup"
+    : "Pickup only";
   const deliveryNote = product.delivery?.note || "";
 
   const add = () => {
@@ -231,6 +266,8 @@ export default function ProductDetailPage({
     }
   };
 
+  const collectionCategory = product.collectionCategory || product.category || "Collection";
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} className="min-h-screen bg-light-brown text-chocolate pb-36">
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-chocolate/10 bg-white/40 px-6 py-4 backdrop-blur-md">
@@ -239,48 +276,59 @@ export default function ProductDetailPage({
           Back to Curation
         </button>
 
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-full p-2 text-chocolate/60 transition hover:bg-chocolate/5 hover:text-gold"
-            aria-label="Details menu"
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
-          </button>
+        <div className="flex items-center gap-2">
+          {onViewCollection && (
+            <button
+              onClick={() => onViewCollection(product.collectionCategory || product.category || "home")}
+              className="rounded-full border border-chocolate/10 bg-white/60 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-chocolate/70 hover:text-gold"
+            >
+              View Collection
+            </button>
+          )}
 
-          <AnimatePresence>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                  className="absolute right-0 top-full z-50 mt-3 w-52 overflow-hidden rounded-2xl border border-chocolate/10 bg-white shadow-2xl"
-                >
-                  {[
-                    { label: "Edit", icon: Pencil, run: () => onEditProduct?.(product) },
-                    { label: "Restock", icon: PackagePlus, run: () => { setModalError(null); setRestockAmount(10); setShowRestockModal(true); } },
-                    { label: "Record Sale", icon: BadgePercent, run: () => { setModalError(null); setSaleAmount(1); setShowRecordSaleModal(true); } },
-                    { label: "Share", icon: Share2, run: shareProduct },
-                    { label: "Add to Cart", icon: ShoppingCart, run: add },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={() => {
-                        item.run();
-                        setMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs uppercase tracking-wider text-chocolate/70 transition hover:bg-chocolate/5 hover:text-gold"
-                    >
-                      <item.icon className="h-4 w-4 text-gold/80" />
-                      {item.label}
-                    </button>
-                  ))}
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="rounded-full p-2 text-chocolate/60 transition hover:bg-chocolate/5 hover:text-gold"
+              aria-label="Details menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
+            </button>
+
+            <AnimatePresence>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    className="absolute right-0 top-full z-50 mt-3 w-52 overflow-hidden rounded-2xl border border-chocolate/10 bg-white shadow-2xl"
+                  >
+                    {[
+                      { label: "Edit", icon: Pencil, run: () => onEditProduct?.(product) },
+                      { label: "Restock", icon: PackagePlus, run: () => { setModalError(null); setRestockAmount(10); setShowRestockModal(true); } },
+                      { label: "Record Sale", icon: BadgePercent, run: () => { setModalError(null); setSaleAmount(1); setShowRecordSaleModal(true); } },
+                      { label: "Share", icon: Share2, run: shareProduct },
+                      { label: "Add to Cart", icon: ShoppingCart, run: add },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          item.run();
+                          setMenuOpen(false);
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs uppercase tracking-wider text-chocolate/70 transition hover:bg-chocolate/5 hover:text-gold"
+                      >
+                        <item.icon className="h-4 w-4 text-gold/80" />
+                        {item.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -300,7 +348,13 @@ export default function ProductDetailPage({
           {images.length > 1 ? (
             <div className="flex gap-3 overflow-x-auto py-2">
               {images.map((src, i) => (
-                <button key={src + i} onClick={() => setImageIndex(i)} className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${i === imageIndex ? "border-gold" : "border-chocolate/15 opacity-60"}`}>
+                <button
+                  key={src + i}
+                  onClick={() => setImageIndex(i)}
+                  className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${
+                    i === imageIndex ? "border-gold" : "border-chocolate/15 opacity-60"
+                  }`}
+                >
                   <img src={src} alt={`${product.name} thumbnail ${i + 1}`} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
@@ -310,7 +364,7 @@ export default function ProductDetailPage({
 
         <div className="space-y-8">
           <div className="space-y-3">
-            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.4em] text-gold">{product.collectionCategory || product.category} Collection</div>
+            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.4em] text-gold">{collectionCategory} Collection</div>
             <h1 className="font-serif text-3xl font-semibold leading-tight text-chocolate md:text-4xl">{product.name}</h1>
             <div className="flex flex-wrap items-center gap-3">
               <span className="font-mono text-2xl font-semibold tracking-wider text-chocolate md:text-3xl">{primary}</span>
@@ -323,7 +377,7 @@ export default function ProductDetailPage({
 
           {variantChips.length > 0 ? (
             <div className="space-y-3">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gold">{product.collectionCategory === "Fragrances" ? "Available Volumes" : "Available Sizes"}</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gold">{(product.collectionCategory || "").toLowerCase() === "fragrances" ? "Available Volumes" : "Available Sizes"}</div>
               <div className="flex flex-wrap gap-2.5">
                 {variantChips.map((v) => (
                   <button key={v} onClick={() => setSize(v)} className={`rounded-lg border px-4 py-2 text-xs font-mono uppercase tracking-wider ${size === v ? "border-chocolate bg-chocolate text-cream" : "border-chocolate/15 bg-white/60 text-chocolate/70"}`}>
@@ -380,15 +434,13 @@ export default function ProductDetailPage({
               <div className="text-[10px] font-mono uppercase tracking-widest text-gold">Selected Highlights</div>
               <div className="flex flex-wrap gap-2">
                 {product.details.map((d) => (
-                  <span key={d} className="rounded-full border border-chocolate/10 bg-white px-3 py-1 text-[11px] text-chocolate/70">
-                    {d}
-                  </span>
+                  <span key={d} className="rounded-full border border-chocolate/10 bg-white px-3 py-1 text-[11px] text-chocolate/70">{d}</span>
                 ))}
               </div>
             </div>
           ) : null}
 
-          <div className="space-y-4">
+          <div className="space-y-4 border-t border-chocolate/10 pt-6">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gold">Order Quantity</span>
               <div className="flex items-center space-x-4 rounded-xl border border-chocolate/15 bg-white/40 p-1">
@@ -398,10 +450,7 @@ export default function ProductDetailPage({
               </div>
             </div>
 
-            <button
-              onClick={() => setToast("Payments are coming soon. Please use Add to Cart or WhatsApp checkout.")}
-              className="flex w-full items-center justify-center gap-3 rounded-xl bg-orange-600 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-cream transition hover:bg-orange-500"
-            >
+            <button onClick={() => setToast("Payments are coming soon. Please use Add to Cart or WhatsApp checkout.")} className="flex w-full items-center justify-center gap-3 rounded-xl bg-orange-600 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-cream transition hover:bg-orange-500">
               <ShoppingBag className="h-4 w-4" />
               Buy Now
             </button>
@@ -410,18 +459,55 @@ export default function ProductDetailPage({
               {added ? <><Check className="h-4 w-4" />Added to Cart</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
             </button>
 
-            <a
-              href={`https://wa.me/265883184144?text=${encodeURIComponent(
-                `Hello, I am interested in: ${product.name} (${primary}). Size: ${size || "Any"}, Color: ${color || "Any"}.`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-chocolate/20 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-chocolate transition hover:border-gold hover:bg-chocolate/5 hover:text-gold"
-            >
+            <a href={`https://wa.me/265883184144?text=${encodeURIComponent(`Hello, I am interested in: ${product.name} (${primary}). Size: ${size || "Any"}, Color: ${color || "Any"}.`)}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-3 rounded-xl border border-chocolate/20 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-chocolate transition hover:border-gold hover:bg-chocolate/5 hover:text-gold">
               <MessageCircle className="h-4 w-4 text-emerald-600" />
               Chat on WhatsApp
             </a>
           </div>
+
+          {relatedProducts.length > 0 && (
+            <div className="space-y-4 border-t border-chocolate/10 pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-gold">Related</div>
+                  <div className="text-sm font-semibold text-chocolate/80">More from this collection</div>
+                </div>
+                {onViewCollection && (
+                  <button
+                    type="button"
+                    onClick={() => onViewCollection(product.collectionCategory || product.category || "home")}
+                    className="rounded-full border border-chocolate/10 bg-white/60 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-chocolate/70 hover:text-gold"
+                  >
+                    View Collection
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {relatedProducts.map((rel) => (
+                  <button
+                    key={rel.id}
+                    onClick={() => (onViewProduct ? onViewProduct(rel) : onBack())}
+                    className="group overflow-hidden rounded-2xl border border-chocolate/10 bg-white/70 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="aspect-square bg-chocolate/5">
+                      {rel.image ? (
+                        <img src={rel.image} alt={rel.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-chocolate/25">
+                          <Sparkles className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <div className="truncate text-[11px] font-mono font-bold uppercase tracking-wider text-chocolate">{rel.name}</div>
+                      <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.25em] text-chocolate/45">Tap to open</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -429,12 +515,7 @@ export default function ProductDetailPage({
 
       <AnimatePresence>
         {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            className="fixed left-1/2 top-24 z-50 -translate-x-1/2 rounded-full border border-gold/40 bg-[#0b1b33]/95 px-6 py-3 text-xs font-mono uppercase tracking-widest text-cream shadow-2xl"
-          >
+          <motion.div initial={{ opacity: 0, y: -10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.98 }} className="fixed left-1/2 top-24 z-50 -translate-x-1/2 rounded-full border border-gold/40 bg-[#0b1b33]/95 px-6 py-3 text-xs font-mono uppercase tracking-widest text-cream shadow-2xl">
             {toast}
           </motion.div>
         ) : null}
