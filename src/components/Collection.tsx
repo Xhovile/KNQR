@@ -71,7 +71,7 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
       id={`collection-card-${product.id}`}
     >
       <div
-        className="relative w-full aspect-[3/4] mb-5 rounded-2xl overflow-hidden border border-chocolate/15 cursor-pointer bg-[#ece5d8]"
+        className="relative w-full aspect-[4/5] sm:aspect-[3/4] mb-4 sm:mb-5 rounded-2xl overflow-hidden border border-chocolate/15 cursor-pointer bg-[#ece5d8]"
         onClick={() => onSelectCollection(product.collectionCategory)}
         id={`card-image-click-${product.id}`}
       >
@@ -99,7 +99,7 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
               type="button"
               onClick={goToPreviousImage}
               aria-label="Previous collection image"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-chocolate/45 text-cream backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-chocolate/70"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-cream/10 bg-chocolate/18 text-cream/85 backdrop-blur-[2px] transition-all duration-200 hover:scale-105 hover:bg-chocolate/32 hover:text-cream"
             >
               <span className="text-lg leading-none">‹</span>
             </button>
@@ -108,15 +108,15 @@ function CollectionCard({ product, allProducts, onSelectCollection }: Collection
               type="button"
               onClick={goToNextImage}
               aria-label="Next collection image"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-chocolate/45 text-cream backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-chocolate/70"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-cream/10 bg-chocolate/18 text-cream/85 backdrop-blur-[2px] transition-all duration-200 hover:scale-105 hover:bg-chocolate/32 hover:text-cream"
             >
               <span className="text-lg leading-none">›</span>
             </button>
           </>
         )}
 
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center text-[10px] font-bold tracking-[0.25em] uppercase text-cream/90 z-10 bg-chocolate/40 backdrop-blur-sm px-3 py-2 rounded-xl border border-cream/5">
-          <span>
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center text-[10px] font-bold tracking-[0.25em] uppercase text-cream/95 z-10 px-3 py-2">
+          <span style={{ textShadow: "0 1px 3px rgba(0,0,0,0.55)" }}>
             {allProducts
               .filter((p) => p.collectionCategory === product.collectionCategory && p.status === "active")
               .reduce((sum, p) => sum + (p.stock || 0), 0)}{" "}
@@ -179,10 +179,10 @@ export default function Collection({
 
   return (
     <section
-      className="py-16 px-6 bg-white border-b-4 border-chocolate text-center"
+      className="py-14 px-6 bg-white border-b-4 border-chocolate text-center"
       id="knqr-collection-section"
     >
-      <div className="mb-12 max-w-sm mx-auto">
+      <div className="mb-10 max-w-sm mx-auto">
         <h3
           className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-chocolate mb-3 uppercase"
           id="collection-heading"
@@ -192,7 +192,7 @@ export default function Collection({
         <div className="w-12 h-[1px] bg-chocolate/30 mx-auto" />
       </div>
 
-      <div className="flex flex-col gap-12 max-w-md mx-auto" id="collection-cards-list">
+      <div className="flex flex-col gap-8 sm:gap-10 max-w-md mx-auto" id="collection-cards-list">
         {categoryCards.map((product, idx) => (
           <React.Fragment key={product.id}>
             <CollectionCard
@@ -202,7 +202,7 @@ export default function Collection({
             />
             {idx < categoryCards.length - 1 && (
               <div
-                className="border-b-4 border-chocolate w-full my-4"
+                className="border-b-4 border-chocolate w-full my-2 sm:my-4"
                 id={`collection-separator-${idx}`}
               />
             )}
