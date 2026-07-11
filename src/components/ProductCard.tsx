@@ -17,20 +17,19 @@ function ProductCard({
   onViewDetails,
   onAddToCart,
   onToggleWishlist,
-  isWishlisted
+  isWishlisted,
 }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Fallback default colors and sizes for safe interaction
   const defaultColor = product.colors?.[0] || "Default";
   const [selectedColor] = useState({ name: defaultColor, value: "#000" });
 
   const isSoldOut = product.stock <= 0 || product.status === "sold_out";
   const isDraft = product.status === "draft";
-  const isComingSoon = product.stock === 999; // Special coding for Coming Soon mock state
+  const isComingSoon = product.stock === 999;
 
-  const primaryImage = product.image || (product.images?.[0]) || "";
+  const primaryImage = product.image || product.images?.[0] || "";
 
   const handleAddToCartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -39,9 +38,9 @@ function ProductCard({
     setIsAdding(true);
     const sizesList = product.sizes && product.sizes.length > 0 ? product.sizes : ["One Size"];
     const size = sizesList[0] || "One Size";
-    
+
     onAddToCart(product, size, selectedColor);
-    
+
     setTimeout(() => {
       setIsAdding(false);
     }, 1200);
@@ -52,25 +51,21 @@ function ProductCard({
 
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.25, ease: "easeInOut" }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
       onClick={() => onViewDetails(product)}
       className="cursor-pointer group flex flex-col justify-between h-[225px] sm:h-[315px] bg-white/70 p-3 rounded-2xl border border-chocolate/10 hover:border-chocolate transition-all duration-300 shadow-2xs hover:shadow-lg relative"
       id={`product-card-${product.id}`}
     >
-      {/* Draft Overlay Badge */}
       {isDraft && (
         <div className="absolute top-4 left-4 z-10 bg-amber-600/90 text-white text-[9px] font-mono tracking-widest uppercase px-2 py-0.5 rounded shadow-sm backdrop-blur-xs">
           DRAFT
         </div>
       )}
 
-      {/* Image Gallery and Hover Effects */}
       <div className="aspect-square h-[135px] sm:h-[210px] w-full bg-chocolate/5 rounded-xl overflow-hidden relative border border-chocolate/5 flex-shrink-0 mx-auto">
-        {/* Status Badges */}
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-1 items-end">
           {isSoldOut ? (
             <span className="bg-rose-700 text-white text-[8px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded shadow-xs">
@@ -87,7 +82,6 @@ function ProductCard({
           ) : null}
         </div>
 
-        {/* Stable image, no swap */}
         {primaryImage ? (
           <img
             src={primaryImage}
@@ -108,7 +102,6 @@ function ProductCard({
           </div>
         )}
 
-        {/* Quick View and Action Utility Overlay */}
         <div className="absolute inset-0 bg-chocolate/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
           <button
             onClick={(e) => {
@@ -128,8 +121,8 @@ function ProductCard({
               onToggleWishlist(product.id);
             }}
             className={`p-2.5 rounded-full shadow-md transform translate-y-3 group-hover:translate-y-0 transition-all duration-300 delay-75 hover:scale-110 cursor-pointer ${
-              isWishlisted 
-                ? "bg-rose-600 text-white" 
+              isWishlisted
+                ? "bg-rose-600 text-white"
                 : "bg-white hover:bg-rose-50 text-chocolate hover:text-rose-600"
             }`}
             title="Add to Wishlist"
@@ -140,7 +133,6 @@ function ProductCard({
         </div>
       </div>
 
-      {/* Product Information Body */}
       <div className="space-y-1 px-1 py-0.5">
         <div className="flex justify-between items-start gap-2">
           <h4 className="text-[11px] font-mono tracking-wider font-bold text-chocolate uppercase truncate group-hover:text-chocolate-light transition-colors">
