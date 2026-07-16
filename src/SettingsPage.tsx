@@ -99,7 +99,7 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
     <div className="min-h-screen overflow-x-hidden bg-light-brown text-chocolate">
       <div className="sticky top-0 z-20 border-b border-chocolate/10 bg-white/40 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <button onClick={onBack} className="flex items-center gap-2 text-xs uppercase tracking-widest text-chocolate/70 hover:text-gold">
+          <button type="button" onClick={onBack} className="flex items-center gap-2 text-xs uppercase tracking-widest text-chocolate/70 hover:text-gold">
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
@@ -202,11 +202,11 @@ export default function SettingsPage({ displayName, email, userId, onBack, onGoT
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <button onClick={handleSave} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-chocolate transition hover:bg-cream">
+              <button type="button" onClick={handleSave} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-chocolate transition hover:bg-cream">
                 <Save className="h-4 w-4" />
                 Save Settings
               </button>
-              <button onClick={onSignOut} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-chocolate/10 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-chocolate/70 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">
+              <button type="button" onClick={onSignOut} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-chocolate/10 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-chocolate/70 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">
                 Sign Out
               </button>
             </div>
@@ -238,7 +238,7 @@ function SettingTile({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4 shadow-sm overflow-hidden text-left transition hover:border-gold hover:shadow-md"
+      className="rounded-2xl border border-chocolate/10 bg-light-brown px-4 py-4 text-left shadow-sm overflow-hidden select-none touch-manipulation transform-gpu transition-[border-color,background-color,color,box-shadow,transform] duration-200 ease-out hover:border-gold hover:bg-[#f7f1e6] hover:shadow-sm active:scale-[0.99]"
     >
       <div className="flex items-center gap-2 text-chocolate">
         <Icon className="h-4 w-4 text-gold" />
@@ -269,7 +269,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-2xl border border-chocolate/10 bg-white px-4 py-3 text-sm text-chocolate outline-none placeholder:text-chocolate/35"
+        className="w-full rounded-2xl border border-chocolate/15 bg-white px-4 py-3 text-sm text-chocolate outline-none transition focus:border-gold"
       />
     </label>
   );
