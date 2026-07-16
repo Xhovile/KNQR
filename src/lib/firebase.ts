@@ -4,26 +4,10 @@ import { getAuth } from "firebase/auth";
 import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 import firebaseConfig from "../../firebase-applet-config.json";
 
-function resolveAuthDomain(): string {
-  if (typeof window === "undefined") {
-    return firebaseConfig.authDomain;
-  }
-
-  const host = window.location.hostname;
-
-  // Prefer the actual deployed hostname in browsers so OAuth helpers
-  // run on the same origin the user is visiting.
-  if (host === "localhost" || host.endsWith(".vercel.app") || host.endsWith(".web.app")) {
-    return host;
-  }
-
-  return firebaseConfig.authDomain;
-}
-
 // Initialize Firebase App
 const app = initializeApp({
   apiKey: firebaseConfig.apiKey,
-  authDomain: resolveAuthDomain(),
+  authDomain: firebaseConfig.authDomain,
   projectId: firebaseConfig.projectId,
   storageBucket: firebaseConfig.storageBucket,
   messagingSenderId: firebaseConfig.messagingSenderId,
